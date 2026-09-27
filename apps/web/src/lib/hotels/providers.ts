@@ -13,7 +13,7 @@ import type { HotelOffer, HotelSearch, HotelSelection, HotelSource, HotelStay } 
 import { closeTravelBrowser, currentTravelExecution, TravelCleanupError } from '../travel/execution';
 import { travelImportUrl } from '../travel/import-url';
 
-export const HOTEL_DISCOVERY_LIMIT = 8;
+const HOTEL_DISCOVERY_LIMIT = 8;
 
 export class PartialHotelSourceError extends Error {
   constructor(public readonly offers: HotelOffer[], public readonly errors: string[]) {

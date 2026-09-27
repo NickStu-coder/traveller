@@ -4,7 +4,7 @@
 import { prisma } from '@/lib/prisma';
 import { ACTUAL_FLIGHT_FARE_WHERE } from './flight-pricing.js';
 
-export interface JsonSnapshot {
+interface JsonSnapshot {
   price: number;
   currency: string;
   airline: string;
@@ -15,7 +15,7 @@ export interface JsonSnapshot {
   scrapedAt: string;
 }
 
-export interface JsonBestPrice {
+interface JsonBestPrice {
   price: number;
   currency: string;
   airline: string;

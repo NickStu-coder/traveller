@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 
-export interface AirlineRouteStats {
+interface AirlineRouteStats {
   airline: string;
   route: string;
   avgPrice: number;
@@ -12,7 +12,7 @@ export interface AirlineRouteStats {
   trend: 'rising' | 'falling' | 'stable';
 }
 
-export interface RouteOverview {
+interface RouteOverview {
   route: string;
   origin: string;
   originName: string;

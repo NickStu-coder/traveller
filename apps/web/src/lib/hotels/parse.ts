@@ -1,7 +1,6 @@
 import { validateHotelSearch } from './domain';
 import type { HotelSearch } from './types';
 import { travelJson as hotelJson } from '../travel/ai-json';
-export { hotelJson };
 
 export async function parseHotelQuery(text: string): Promise<HotelSearch> {
   if (!text.trim() || text.length > 4000) throw new Error('Describe a hotel search in 1–4000 characters');

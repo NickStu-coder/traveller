@@ -5,7 +5,7 @@
  * No regex — fast and predictable.
  */
 
-export type BotCategory = 'crawler' | 'scraper' | 'malicious';
+type BotCategory = 'crawler' | 'scraper' | 'malicious';
 
 export interface BotClassification {
   isBot: boolean;

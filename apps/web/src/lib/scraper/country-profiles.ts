@@ -173,7 +173,3 @@ export const COUNTRY_PROFILES: Record<string, CountryProfile> = {
 export function getCountryProfile(code: string): CountryProfile | undefined {
   return COUNTRY_PROFILES[code.toUpperCase()];
 }
-
-export function getAvailableCountries(): CountryProfile[] {
-  return Object.values(COUNTRY_PROFILES);
-}

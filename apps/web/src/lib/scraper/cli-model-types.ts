@@ -1,6 +1,6 @@
 import { CLI_PROVIDERS, PROVIDER_METADATA } from './provider-metadata';
 
-export const REASONING_EFFORTS = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'] as const;
+const REASONING_EFFORTS = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'] as const;
 export type ReasoningEffort = typeof REASONING_EFFORTS[number];
 /** null preserves existing CLI configuration; default explicitly uses the model's default. */
 export type ReasoningSelection = ReasoningEffort | 'default' | null;

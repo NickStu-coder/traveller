@@ -4,7 +4,7 @@ import { getRawDb } from './db';
  * Retroactively mark events as suspected bots: score=1, no beacon, older than 10 min.
  * Returns count of events updated.
  */
-export function markSuspectedBots(): number {
+function markSuspectedBots(): number {
   const db = getRawDb();
   const tenMinAgo = Date.now() - 10 * 60 * 1000;
 

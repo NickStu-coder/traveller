@@ -37,7 +37,6 @@ import {
   isGoogleFlightsLoadingShell,
   isPreviewTooFarInFuture,
   previewTooFarInFutureMessage,
-  type PreviewDatePair,
 } from '@/lib/preview-utils';
 
 const RETRYABLE_FAILURES: ExtractionFailureReason[] = [
@@ -65,7 +64,7 @@ export function parsePreviewConcurrency(raw: string | undefined = process.env.PR
   return Math.min(parsed, 10);
 }
 
-export const PREVIEW_CONCURRENCY = parsePreviewConcurrency();
+const PREVIEW_CONCURRENCY = parsePreviewConcurrency();
 
 /**
  * Redis key prefix for the per IP concurrent preview admission counter.
@@ -170,7 +169,7 @@ export async function releasePreviewAdmission(clientIp: string): Promise<void> {
   }
 }
 
-export type RouteResult = RouteResultPayload;
+type RouteResult = RouteResultPayload;
 
 /**
  * Resolved extraction context shared across all routes in a single
@@ -180,7 +179,7 @@ export type RouteResult = RouteResultPayload;
  * share this same object. Issue 65 audit finding A4: customBaseUrl
  * added so extractPrices can avoid its own DB read.
  */
-export interface ExtractionContext {
+interface ExtractionContext {
   credentials?: CredentialValues;
   reasoningEffort?: import('./scraper/cli-model-types').ReasoningSelection;
   provider: string;
@@ -257,8 +256,7 @@ export function buildCacheKey(
   // v2 separates actual fares from the old cached OW+OW PriceData arrays.
   return `preview:v2:${hash}`;
 }
-
-export { buildPreviewDatePairs, type PreviewDatePair };
+export { buildPreviewDatePairs };
 
 export function validatePreviewPayload(
   payload: PreviewRequestPayload,

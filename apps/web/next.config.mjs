@@ -37,9 +37,6 @@ const nextConfig = {
     'cron',
     'ioredis',
     'ua-parser-js',
-    '@anthropic-ai/sdk',
-    'openai',
-    '@google/generative-ai',
     'thesidedoor-flock',
   ],
 };

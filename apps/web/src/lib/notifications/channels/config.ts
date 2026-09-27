@@ -11,7 +11,7 @@ import type {
   WebhookConfig,
 } from './types';
 
-export const CHANNEL_TYPES: ChannelType[] = ['telegram', 'email', 'ntfy', 'webhook'];
+const CHANNEL_TYPES: ChannelType[] = ['telegram', 'email', 'ntfy', 'webhook'];
 
 /** Secret fields per channel type — encrypted at rest, redacted on read. */
 export const SECRET_FIELDS: Record<ChannelType, string[]> = {

@@ -52,7 +52,7 @@ async function runAlerts(kind: AlertKind): Promise<void> {
 export async function runTravelAlertsSafely(): Promise<void> {
   await Promise.all([runAlerts('car'), runAlerts('hotel'), runAlerts('flight')]);
 }
-export async function runTravelJobsSafely(): Promise<void> {
+async function runTravelJobsSafely(): Promise<void> {
   if (!runtime.travelPump) runtime.travelPump = pump().catch(error => { console.error('[travel] Scheduled worker failed:', error); }).finally(() => { runtime.travelPump = undefined; });
   return runtime.travelPump;
 }

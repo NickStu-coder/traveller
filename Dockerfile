@@ -20,8 +20,7 @@ RUN npm ci --omit=dev --loglevel=error
 # Stage the externalized packages (serverExternalPackages) and the transitive
 # deps the Next standalone trace omits. Resolve each from wherever npm hoisted
 # it (the root or the apps/web workspace) and skip any a dependency bump dropped.
-# A hardcoded COPY list is brittle: ioredis dropped lodash.*, and Next 16's tree
-# hoists @anthropic-ai into the workspace rather than the root.
+# Resolve packages from both root and workspace installations.
 #
 # playwright/playwright-core MUST be here: the standalone trace follows their JS
 # requires but misses browsers.json, which playwright-core reads dynamically at
@@ -29,8 +28,7 @@ RUN npm ci --omit=dev --loglevel=error
 # "Cannot find module '.../playwright-core/browsers.json'" (issue #139 follow-up).
 RUN set -e; cd /app; mkdir -p /ext; \
     for p in ioredis @ioredis redis-parser redis-errors denque standard-as-callback \
-             cluster-key-slot debug ms ua-parser-js @anthropic-ai json-schema-to-ts \
-             @babel/runtime ts-algebra openai @google \
+             cluster-key-slot debug ms ua-parser-js \
              playwright playwright-core; do \
       for base in node_modules apps/web/node_modules; do \
         if [ -e "$base/$p" ]; then mkdir -p "/ext/$(dirname "$p")"; cp -R "$base/$p" "/ext/$p"; break; fi; \

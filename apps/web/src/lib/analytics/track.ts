@@ -18,7 +18,7 @@ function parseDevice(type: string | undefined): string {
   return 'desktop';
 }
 
-export function trackPageView({ path, ip, userAgent, referrer, botScore = 1 }: TrackParams): void {
+function trackPageView({ path, ip, userAgent, referrer, botScore = 1 }: TrackParams): void {
   const parser = new UAParser(userAgent);
   const browser = parser.getBrowser().name || 'Unknown';
   const os = parser.getOS().name || 'Unknown';

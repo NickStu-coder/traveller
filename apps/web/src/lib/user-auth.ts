@@ -26,7 +26,7 @@ export async function getCurrentProfile(): Promise<User | null> {
   return getCurrentUser();
 }
 
-export async function requireUser(): Promise<User> {
+async function requireUser(): Promise<User> {
   const user = await getCurrentUser();
   if (!user) throw new UnauthorizedError();
   return user;
@@ -38,9 +38,9 @@ export async function requireAdminUser(): Promise<User> {
   return user;
 }
 
-export class UnauthorizedError extends Error {
+class UnauthorizedError extends Error {
   constructor() { super('Unauthorized'); this.name = 'UnauthorizedError'; }
 }
-export class ForbiddenError extends Error {
+class ForbiddenError extends Error {
   constructor() { super('Forbidden'); this.name = 'ForbiddenError'; }
 }

@@ -11,5 +11,4 @@ export function createVpnProvider(type: VpnProviderType): VpnProvider {
       return new NoopVpnProvider();
   }
 }
-
-export type { VpnProvider, VpnProviderType, VpnStatus } from './types';
+export type { VpnProvider, VpnProviderType } from './types';

@@ -42,15 +42,9 @@ export async function sendToChannel(channel: SendChannel, message: ChannelMessag
 
 export * from './types';
 export {
-  CHANNEL_TYPES,
-  SECRET_FIELDS,
   isChannelType,
-  validateChannelConfig,
-  encryptChannelConfig,
-  decryptChannelConfig,
   prepareStoredConfig,
   mergeStoredConfig,
   redactChannelConfig,
   assertPublicUrl,
-  assertPublicHost,
 } from './config';
