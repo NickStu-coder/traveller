@@ -116,16 +116,3 @@ export async function cancelTravelJob(id: string, userId: string | null, isAdmin
   });
   return changed.count === 1;
 }
-/** Recovery marks interrupted work visibly failed; it never manufactures prices. */
-export async function recoverTravelJobs(lease: TravelLeaseToken, recover: (tx: Prisma.TransactionClient, job: TravelJob) => Promise<void>): Promise<number> {
-  return prisma.$transaction(async tx => {
-    await lockTravelLease(tx, lease);
-    const jobs = await tx.travelJob.findMany({ where: { status: 'running', leaseResource: lease.id, OR: [{ leaseOwner: { not: lease.owner } }, { leaseGeneration: { not: lease.generation } }] } });
-    let recovered = 0;
-    for (const job of jobs) {
-      const changed = await tx.travelJob.updateMany({ where: { id: job.id, status: 'running', leaseGeneration: job.leaseGeneration }, data: { ...clearClaim, status: 'failed', error: 'Travel worker interrupted; refresh to retry', completedAt: new Date() } });
-      if (changed.count) { await recover(tx, job); recovered++; }
-    }
-    return recovered;
-  });
-}

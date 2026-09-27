@@ -2,7 +2,7 @@ import type { Prisma, TravelAlertDelivery } from '@/generated/prisma/client';
 import { dispatchNotifications } from './notify';
 import type { ChannelMessage } from './channels/types';
 
-export const DELIVERY_RETRY_MS = 300_000;
+const DELIVERY_RETRY_MS = 300_000;
 export const DELIVERY_CLAIM_MS = 120_000;
 export interface ClaimedDelivery extends TravelAlertDelivery {
   owner: string | null;

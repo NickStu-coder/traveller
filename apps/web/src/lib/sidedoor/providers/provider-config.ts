@@ -39,7 +39,7 @@ export async function configurationRequestOwner(request: Request) {
   return { token };
 }
 
-export class ProviderConfigurationConflict extends Error {}
+class ProviderConfigurationConflict extends Error {}
 export type CredentialPatch = Record<string, string | number | boolean | null>;
 export type ProviderCredentialDescription = Omit<Awaited<ReturnType<CredentialVault['describe']>>, 'error'> & { error?: string };
 

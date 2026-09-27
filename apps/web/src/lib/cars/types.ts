@@ -141,7 +141,7 @@ export interface CarCandidate {
   requirements: CarRequirement[];
   reasons: string[];
 }
-export interface CarSearchResult {
+interface CarSearchResult {
   offers: CarOffer[];
   candidates: CarCandidate[];
   errors: { source: CarSource; message: string }[];

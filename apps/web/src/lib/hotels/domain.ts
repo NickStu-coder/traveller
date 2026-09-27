@@ -4,7 +4,7 @@ import { optionalImportUrl } from '../travel/import-url';
 export class HotelError extends Error {
   constructor(message: string, public readonly status = 400) { super(message); this.name = 'HotelError'; }
 }
-export const MAX_HOTEL_COMBINATIONS = 24;
+const MAX_HOTEL_COMBINATIONS = 24;
 const DAY = 86_400_000;
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new HotelError('Expected an object');
@@ -28,7 +28,7 @@ function boolean(value: unknown, defaultValue = false): boolean {
   if (typeof value !== 'boolean') throw new HotelError('Expected a boolean');
   return value;
 }
-export function hotelPrice(value: unknown): number | null {
+function hotelPrice(value: unknown): number | null {
   if (value === null || value === undefined) return null;
   if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0 || value > 1_000_000_000) throw new HotelError('Price must be a positive finite amount');
   return value;

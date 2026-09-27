@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { getDeleteToken } from '@/lib/tracker-storage';
 import styles from './ForceScrapeButton.module.css';
 
-export interface ForceScrapeResult {
+interface ForceScrapeResult {
   accepted: boolean;
   count?: number;
   error?: string;

@@ -10,8 +10,6 @@ import { sumTokenUsage } from 'thesidedoor-core/ai/usage';
 import { isKnownAirline } from '../../../../apps/web/src/lib/scraper/airline-urls.js';
 import type { Airport, ParsedFlightQuery } from '../../../../apps/web/src/lib/scraper/parse-query.js';
 
-export type { PriceData, Airport };
-
 const RETRYABLE_FAILURES: ExtractionFailureReason[] = ['empty_extraction', 'page_not_loaded', 'no_json_in_response'];
 const MAX_ATTEMPTS = 2;
 const DEBUG_DIR = '/tmp/flight-finder-debug';

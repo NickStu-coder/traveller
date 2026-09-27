@@ -1,4 +1,4 @@
-export interface CarCatalogPlace {
+interface CarCatalogPlace {
   id: string;
   kind: 'airport' | 'city';
   name: string;

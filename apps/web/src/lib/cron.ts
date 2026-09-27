@@ -77,7 +77,7 @@ async function runAndReschedule() {
   scheduleNext();
 }
 
-export function getNextScrapeTime(): string | null {
+function getNextScrapeTime(): string | null {
   return nextScrapeAt?.toISOString() ?? null;
 }
 

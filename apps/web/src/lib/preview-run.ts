@@ -71,5 +71,3 @@ export const PREVIEW_WALL_CLOCK_ERROR =
   'Preview hit the 12 minute wall-clock limit before all routes finished';
 export const ACTIVE_PREVIEW_STATUSES = ['pending', 'running'] as const;
 export const TERMINAL_PREVIEW_STATUSES = ['completed', 'failed'] as const;
-export type ActivePreviewStatus = typeof ACTIVE_PREVIEW_STATUSES[number];
-export type TerminalPreviewStatus = typeof TERMINAL_PREVIEW_STATUSES[number];

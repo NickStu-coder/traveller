@@ -1,6 +1,6 @@
 export const HOTEL_MAP_STYLES = ['liberty', 'positron', 'bright'] as const;
 export const HOTEL_MAP_BROWSER_PREFERENCES_KEY = 'flight-finder:hotel-map:solo:v1';
-export type HotelMapStyle = typeof HOTEL_MAP_STYLES[number];
+type HotelMapStyle = typeof HOTEL_MAP_STYLES[number];
 export interface HotelMapPreferences { version: 1; style: HotelMapStyle; enabled: boolean }
 export interface HotelMapSettings { config: HotelMapConfig; preferences: HotelMapPreferences; preferencesRevision?: number; account: boolean; actorScope?: string; error?: string }
 export function hotelMapActorScope(userId: string | null): string { return userId ? `user:${userId}` : 'solo'; }

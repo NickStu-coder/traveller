@@ -6,7 +6,7 @@ import { validateInferenceSelection } from './inference-selection';
 export class CliTestError extends Error {
   constructor(message: string, readonly status: number) { super(message); }
 }
-export function cliTestFailure(error: unknown): string {
+function cliTestFailure(error: unknown): string {
   const message = error instanceof Error ? error.message : '';
   if (/requires a newer version|upgrade.*(?:codex|cli)/i.test(message)) return 'This model requires a newer CLI. Update it and recheck models.';
   if (/credit balance|insufficient.*(?:credit|quota)|billing/i.test(message)) return 'The provider has insufficient credit. Check the connected account.';

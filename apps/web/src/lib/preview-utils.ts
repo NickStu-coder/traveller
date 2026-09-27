@@ -6,7 +6,7 @@ const MS_PER_DAY = 1000 * 60 * 60 * 24;
 /** Google Flights preview often stalls beyond ~9 months out. */
 export const PREVIEW_MAX_FUTURE_DAYS = 270;
 /** Show a UI warning when dates are far enough out that Google often stalls. */
-export const PREVIEW_FAR_FUTURE_WARN_DAYS = 120;
+const PREVIEW_FAR_FUTURE_WARN_DAYS = 120;
 
 /** Warn in the UI when a preview would fan out to this many scrapes. */
 export const PREVIEW_COMBO_WARN_THRESHOLD = 8;
@@ -80,7 +80,7 @@ export function countPreviewTasks(
   return originsCount * destinationsCount * datePairs.length;
 }
 
-export function farthestPreviewDate(fields: PreviewDateFields): Date {
+function farthestPreviewDate(fields: PreviewDateFields): Date {
   const isOneWay = fields.tripType === 'one_way';
   const datePairs = buildPreviewDatePairs(
     fields.outboundDates,
@@ -99,7 +99,7 @@ export function farthestPreviewDate(fields: PreviewDateFields): Date {
   return new Date(sorted[sorted.length - 1]! + 'T00:00:00Z');
 }
 
-export function daysUntilPreviewDate(date: Date, now = new Date()): number {
+function daysUntilPreviewDate(date: Date, now = new Date()): number {
   const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   const targetUtc = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
   return Math.ceil((targetUtc - todayUtc) / MS_PER_DAY);
@@ -140,7 +140,7 @@ export function isGoogleFlightsLoadingShell(text: string, resultsFound?: boolean
   return true;
 }
 
-export function googleFlightsLoadingShellMessage(origin: string, destination: string): string {
+function googleFlightsLoadingShellMessage(origin: string, destination: string): string {
   return `Google Flights did not return results for ${origin}→${destination} on these dates. Try again later or edit the search.`;
 }
 

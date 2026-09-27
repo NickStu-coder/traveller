@@ -48,7 +48,7 @@ export interface FlightSearchParams {
 
 export type NavigationSource = 'google_flights' | 'airline_direct' | 'skyscanner' | 'kayak';
 
-export const AGGREGATOR_SOURCES = ['google_flights', 'airline_direct', 'skyscanner', 'kayak'] as const;
+const AGGREGATOR_SOURCES = ['google_flights', 'airline_direct', 'skyscanner', 'kayak'] as const;
 
 export function isAggregatorSource(value: unknown): value is NavigationSource {
   return typeof value === 'string' && (AGGREGATOR_SOURCES as readonly string[]).includes(value);
@@ -90,9 +90,9 @@ export function isoDate(d: Date): string {
 //   2. At least one price-shaped token (symbol or bounded code adjacent to a
 //      digit). Lookaround prevents matching "TRY" inside INDUSTRY or "EUR"
 //      inside EURO trip.
-export const CURRENCY_MENTION_PATTERN = '€|£|\\$|EUR|GBP|USD|TRY|JPY|CHF';
-export const PRICE_TOKEN_PATTERN = '(?:€|£|\\$)\\s?\\d|(?<![A-Za-z])(?:EUR|GBP|USD|TRY|JPY|CHF)(?![A-Za-z])\\s?\\d';
-export const MIN_CURRENCY_MENTIONS = 3;
+const CURRENCY_MENTION_PATTERN = '€|£|\\$|EUR|GBP|USD|TRY|JPY|CHF';
+const PRICE_TOKEN_PATTERN = '(?:€|£|\\$)\\s?\\d|(?<![A-Za-z])(?:EUR|GBP|USD|TRY|JPY|CHF)(?![A-Za-z])\\s?\\d';
+const MIN_CURRENCY_MENTIONS = 3;
 
 export function hasFlightPriceSignal(text: string): boolean {
   const mentions = (text.match(new RegExp(CURRENCY_MENTION_PATTERN, 'g')) || []).length;

@@ -29,4 +29,3 @@ export function carDeliveryView(row: DeliveryRow, trackerId: string, now: Date) 
     createdAt: row.createdAt.toISOString(), nextAttemptAt: row.pending ? row.nextAttemptAt.toISOString() : null,
   }, trackerId);
 }
-export type CarDeliveryView = ReturnType<typeof validateCarDeliveryView>;

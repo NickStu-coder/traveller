@@ -60,10 +60,6 @@ export function themeId(family: string, mode: ThemeMode): ThemeId {
   return `${family}-${mode}`;
 }
 
-export function getFamily(id: string): ThemeFamily | undefined {
-  return THEME_FAMILIES.find((f) => f.id === getThemeFamily(id));
-}
-
 export function getThemeFromDom(): ThemeId {
   if (typeof document === 'undefined') return DEFAULT_THEME;
   const current = document.documentElement.getAttribute('data-theme');

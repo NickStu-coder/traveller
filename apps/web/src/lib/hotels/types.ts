@@ -1,7 +1,7 @@
 export const HOTEL_SOURCES = ['google_hotels', 'booking'] as const;
 export type HotelSource = typeof HOTEL_SOURCES[number];
 export const HOTEL_AMENITIES = ['parking', 'pool', 'pets', 'accessible'] as const;
-export type HotelAmenity = typeof HOTEL_AMENITIES[number];
+type HotelAmenity = typeof HOTEL_AMENITIES[number];
 export interface HotelRoom { adults: number; children: number[] }
 export interface HotelFilters {
   maxTotal: number | null;
@@ -58,7 +58,7 @@ export interface HotelOffer extends HotelStay {
   amenities: Partial<Record<HotelAmenity, boolean>>;
   match: 'exact' | 'approximate';
 }
-export interface HotelSourceError { source: HotelSource; checkIn: string; checkOut: string; message: string }
+interface HotelSourceError { source: HotelSource; checkIn: string; checkOut: string; message: string }
 export interface HotelSearchResult { offers: HotelOffer[]; errors: HotelSourceError[]; completed: number; total: number }
 export interface HotelSelection { propertyId: string; source: HotelSource; hotelName: string; propertyUrl: string; roomName: string | null; rateName: string | null; providerRateId?: string; seller: string; refundable: boolean | null; breakfast: boolean | null }
 export interface HotelTrackingOptions {
