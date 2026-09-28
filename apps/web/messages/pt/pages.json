@@ -65,6 +65,8 @@
     "passkeyUnavailable": "As chaves de acesso exigem o endereço seguro configurado para esta instância e um navegador compatível.",
     "unauthorized": "Não foi possível verificar as credenciais.",
     "forbidden": "Esta ação não é permitida.",
+    "localSetupRequired": "Crie o primeiro perfil de administrador e a senha compartilhada em um terminal neste computador ou servidor e recarregue esta página:",
+    "originNotAllowed": "Este endereço não está configurado para iniciar sessão. Peça ao administrador que o configure com flight-finder access origin <url>.",
     "conflict": "A configuração da conta ou da instância mudou. Confira o estado atual antes de continuar.",
     "rate_limited": "Muitas tentativas. Tente novamente mais tarde.",
     "cancelled": "A solicitação de chave de acesso foi cancelada.",

@@ -260,6 +260,8 @@ STUB
 
   # Create a fake "flight-finder-cli" download server using a local file
   mkdir -p "$HOME/fake-server"
+  mkdir -p "$HOME/fake-server/install"
+  cp /home/testuser/install/network.sh "$HOME/fake-server/install/network.sh"
   cp /home/testuser/flight-finder-cli "$HOME/fake-server/flight-finder-cli"
   # The CLI requires flight-finder-cli-flags.sh next to it (issue #72); ship it
   # in the fake-server so install.sh's parallel curl succeeds.
@@ -274,8 +276,9 @@ STUB
     export FLIGHT_FINDER_YES=1
     export FLIGHT_FINDER_URL="file://$HOME/fake-server"
     export HOST_PORT=3003
+    export FLIGHT_FINDER_SKIP_START=1
 
-    echo "" | bash /home/testuser/install.sh 2>&1 || true
+    echo "" | bash /home/testuser/install.sh 2>&1
   )
 
   # Verify: .fairtrail directory created

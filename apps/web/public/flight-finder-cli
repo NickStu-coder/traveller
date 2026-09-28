@@ -562,6 +562,7 @@ cmd_help() {
   echo "    access setup                           Create first Admin and shared password"
   echo "    access reset                           Replace the shared password locally"
   echo "    access list                            List Sidedoor principals"
+  echo "    access origin <url>                    Configure the exact public login address"
   echo "    access device <principal-id> [name]    Create an API device token"
   echo ""
   echo "  Terminal UI flags (forwarded to flight-finder-tui inside the container):"

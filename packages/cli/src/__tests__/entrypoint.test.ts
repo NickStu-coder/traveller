@@ -75,7 +75,17 @@ describe('flight CLI entrypoint alongside hotel and car commands', () => {
   it.each(['claim', 'recover'])('does not expose %s as a private access command', async (operation) => {
     const result = await runCli(['access', operation]);
     expect(result.code).toBe(1);
-    expect(result.stderr).toContain('Use access initialize, setup, reset, list, or device.');
+    expect(result.stderr).toContain('Use access');
+    expect(result.stderr).toContain('setup');
+    expect(result.stdout).toBe('');
+  });
+
+  it.each([[], ['https://finder.example/path'], ['https://user:secret@finder.example'], ['https://*.example'], ['https://finder.example', 'extra']].map(args => ({ args })))('rejects invalid origin configuration before accessing the database: $args', async ({ args }) => {
+    const result = await runCli(['access', 'origin', ...args]);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toMatch(/origin|Origin/);
+    expect(result.stderr).not.toContain('secret');
+    expect(result.stderr).not.toContain('Prisma');
     expect(result.stdout).toBe('');
   });
 

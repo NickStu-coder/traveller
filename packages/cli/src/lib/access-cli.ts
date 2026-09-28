@@ -4,7 +4,7 @@ export function registerAccessCommands(program: Command): void {
   program
     .command("access <operation> [principalId] [deviceName]")
     .description(
-      "Local access administration: initialize, setup, reset, list, device",
+      "Local access administration: initialize, setup, reset, list, device, origin",
     )
     .action(
       async (
@@ -17,8 +17,20 @@ export function registerAccessCommands(program: Command): void {
         );
         let database: { $disconnect(): Promise<void> } | undefined;
         try {
+          if (operation === 'origin') {
+            if (!principalId || deviceName) throw new Error('Use access origin <http(s)://hostname[:port]>');
+            const { accessOrigin } = await import('../../../../apps/web/src/lib/sidedoor/access/network/configuration');
+            const publicBaseUrl = accessOrigin(principalId);
+            const { prisma } = await import('@/lib/prisma');
+            database = prisma;
+            await prisma.extractionConfig.upsert({
+              where: { id: 'singleton' }, create: { id: 'singleton', publicBaseUrl }, update: { publicBaseUrl },
+            });
+            console.log(`Access origin configured: ${publicBaseUrl}. Open this address to sign in. Additional addresses require SIDEDOOR_PASSWORD_ORIGINS.`);
+            return;
+          }
           if (!['initialize', 'setup', 'reset', 'list', 'device', 'prepare', 'finalize'].includes(operation))
-            throw new Error('Use access initialize, setup, reset, list, or device.');
+            throw new Error('Use access initialize, setup, reset, list, device, or origin.');
           if (operation === "prepare" || operation === "finalize") {
             if (args.length !== 1)
               throw new Error(`Use access ${operation}.`);

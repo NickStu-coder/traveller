@@ -236,32 +236,21 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 1b. Check if port is available
+# 1b. Load network setup and resolve the effective port before generating Compose.
 # ---------------------------------------------------------------------------
-port_in_use() {
-  if command -v lsof &>/dev/null; then
-    lsof -i :"$1" &>/dev/null
-  elif command -v ss &>/dev/null; then
-    ss -tlnp | grep -q ":$1 "
-  elif command -v netstat &>/dev/null; then
-    netstat -tlnp 2>/dev/null | grep -q ":$1 "
-  else
-    return 1
+if [ -n "${FLIGHT_FINDER_CLI_SOURCE:-}" ]; then
+  NETWORK_HELPER="$(dirname "$FLIGHT_FINDER_CLI_SOURCE")/install/network.sh"
+  [ -f "$NETWORK_HELPER" ] || fail "Missing installer network helper: $NETWORK_HELPER"
+  source "$NETWORK_HELPER"
+else
+  NETWORK_HELPER=$(mktemp)
+  if ! curl -fsSL "$BASE_URL/install/network.sh" -o "$NETWORK_HELPER"; then
+    rm -f "$NETWORK_HELPER"
+    fail "Could not download installer network configuration"
   fi
-}
-
-while port_in_use "$HOST_PORT"; do
-  warn "Port ${HOST_PORT} is already in use."
-  if [ "${FLIGHT_FINDER_YES:-}" = "1" ]; then
-    HOST_PORT=$((HOST_PORT + 1))
-  else
-    echo ""
-    read -rp "  Enter a different port [default: $((HOST_PORT + 1))]: " NEW_PORT < /dev/tty
-    HOST_PORT="${NEW_PORT:-$((HOST_PORT + 1))}"
-  fi
-done
-
-ok "Port ${HOST_PORT} is available"
+  source "$NETWORK_HELPER"
+  rm -f "$NETWORK_HELPER"
+fi
 
 # ---------------------------------------------------------------------------
 # 2. Migrate from old install location
@@ -354,6 +343,7 @@ fi
 # 3. Create install directory + write docker-compose.yml
 # ---------------------------------------------------------------------------
 mkdir -p "$FLIGHT_FINDER_DIR"
+configure_install_network
 
 # When this install was migrated from ~/.fairtrail, keep `name: fairtrail` at
 # the top of the generated compose. That maps the project name back to the
@@ -419,6 +409,8 @@ services:
       CHROME_PATH: /usr/bin/chromium-browser
       NODE_ENV: production
       SELF_HOSTED: "true"
+      APP_URL: \${APP_URL:-http://localhost:${HOST_PORT}}
+      SIDEDOOR_PASSWORD_ORIGINS: '\${SIDEDOOR_PASSWORD_ORIGINS-${INSTALL_PASSWORD_ORIGINS}}'
 $EXTRA_HOSTS_BLOCK
     volumes:
       - app-data:/app/data
@@ -602,6 +594,8 @@ if [ -f "$FLIGHT_FINDER_DIR/.env" ]; then
     ok "Added ${_key} to existing .env"
   }
   append_env_if_missing "CLAUDE_CODE_OAUTH_TOKEN" "${CLAUDE_SETUP_TOKEN:-}" "# Claude Code setup token (long-lived, from 'claude setup-token')"
+  append_env_if_missing "APP_URL" "${APP_URL:-}"
+  append_env_if_missing "SIDEDOOR_PASSWORD_ORIGINS" "${SIDEDOOR_PASSWORD_ORIGINS:-}"
   if [ "$ENV_ADDED" -eq 0 ]; then
     warn "Existing .env found — no new keys to add, keeping it as is"
   else
@@ -620,6 +614,8 @@ else
     echo "# Host port — the port YOU access in the browser."
     echo "# The container always listens on 3003 internally; do NOT set PORT."
     echo "HOST_PORT=${HOST_PORT}"
+    [ -z "${APP_URL:-}" ] || printf 'APP_URL=%s\n' "$APP_URL"
+    [ -z "${SIDEDOOR_PASSWORD_ORIGINS:-}" ] || printf 'SIDEDOOR_PASSWORD_ORIGINS=%s\n' "$SIDEDOOR_PASSWORD_ORIGINS"
     echo ""
     if [ -n "${CLAUDE_SETUP_TOKEN:-}" ]; then
       echo ""
@@ -819,6 +815,7 @@ fi
 
 
 CLAIM_CODE=""
+ACCESS_SETUP_REQUIRED=false
 if [ "${FLIGHT_FINDER_SKIP_START:-}" = "1" ]; then
   ok "Skipping container start (test mode)"
 else
@@ -828,6 +825,15 @@ else
     fail "Access preparation failed. The new app was not started."
   fi
   printf '%s\n' "$PREPARE_OUTPUT"
+  if ! printf '%s\n' "$PREPARE_OUTPUT" | grep -q '"role": "owner"'; then
+    if [ -t 0 ] || (tty -s </dev/tty 2>/dev/null); then
+      printf 'Create the first Admin profile and shared password.\n'
+      $DC run --rm --no-deps --entrypoint node web /app/packages/cli/dist/index.js access setup </dev/tty
+    else
+      ACCESS_SETUP_REQUIRED=true
+      warn "Local password setup is required. Run 'flight-finder access setup' in a terminal. Sign-in remains disabled until setup is complete."
+    fi
+  fi
   CLAIM_CODE=$(printf '%s\n' "$PREPARE_OUTPUT" | sed -nE 's/.*"code"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' | tail -n 1)
   $DC up -d 2>&1 | while IFS= read -r line; do
     printf "  ${DIM}%s${RESET}\n" "$line"
@@ -840,19 +846,8 @@ else
   # ---------------------------------------------------------------------------
   info "Waiting for the app to start..."
 
-  RETRIES=60
-  until curl -sf "http://localhost:${HOST_PORT}/api/health" >/dev/null 2>&1; do
-    RETRIES=$((RETRIES - 1))
-    if [ "$RETRIES" -le 0 ]; then
-      warn "App didn't respond in 60s — run 'flight-finder logs' to debug"
-      break
-    fi
-    sleep 1
-  done
-
-  if [ "$RETRIES" -gt 0 ]; then
-    ok "Flight Finder is running"
-  fi
+  wait_for_install_access
+  ok "Flight Finder is running"
 fi
 
 # ---------------------------------------------------------------------------
@@ -861,7 +856,11 @@ fi
 echo ""
 printf "${BOLD}  ┌──────────────────────────────────────────────────┐${RESET}\n"
 printf "${BOLD}  │                                                  │${RESET}\n"
-printf "${BOLD}  │${RESET}   ${CYAN}Flight Finder is ready${RESET}                            ${BOLD}│${RESET}\n"
+if [ "$ACCESS_SETUP_REQUIRED" = true ]; then
+  printf '  Flight Finder is installed. Local password setup is required.\n'
+else
+  printf "${BOLD}  │${RESET}   ${CYAN}Flight Finder is ready${RESET}                            ${BOLD}│${RESET}\n"
+fi
 printf "${BOLD}  │${RESET}                                                  ${BOLD}│${RESET}\n"
 printf "${BOLD}  │${RESET}   Open:  ${BOLD}http://localhost:${HOST_PORT}${RESET}                  ${BOLD}│${RESET}\n"
 printf "${BOLD}  │${RESET}                                                  ${BOLD}│${RESET}\n"
@@ -912,14 +911,7 @@ printf "    ${DIM}4)${RESET} Tailscale                     ${DIM}(private mesh; 
 printf "    ${DIM}5)${RESET} Skip / decide later\n"
 echo ""
 
-# Best-effort LAN IP for option 2.
-lan_ip() {
-  if [ "$OS" = "macos" ]; then
-    ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true
-  else
-    hostname -I 2>/dev/null | awk '{print $1}' || true
-  fi
-}
+print_install_connections
 
 REACH_CHOICE="1"
 if [ "${FLIGHT_FINDER_YES:-}" != "1" ]; then
@@ -933,7 +925,7 @@ case "$REACH_CHOICE" in
     if [ "$CURRENT_BIND_ADDRESS" = "127.0.0.1" ]; then
       warn "Local network access is disabled. Use the desktop Local network option to change the binding."
     elif [ -n "$LAN_IP" ]; then
-      ok "On your network at: ${BOLD}http://${LAN_IP}:${HOST_PORT}${RESET}"
+      info "LAN address: ${BOLD}http://${LAN_IP}:${HOST_PORT}${RESET} (must be in the configured origins)"
       printf "  ${DIM}Open that on a phone on the same WiFi. It is http, so the phone can view\n"
       printf "  it but cannot install it as an app — use option 3 or 4 for that.${RESET}\n"
     else
@@ -944,7 +936,7 @@ case "$REACH_CHOICE" in
     printf "  ${DIM}This opens a temporary ${RESET}${BOLD}public${RESET}${DIM} https URL to this machine. Anyone with\n"
     printf "  the URL can reach it; it goes away when you stop the tunnel.${RESET}\n"
     if command -v cloudflared &>/dev/null; then
-      info "Starting a Cloudflare quick tunnel — copy the https URL, Ctrl+C to stop."
+      info "Starting a Cloudflare quick tunnel. Configure its URL with 'flight-finder access origin <url>' in another terminal before signing in."
       cloudflared tunnel --url "http://localhost:${HOST_PORT}" || warn "Tunnel exited."
     else
       warn "cloudflared isn't installed."
