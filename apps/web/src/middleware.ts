@@ -61,12 +61,25 @@ export async function middleware(request: NextRequest) {
         ? `${forwardedProtocol}:`
         : request.nextUrl.protocol;
     const expectedOrigin = `${protocol}//${request.headers.get("host") ?? request.nextUrl.host}`;
-    if (
-      request.headers.get("sec-fetch-site") === "cross-site" ||
-      (origin !== null && origin !== expectedOrigin)
-    )
+    const crossSite = request.headers.get("sec-fetch-site") === "cross-site";
+    let rejected = crossSite;
+    if (!crossSite && origin !== null && origin !== expectedOrigin) {
+      // A proxy may rewrite Host. Only the shared configured-origin policy can admit it.
+      const headers = new Headers(request.headers);
+      headers.set('content-type', 'application/json');
+      headers.delete('content-length');
+      try {
+        const check = await (await accessHandler())(new Request(request.url, {
+          method: 'POST', headers, body: '{}', signal: request.signal,
+        }), 'check-origin');
+        rejected = !check.ok;
+      } catch {
+        return NextResponse.json({ ok: false, error: 'Access configuration is unavailable' }, { status: 503 });
+      }
+    }
+    if (rejected)
       return NextResponse.json(
-        { ok: false, error: "Cross-origin changes are not allowed" },
+        { ok: false, error: pathname.startsWith('/api/access/') ? 'origin_not_allowed' : "Cross-origin changes are not allowed" },
         { status: 403 },
       );
   }

@@ -29,6 +29,7 @@ jobs:
       - run: node --test scripts/docker-publication.test.cjs scripts/desktop-publication.test.cjs
       - run: bash scripts/install-flow-test.sh
       - run: python3 scripts/test_access_preparation.py
+      - run: python3 scripts/testing/test_installer_network.py -v
       - run: bash scripts/cli-runtime-test.sh
       - run: python3 -m unittest discover -s scripts -p 'test_deploy*.py' -v
 
@@ -104,7 +105,7 @@ jobs:
 
   integration:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Build and stage the exact commit on this disposable runner
@@ -121,6 +122,11 @@ jobs:
           npm ci
           npx playwright install chromium --with-deps
           bash scripts/browser-smoke-test.sh http://localhost:3399
+      - name: Fresh installer and browser access through local, LAN and HTTPS addresses
+        run: |
+          image=$(docker image inspect --format '{{.Id}}' flight-finder-test:latest)
+          node scripts/testing/installer-browser.mjs "$image"
+          node scripts/testing/installer-browser.mjs "$image" --desktop
       - name: Cleanup only this runner's test containers
         if: always()
         run: docker compose -p flight-finder-integration-test -f scripts/docker-compose.integration.yml down -v --remove-orphans

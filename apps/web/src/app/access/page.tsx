@@ -1,6 +1,7 @@
 import { AccessScreen } from './AccessScreen';
 import { InvitationScreen } from './InvitationScreen';
 import { sanitizeNext } from '@/lib/safe-next';
+import { sharedAccessStore } from '@/lib/sidedoor/access/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,5 +11,6 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
   const hosted = process.env.SELF_HOSTED !== 'true';
   if (hosted && params.mode === 'invite') return <InvitationScreen next={next ?? '/'} />;
   const mode = hosted ? (params.mode === 'recover' ? 'recover' : 'login') : 'household';
-  return <AccessScreen next={next} mode={mode} hosted={hosted} />;
+  const needsLocalSetup = !hosted && !(await sharedAccessStore.admissionPolicy()).hasOwner;
+  return <AccessScreen next={next} mode={mode} hosted={hosted} needsLocalSetup={needsLocalSetup} />;
 }

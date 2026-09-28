@@ -54,11 +54,14 @@ hotels and cars with structured forms.
 curl -fsSL https://flight-finder.org/install.sh | bash
 ```
 
-If you have [Claude Code](https://docs.anthropic.com/en/docs/claude-code) or [Codex](https://github.com/openai/codex) installed, the setup script detects it automatically. Otherwise, it asks you to paste an API key.
+The installer asks you to create the first Admin profile and shared password in
+your terminal. An unattended or desktop installation keeps sign-in disabled until
+you run `flight-finder access setup` locally, then reload the browser. Configure an AI
+provider in browser setup, or use the CLI subscription detected by the installer.
 
 Once it finishes:
 
-1. Open [localhost:3003](http://localhost:3003) and choose **Flights**, **Hotels**, or **Cars**.
+1. Open the address printed by the installer, enter the shared password, and select your Admin profile. Complete setup, then choose **Flights**, **Hotels**, or **Cars**.
 2. Search for a route, stay, or rental, review the details, and select what to track.
 3. Follow price history and configure alerts. Hotels and cars do not require a flight.
 
@@ -207,6 +210,26 @@ Every option below is a terminal command, so a headless VPS can both run **and**
 - **Domain + auto HTTPS** (permanent): point a domain at the server and put [Caddy](https://caddyfile.com) in front. A ready Caddyfile lives at the repo root; it reverse-proxies `localhost:3003` and provisions Let's Encrypt TLS automatically. Replace the site address with your domain.
 
 The installer offers to start the Cloudflare quick tunnel for you at the end, and these same methods are walked step by step in **Instance settings -> Reach it from other devices** inside the app.
+
+Before signing in through a tunnel or custom hostname, configure its exact origin
+from a terminal on the server:
+
+```bash
+flight-finder access origin https://flights.yourdomain.com
+```
+
+This command also repairs a login blocked by an unconfigured address. Include
+the port when it is nonstandard. The saved URL takes precedence over `APP_URL`
+and also supplies notification links. Temporary tunnel URLs need reconfiguration
+when they change. Changing the hostname changes the passkey relying party;
+register passkeys again at the new hostname.
+
+The installer configures local aliases and the detected LAN IPv4 address for its
+selected port. A localhost-only desktop binding excludes LAN access. To restrict
+or extend the aliases, set `SIDEDOOR_PASSWORD_ORIGINS` to a JSON array of exact
+origins in the installed configuration and recreate the web container. An explicit
+list replaces the detected aliases; `[]` permits only the canonical origin.
+Rerunning the installer preserves saved ports and explicit origin settings.
 
 Multiple people connect to one instance with multi user mode (see the Multi user mode section below). Everyone enters with the same app password or a saved passkey, then chooses a profile. Trackers, avatars, and light or dark theme remain personal to each profile.
 
