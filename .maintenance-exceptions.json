@@ -72,30 +72,6 @@
       "kind": "binaries",
       "name": "flight-finder-tui",
       "reason": "Installed terminal client exercised by the container smoke script."
-    },
-    {
-      "tool": "knip",
-      "mode": "production",
-      "file": "apps/web/src/lib/rate-limit.ts",
-      "kind": "files",
-      "name": "apps/web/src/lib/rate-limit.ts",
-      "reason": "Retained test-only contract pending the consumer and replacement-coverage review in https://github.com/affromero/flight-finder/issues/242."
-    },
-    {
-      "tool": "knip",
-      "mode": "production",
-      "file": "apps/web/src/lib/scraper/cli-cancellation.ts",
-      "kind": "files",
-      "name": "apps/web/src/lib/scraper/cli-cancellation.ts",
-      "reason": "Retained test-only contract pending the consumer and replacement-coverage review in https://github.com/affromero/flight-finder/issues/242."
-    },
-    {
-      "tool": "knip",
-      "mode": "production",
-      "file": "apps/web/src/lib/travel/resources.ts",
-      "kind": "files",
-      "name": "apps/web/src/lib/travel/resources.ts",
-      "reason": "Retained test-only contract pending the consumer and replacement-coverage review in https://github.com/affromero/flight-finder/issues/242."
     }
   ]
 }

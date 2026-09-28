@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Browser } from 'playwright';
 import { currentTravelExecution, TravelCleanupError, TravelExecution, travelDelay, withTravelExecution } from './execution';
-import { travelNetworkResource } from './resources';
 
 const execution = (jobId: string) => new TravelExecution({ jobId, generation: 1, resource: 'browser' });
 
@@ -64,21 +63,5 @@ describe('travel execution lifetime', () => {
     const reason = new AggregateError([new Error('Lease replaced')], 'Cancelled by coordinator');
     scope.abort(reason);
     await expect(withTravelExecution(scope, async () => 'unexpected')).rejects.toBe(reason);
-  });
-});
-
-describe('travel network topology', () => {
-  it('places every search on one resource when VPN changes all host traffic', () => {
-    const topology = { vpnEnabled: true, systemWide: true };
-    expect(travelNetworkResource(topology, true)).toBe('network');
-    expect(travelNetworkResource(topology, false)).toBe('network');
-  });
-  it('separates direct browsing from a SOCKS tunnel while serializing tunnel clients', () => {
-    const topology = { vpnEnabled: true, systemWide: false };
-    expect(travelNetworkResource(topology, true)).toBe('vpn');
-    expect(travelNetworkResource(topology, false)).toBe('browser');
-  });
-  it('does not impose a host-wide lock when VPN is disabled', () => {
-    expect(travelNetworkResource({ vpnEnabled: false, systemWide: true }, false)).toBe('browser');
   });
 });

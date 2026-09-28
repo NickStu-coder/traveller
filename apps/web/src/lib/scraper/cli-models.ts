@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { linkCliCancellation } from './cli-cancellation';
 import { cliEnvironment } from './cli-environment';
 import { isReasoningEffort, validModelId, type CliCatalog, type CliModel, type ReasoningSelection } from './cli-model-types';
 import { CLI_PROVIDERS } from './provider-metadata';
@@ -24,7 +25,8 @@ function command(provider: string, args: string[], signal?: AbortSignal): Promis
       } catch { child.kill('SIGKILL'); }
     };
     const timer = setTimeout(() => { stop(); reject(new CliModelError('CLI readiness check timed out')); }, 8000);
-    const abort = () => { clearTimeout(timer); stop(); reject(signal?.reason); };
+    const abort = () => { clearTimeout(timer); reject(signal?.reason); };
+    const unlinkCancellation = linkCliCancellation(child, signal);
     signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) abort();
     const read = (chunk: Buffer) => {
@@ -33,9 +35,10 @@ function command(provider: string, args: string[], signal?: AbortSignal): Promis
       output += chunk.toString();
     };
     child.stdout.on('data', read); child.stderr.on('data', read);
-    child.on('error', () => { signal?.removeEventListener('abort', abort); clearTimeout(timer); reject(new CliModelError('CLI is not installed or could not start')); });
+    child.on('error', () => { unlinkCancellation(); signal?.removeEventListener('abort', abort); clearTimeout(timer); reject(new CliModelError('CLI is not installed or could not start')); });
     child.on('close', (code, exitSignal) => {
       clearTimeout(timer);
+      unlinkCancellation();
       signal?.removeEventListener('abort', abort);
       if (failure) reject(failure);
       else if (exitSignal) reject(new CliModelError('CLI readiness check timed out'));
