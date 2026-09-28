@@ -536,17 +536,18 @@ test_tui_preserves_multi_word_arg_boundaries() {
 # Test cases — cmd_update (issue #72 v1)
 # ---------------------------------------------------------------------------
 
-test_update_pulls_then_force_recreates_web() {
+test_update_rejects_unvalidated_bundle() {
   for rt in docker_v2 docker_v1 podman_native podman_delegated podman_pc; do
     setup_runtime "$rt"
-    run_cli update
+    EXPECT_NONZERO=1 run_cli update
     LAST_RUNTIME="$rt"; LAST_CMD="update"
-    assert_recorded "update pulls web" \
-      ' pull web'
-    assert_recorded "update brings up db/redis with --no-recreate" \
-      ' up -d --no-recreate db redis'
-    assert_recorded "update force-recreates web (#72 v1)" \
-      ' up -d --force-recreate --no-deps --remove-orphans web'
+    if [ "$LAST_EXIT" -ne 0 ]; then
+      pass "update rejects the unsupported downloaded CLI"
+    else
+      fail "update accepted an unvalidated updater bundle"
+    fi
+    assert_not_recorded "invalid update leaves running services unchanged" \
+      ' (pull|build|up|stop|run) '
   done
 }
 
@@ -879,7 +880,7 @@ test_tui_list_podman_pc
 test_tui_headless_podman_delegated
 test_tui_list_podman_delegated
 test_tui_preserves_multi_word_arg_boundaries
-test_update_pulls_then_force_recreates_web
+test_update_rejects_unvalidated_bundle
 test_start_calls_up_dash_d
 test_logs_calls_dc_logs_f_web
 test_no_arg_runs_full_foreground_pipeline

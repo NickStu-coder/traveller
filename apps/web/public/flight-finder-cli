@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Flight Finder updater protocol: 1
 
 # Detect deprecated `fairtrail` invocation and print a one line notice.
 # Set FLIGHT_FINDER_SILENCE_RENAME=1 to suppress. Sunset target: v1.0.
@@ -298,70 +299,33 @@ cmd_status() {
 }
 
 cmd_update() {
-  printf "${CYAN}${BOLD}▸${RESET} Updating Flight Finder...\n"
-
-  # Detect where the running binary lives (don't hardcode ~/.local/bin).
-  # Try canonical first, then the legacy `fairtrail` install path so users on
-  # the pre-rename binary update in place without reinstalling.
-  CLI_PATH=$(command -v flight-finder 2>/dev/null || command -v fairtrail 2>/dev/null || echo "$HOME/.local/bin/flight-finder")
-  CLI_DIR=$(dirname "$CLI_PATH")
-  mkdir -p "$CLI_DIR"
-
-  # Update CLI (download to temp, atomic move)
-  if curl -fsSL "$BASE_URL/flight-finder-cli" -o "${CLI_PATH}.tmp"; then
-    mv -f "${CLI_PATH}.tmp" "$CLI_PATH"
-    chmod +x "$CLI_PATH"
-    printf "${GREEN}${BOLD}✓${RESET} CLI updated\n"
-  else
-    rm -f "${CLI_PATH}.tmp"
-    printf "${YELLOW}${BOLD}!${RESET} CLI update skipped (couldn't reach %s)\n" "$BASE_URL"
+  command -v python3 >/dev/null || { printf >&2 'Update requires Python 3. Install it and retry.\n'; return 1; }
+  if [ -n "${FLIGHT_FINDER_UPDATE_STAGE:-}" ]; then
+    [ "$(dirname "$0")" = "$FLIGHT_FINDER_UPDATE_STAGE" ] || { printf >&2 'Invalid updater stage.\n'; return 1; }
+    exec python3 "$FLIGHT_FINDER_UPDATE_STAGE/update.py" "$FLIGHT_FINDER_DIR" "${FLIGHT_FINDER_UPDATE_TARGET:?}" "$FLIGHT_FINDER_UPDATE_STAGE" $_DC $COMPOSE_FILES
   fi
-
-  # Refresh the compose-flavor flag helper alongside the CLI (issue #72).
-  # If the CLI updated but the helper didn't, podman-compose users would
-  # fall through to undefined `_compose_exec_flags`. Treat as best-effort:
-  # the source guard at the top of the CLI errors out clearly if missing.
-  FLAGS_PATH="${CLI_DIR}/flight-finder-cli-flags.sh"
-  if curl -fsSL "$BASE_URL/flight-finder-cli-flags.sh" -o "${FLAGS_PATH}.tmp"; then
-    mv -f "${FLAGS_PATH}.tmp" "$FLAGS_PATH"
-  else
-    rm -f "${FLAGS_PATH}.tmp"
-    printf "${YELLOW}${BOLD}!${RESET} Flag helper update skipped (couldn't reach %s)\n" "$BASE_URL"
-  fi
-
-  # Try pulling pre-built image; fall back to local build if unavailable
-  if ! dc pull web 2>&1 | while IFS= read -r line; do
-    printf "  ${DIM}%s${RESET}\n" "$line"
-  done; then
-    printf "${YELLOW}${BOLD}!${RESET} No pre-built image for this architecture, building locally...\n"
-    cd "$FLIGHT_FINDER_DIR"
-    if [ -d repo/.git ]; then
-      git -C repo pull --ff-only -q 2>/dev/null || true
-    else
-      git clone --depth 1 -q https://github.com/affromero/flight-finder.git repo
+  local target asset
+  target=$(command -v flight-finder 2>/dev/null || command -v fairtrail 2>/dev/null || printf '%s' "$0")
+  target=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$target")
+  stage=$(mktemp -d "$(dirname "$target")/.flight-finder-update.XXXXXX")
+  chmod 700 "$stage"
+  trap 'rm -f "$stage/flight-finder-cli" "$stage/flight-finder-cli-flags.sh" "$stage/network.sh" "$stage/update.py"; rmdir "$stage"' EXIT
+  for asset in flight-finder-cli flight-finder-cli-flags.sh install/network.sh install/update.py; do
+    if ! curl --max-time 60 -fsSL "$BASE_URL/$asset" -o "$stage/${asset##*/}"; then
+      printf >&2 'Updater download failed. Services and configuration were not changed.\n'
+      return 1
     fi
-    dc build web 2>&1 | while IFS= read -r line; do
-      printf "  ${DIM}%s${RESET}\n" "$line"
-    done
-  fi
-
-  # Ensure db/redis are running but do not touch them.
-  dc up -d --no-recreate db redis 2>&1 | while IFS= read -r line; do
-    printf "  ${DIM}%s${RESET}\n" "$line"
+    [ -s "$stage/${asset##*/}" ] || { printf >&2 'Updater asset is empty. Services were not changed.\n'; return 1; }
   done
-
-  # Force-recreate the web container so the freshly-pulled (or rebuilt)
-  # image actually replaces the running one. Without --force-recreate,
-  # podman-compose does not always detect that :latest now points to a
-  # different digest and skips the recreate, leaving the user on the old
-  # image even though the pull succeeded (issue #72).
-  dc stop web
-  dc run --rm --no-deps -e SIDEDOOR_PREPARE_ONLY=true web
-  dc up -d --force-recreate --no-deps --remove-orphans web 2>&1 | while IFS= read -r line; do
-    printf "  ${DIM}%s${RESET}\n" "$line"
-  done
-
-  printf "${GREEN}${BOLD}✓${RESET} Updated and restarted\n"
+  grep -qx '# Flight Finder updater protocol: 1' "$stage/flight-finder-cli" || { printf >&2 'Unsupported updater protocol.\n'; return 1; }
+  bash -n "$stage/flight-finder-cli"
+  bash -n "$stage/flight-finder-cli-flags.sh"
+  bash -n "$stage/network.sh"
+  bash -c 'source "$1"; declare -F _compose_exec_flags >/dev/null' update "$stage/flight-finder-cli-flags.sh"
+  bash -c 'source "$1"; declare -F derive_install_origins >/dev/null' update "$stage/network.sh"
+  python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read())' "$stage/update.py"
+  export FLIGHT_FINDER_UPDATE_STAGE="$stage" FLIGHT_FINDER_UPDATE_TARGET="$target"
+  exec bash "$stage/flight-finder-cli" update
 }
 
 cmd_search() {

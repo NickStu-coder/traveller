@@ -97,6 +97,14 @@ describe('flight CLI entrypoint alongside hotel and car commands', () => {
     expect(result.stdout).toBe('');
   });
 
+  it('rejects arguments to read-only origin inspection before database access', async () => {
+    const result = await runCli(['access', 'origins', 'extra']);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain('without arguments');
+    expect(result.stderr).not.toContain('Prisma');
+    expect(result.stdout).toBe('');
+  });
+
   it('reports a JSON database error from the flight handler', async () => {
     const result = await runCli(['--json']);
     expect(result.code).toBe(1);

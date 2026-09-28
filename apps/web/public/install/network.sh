@@ -54,9 +54,16 @@ configure_install_network() {
     [[ "$HOST_PORT" =~ ^[1-9][0-9]{0,4}$ ]] && [ "$HOST_PORT" -le 65535 ] || fail "HOST_PORT must be between 1 and 65535, without leading zeros"
   done
   INSTALL_BIND_ADDRESS="${HOST_BIND_ADDRESS:-$(saved_network_value HOST_BIND_ADDRESS)}"
+  derive_install_origins
+  ok "Using port ${HOST_PORT}"
+}
+
+# Shared by fresh installation and host-side update migration. Never infer trust
+# from a browser request or a container's bridge address.
+derive_install_origins() {
   INSTALL_LAN_IP=""
   INSTALL_PASSWORD_ORIGINS="[\"http://localhost:${HOST_PORT}\",\"http://127.0.0.1:${HOST_PORT}\",\"http://[::1]:${HOST_PORT}\""
-  if [ "$INSTALL_BIND_ADDRESS" != 127.0.0.1 ]; then
+  if [ "$INSTALL_BIND_ADDRESS" != 127.0.0.1 ] && [ "$INSTALL_BIND_ADDRESS" != ::1 ]; then
     INSTALL_LAN_IP=$(lan_ip)
     if [[ "$INSTALL_LAN_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
       INSTALL_PASSWORD_ORIGINS+=",\"http://${INSTALL_LAN_IP}:${HOST_PORT}\""
@@ -65,7 +72,6 @@ configure_install_network() {
     fi
   fi
   INSTALL_PASSWORD_ORIGINS+="]"
-  ok "Using port ${HOST_PORT}"
 }
 
 wait_for_install_access() {

@@ -417,6 +417,38 @@ For Skyscanner and Kayak to be production grade you would need residential proxi
 
 ## Managing Flight Finder
 
+### Updating an installed instance
+
+Run `flight-finder update` on the machine hosting the installation. The updater
+requires Python 3 and a Compose provider that supports JSON configuration output
+and `--no-env-resolution`. Unsupported providers stop before changing services.
+
+For installations using the historical updater, run the command twice for this
+upgrade. The first invocation downloads the new CLI but continues executing its
+old shell function. The second invocation runs the configuration migration.
+Subsequent updates refresh and execute the updater within one invocation.
+
+When no origin policy exists, the migration adds local login addresses using
+the actual published port. All-interface installations also include the detected
+LAN IPv4 address. Loopback-only desktop installations exclude LAN addresses.
+Explicit `APP_URL`, `SIDEDOOR_PASSWORD_ORIGINS` (including `[]`), and a canonical
+URL saved with `access origin` remain unchanged. Custom hostnames and tunnel URLs
+still need `flight-finder access origin https://your-hostname`.
+
+The updater preserves existing configuration bytes and keeps a private
+`.env.before-update-*` backup when it adds origins. It checks health and the
+configured backend login policy before reporting success. External DNS, TLS,
+and proxy routing need separate verification. Missing owner setup is reported
+as an error with the local setup command.
+
+Failed pulls leave the running web service alone. Failures during database
+preparation or web recreation can interrupt service. Inspect `flight-finder logs`,
+fix the reported failure, then retry the update. Configuration backups do not
+roll back database migrations; check schema compatibility before reverting an image.
+An interrupted or timed-out updater retains its lock because a container operation
+may still be running. Inspect the runtime and stop that operation before removing
+the empty lock directory identified in the error and retrying.
+
 ```
 Usage: flight-finder [command]
 

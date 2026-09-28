@@ -193,29 +193,26 @@ test_old_dir_migration() {
 }
 
 # ──────────────────────────────────────────────────────────────────
-# Test 5: flight-finder-cli update uses command -v, not hardcoded path
+# Test 5: Missing updater prerequisites leave services untouched
 # ──────────────────────────────────────────────────────────────────
 test_cli_update_path() {
-  local cli="/home/testuser/flight-finder-cli"
-
-  # Check cmd_update function uses command -v (canonical flight-finder name).
-  # Widened to -A8 to allow a multi-line comment explaining the legacy fallback.
-  if grep -A8 'cmd_update' "$cli" | grep -q 'command -v flight-finder'; then
-    pass "CLI update uses 'command -v' for self-path detection"
+  local sandbox output code
+  sandbox=$(mktemp -d)
+  mkdir "$sandbox/bin" "$sandbox/install"
+  printf 'services: {}\n' > "$sandbox/install/docker-compose.yml"
+  printf '#!/bin/sh\ncase "$*" in "compose version") exit 0;; *) echo changed >> "$TEST_ACTIONS";; esac\n' > "$sandbox/bin/docker"
+  printf '#!/bin/sh\nexit 22\n' > "$sandbox/bin/curl"
+  chmod +x "$sandbox/bin/docker" "$sandbox/bin/curl"
+  code=0
+  output=$(PATH="$sandbox/bin:$PATH" TEST_ACTIONS="$sandbox/actions" FLIGHT_FINDER_DIR="$sandbox/install" \
+    bash /home/testuser/flight-finder-cli update 2>&1) || code=$?
+  if [ "$code" -ne 0 ] && [ ! -e "$sandbox/actions" ] && printf '%s' "$output" | grep -Eq 'Python 3|download failed'; then
+    pass "Updater reports missing prerequisites without changing services"
   else
-    fail "CLI update hardcodes path" "should use command -v"
+    fail "Updater prerequisite failure was not safe" "$output"
   fi
-
-  # Check it doesn't swallow curl errors
-  local update_section
-  update_section=$(sed -n '/^cmd_update/,/^cmd_/p' "$cli")
-  local curl_line
-  curl_line=$(echo "$update_section" | grep 'curl.*flight-finder-cli' | head -1)
-  if echo "$curl_line" | grep -q '2>/dev/null'; then
-    fail "CLI update swallows curl errors" "2>/dev/null found on download line"
-  else
-    pass "CLI update shows curl errors"
-  fi
+  rm -f "$sandbox/bin/docker" "$sandbox/bin/curl" "$sandbox/install/docker-compose.yml" "$sandbox/actions"
+  rmdir "$sandbox/bin" "$sandbox/install" "$sandbox"
 }
 
 # ──────────────────────────────────────────────────────────────────

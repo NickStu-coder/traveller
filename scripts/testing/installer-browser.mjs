@@ -15,9 +15,12 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 const image = process.argv[2];
 const options = process.argv.slice(3);
 const desktop = options.includes('--desktop');
-const baselineImage = options.find(value => value.startsWith('--baseline='))?.slice('--baseline='.length);
-const baselineRef = options.find(value => value.startsWith('--baseline-ref='))?.slice('--baseline-ref='.length);
-assert.ok(options.every(value => value === '--desktop' || value.startsWith('--baseline=') || value.startsWith('--baseline-ref=')), 'Unsupported option');
+const update = options.includes('--update');
+const legacyInstaller = options.find(value => value.startsWith('--legacy-installer='))?.slice('--legacy-installer='.length);
+const baselineImage = legacyInstaller ? image : options.find(value => value.startsWith('--baseline='))?.slice('--baseline='.length);
+const baselineRef = legacyInstaller ?? options.find(value => value.startsWith('--baseline-ref='))?.slice('--baseline-ref='.length);
+assert.ok(options.every(value => ['--desktop', '--update'].includes(value) || value.startsWith('--baseline=') || value.startsWith('--baseline-ref=') || value.startsWith('--legacy-installer=')), 'Unsupported option');
+assert.ok(!update || baselineImage, 'Updater regression requires the historical installer and image');
 assert.equal(Boolean(baselineImage), Boolean(baselineRef), 'Baseline image and source revision must be supplied together');
 if (baselineImage) assert.match(baselineImage, /^sha256:[a-f0-9]{64}$/);
 if (baselineRef) assert.match(baselineRef, /^[a-f0-9]{40}$/);
@@ -27,7 +30,7 @@ const home = join(directory, 'home');
 const install = join(home, '.flight-finder');
 const project = `ff-installer-${process.pid}-${Date.now()}`;
 const base = join(install, 'docker-compose.yml');
-const override = join(directory, 'test-compose.yml');
+let override = join(directory, 'test-compose.yml');
 const password = 'installer-browser-test-password';
 const owner = 'installer-owner';
 await mkdir(home);
@@ -94,6 +97,10 @@ await selectImage(image);
 let browser;
 let proxy;
 let rejectedHost;
+let assetsServer;
+async function runUpdate() {
+  return command('bash', [join(home, '.local/bin/flight-finder'), 'update']);
+}
 try {
   browser = await chromium.launch({ args: ['--no-proxy-server', '--host-resolver-rules=MAP finder.test 127.0.0.1, MAP unknown.test 127.0.0.1'] });
   let baselineSaved;
@@ -103,7 +110,8 @@ try {
     const revision = (await command('docker', ['image', 'inspect', baselineImage, '--format', '{{index .Config.Labels "org.opencontainers.image.revision"}}'])).output.trim();
     assert.match(revision, /^[a-f0-9]{7,40}$/);
     const resolvedRevision = (await command('git', ['rev-parse', '--verify', `${revision}^{commit}`])).output.trim();
-    assert.equal(resolvedRevision, baselineRef, 'Baseline image must identify the exact archived source revision');
+    if (!legacyInstaller) assert.equal(resolvedRevision, baselineRef, 'Baseline image must identify the exact archived source revision');
+    else console.log('CI fixture uses the current backend with the historical installer and updater');
     const assets = join(directory, 'baseline');
     await mkdir(assets);
     for (const name of ['install.sh', 'flight-finder-cli', 'flight-finder-cli-flags.sh']) {
@@ -132,7 +140,8 @@ try {
       const response = page.waitForResponse(response => response.url().endsWith('/api/access/household') && response.request().method() === 'POST');
       await page.locator('button[type=submit]').click();
       assert.equal((await response).status(), 403, 'Unfixed installer must reproduce the reported rejection with an existing owner');
-      await page.getByText('This action is not allowed.', { exact: true }).waitFor();
+      if (legacyInstaller) await page.getByText(/This address is not configured for login/).waitFor();
+      else await page.getByText('This action is not allowed.', { exact: true }).waitFor();
       assert.equal((await oldContext.cookies()).some(cookie => cookie.name === 'ft-session'), false);
       if (artifacts) await page.screenshot({ path: join(artifacts, 'before-login-rejected.png'), fullPage: true });
       console.log(`REPRODUCED ${baselineRef}: installer reports ready, owner exists, valid password returns 403 and the reported UI error`);
@@ -140,9 +149,40 @@ try {
     await selectImage(image);
   }
   console.log(baselineImage ? 'Upgrading the reproduced broken installation' : 'Installing into an empty home and database');
-  const initial = await installer();
+  let initial;
+  if (update) {
+    const updaterOverride = join(install, 'docker-compose.override.yml');
+    await writeFile(updaterOverride, await readFile(override));
+    override = updaterOverride;
+    environment.COMPOSE_FILE = [base, override].join(delimiter);
+    assetsServer = httpServer(async (request, response) => {
+      const paths = ['/flight-finder-cli', '/flight-finder-cli-flags.sh', '/install/network.sh', '/install/update.py'];
+      if (!paths.includes(request.url)) { response.writeHead(404); response.end(); return; }
+      response.end(await readFile(join(root, 'apps/web/public', request.url)));
+    });
+    environment.FLIGHT_FINDER_URL = `http://127.0.0.1:${await listen(assetsServer)}`;
+    const binaries = join(directory, 'bin');
+    await mkdir(binaries);
+    const dockerPath = (await command('which', ['docker'])).stdout.trim();
+    // The candidate is an immutable local image, with no remote registry tag.
+    // Only registry pulling is replaced. Every Compose operation uses real Docker.
+    await writeFile(join(binaries, 'docker'), `#!/usr/bin/env bash\nfor arg in "$@"; do\n  if [ "$arg" = pull ]; then exit 0; fi\ndone\nexec ${JSON.stringify(dockerPath)} "$@"\n`, { mode: 0o755 });
+    environment.PATH = `${binaries}:${join(home, '.local/bin')}:${environment.PATH}`;
+    await runUpdate();
+    assert.equal(await readFile(join(install, '.env'), 'utf8'), baselineSaved, 'Historical invocation must only bootstrap migration support');
+    await compose('up', '-d', '--wait', '--wait-timeout', '180', '--no-deps', 'web');
+    const rejected = await fetch(`http://127.0.0.1:${port}/api/access/check-origin`, {
+      method: 'POST', headers: { Origin: `http://localhost:${port}`, 'Content-Type': 'application/json' }, body: '{}',
+    });
+    assert.equal(rejected.status, 403, 'First historical invocation must demonstrate that origin repair has not run yet');
+    console.log('PASS historical first invocation refreshes CLI but still reproduces the rejected origin');
+    initial = await runUpdate();
+    assert.match(initial.output, /Updated and verified/);
+  } else initial = await installer();
   if (baselineImage) {
-    assert.equal(await readFile(join(install, '.env'), 'utf8'), baselineSaved, 'Upgrade changed existing credentials or configuration');
+    const upgraded = await readFile(join(install, '.env'), 'utf8');
+    if (update) assert.ok(upgraded.startsWith(baselineSaved), 'Updater changed existing configuration bytes');
+    else assert.equal(upgraded, baselineSaved, 'Upgrade changed existing credentials or configuration');
     assert.deepEqual(JSON.parse((await access('list')).stdout), baselinePrincipals, 'Upgrade changed existing principals');
     console.log('PASS upgrade preserves the existing owner, credentials and configuration');
   } else {
@@ -210,11 +250,12 @@ try {
   for (const origin of new Set([canonical, `http://127.0.0.1:${port}`, localAlias])) await login(origin);
 
   const saved = await readFile(join(install, '.env'), 'utf8');
-  await installer();
+  if (update) await runUpdate();
+  else await installer();
   assert.equal(await readFile(join(install, '.env'), 'utf8'), saved, 'Reinstall changed existing configuration');
   assert.equal(JSON.parse((await compose('config', '--format', 'json')).output).services.web.environment.APP_URL, canonical);
   await login(canonical);
-  console.log('PASS reinstall preserves port, credentials and configuration');
+  console.log(`PASS ${update ? 'repeat update' : 'reinstall'} preserves port, credentials and configuration`);
 
   function forward(request, response) {
     const upstream = httpRequest({ hostname: '127.0.0.1', port, path: request.url, method: request.method,
@@ -253,13 +294,16 @@ try {
   } finally { await deniedContext.close(); }
 
   await writeFile(join(install, '.env'), saved + '\nSIDEDOOR_PASSWORD_ORIGINS=[]\n');
-  const restricted = await installer({ allowFailure: true });
-  assert.notEqual(restricted.code, 0);
-  assert.match(restricted.output, /Local access is not allowed/);
-  assert.doesNotMatch(restricted.output, /Flight Finder is ready/);
+  const restricted = update ? await runUpdate() : await installer({ allowFailure: true });
+  if (update) assert.match(restricted.output, /Updated and verified/);
+  else {
+    assert.notEqual(restricted.code, 0);
+    assert.match(restricted.output, /Local access is not allowed/);
+    assert.doesNotMatch(restricted.output, /Flight Finder is ready/);
+  }
   assert.equal(await readFile(join(install, '.env'), 'utf8'), saved + '\nSIDEDOOR_PASSWORD_ORIGINS=[]\n');
   await login(publicOrigin, true);
-  console.log('PASS explicit origin restrictions survive reinstall and prevent false readiness');
+  console.log(`PASS explicit origin restrictions survive ${update ? 'update' : 'reinstall'} and prevent false readiness`);
 } catch (error) {
   console.error(error);
   console.error((await compose('logs', '--no-color', '--tail', '150')).output);
@@ -268,6 +312,8 @@ try {
   await browser?.close();
   proxy?.closeAllConnections();
   rejectedHost?.closeAllConnections();
+  assetsServer?.closeAllConnections();
+  if (assetsServer) await new Promise(resolve => assetsServer.close(resolve));
   if (proxy) await new Promise(resolve => proxy.close(resolve));
   if (rejectedHost) await new Promise(resolve => rejectedHost.close(resolve));
   await compose('down', '-v', '--remove-orphans');

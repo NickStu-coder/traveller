@@ -4,7 +4,7 @@ export function registerAccessCommands(program: Command): void {
   program
     .command("access <operation> [principalId] [deviceName]")
     .description(
-      "Local access administration: initialize, setup, reset, list, device, origin",
+      "Local access administration: initialize, setup, reset, list, device, origin, origins",
     )
     .action(
       async (
@@ -17,6 +17,18 @@ export function registerAccessCommands(program: Command): void {
         );
         let database: { $disconnect(): Promise<void> } | undefined;
         try {
+          if (operation === 'origins') {
+            if (principalId || deviceName) throw new Error('Use access origins without arguments');
+            const { accessOrigins } = await import('../../../../apps/web/src/lib/sidedoor/access/network/configuration');
+            const { prisma } = await import('@/lib/prisma');
+            database = prisma;
+            const config = await prisma.extractionConfig.findUnique({ where: { id: 'singleton' }, select: { publicBaseUrl: true } });
+            const { FlightFinderAccessStore } = await import('../../../../apps/web/src/lib/sidedoor/access/access-store');
+            const policy = await new FlightFinderAccessStore().admissionPolicy();
+            console.log(JSON.stringify({ ...accessOrigins(config?.publicBaseUrl), hasOwner: policy.hasOwner,
+              canonicalConfigured: Boolean(config?.publicBaseUrl || process.env.APP_URL) }));
+            return;
+          }
           if (operation === 'origin') {
             if (!principalId || deviceName) throw new Error('Use access origin <http(s)://hostname[:port]>');
             const { accessOrigin } = await import('../../../../apps/web/src/lib/sidedoor/access/network/configuration');
