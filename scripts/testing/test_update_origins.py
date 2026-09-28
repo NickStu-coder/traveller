@@ -3,12 +3,14 @@
 import copy
 import importlib.util
 import io
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from threading import Thread
 import unittest
 from unittest.mock import patch
 
@@ -72,7 +74,8 @@ class UpdateTests(unittest.TestCase):
                                            if value != values['APP_URL']])
             if self.bad_config:
                 result['services']['db']['image'] = 'unexpected'
-        if '--no-env-resolution' in command:
+        # Compose 2.38.2 drops env_file unless both switches are present.
+        if '--no-env-resolution' in command and '--no-interpolate' in command:
             result['services']['web']['env_file'] = [{'path': str(self.directory / 'custom.env' if self.custom_env else self.env), 'required': True}]
         if self.failure and self.failure in command:
             return subprocess.CompletedProcess(command, 1, '', 'do-not-print-this')
@@ -241,6 +244,36 @@ class UpdateTests(unittest.TestCase):
             with self.assertRaises(KeyboardInterrupt):
                 self.updater.execute()
         self.assertTrue((self.directory / '.flight-finder-update.lock').exists())
+
+    def test_origin_readiness_never_follows_http_redirects(self):
+        requests = []
+
+        class Backend(BaseHTTPRequestHandler):
+            def do_GET(self):
+                requests.append(self.path)
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b'{"status":"ok","database":"connected","redis":"connected"}')
+
+            def do_POST(self):
+                requests.append(self.path)
+                self.send_response(302)
+                self.send_header('Location', '/unexpected-redirect')
+                self.end_headers()
+
+        with HTTPServer(('127.0.0.1', 0), Backend) as server:
+            self.config['services']['web']['ports'][0]['published'] = str(server.server_port)
+            thread = Thread(target=server.serve_forever)
+            thread.start()
+            try:
+                with patch.object(subprocess, 'run', side_effect=self.process):
+                    with self.assertRaisesRegex(MODULE.UpdateError, 'login origin'):
+                        self.updater.execute()
+            finally:
+                server.shutdown()
+                thread.join()
+        self.assertIn('/api/access/check-origin', requests)
+        self.assertNotIn('/unexpected-redirect', requests)
 
 
 if __name__ == '__main__':

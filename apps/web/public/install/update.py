@@ -12,14 +12,16 @@ import subprocess
 import sys
 import tempfile
 import time
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 
 class LocalOnly(HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        return None
+    def http_error_302(self, req, fp, code, msg, headers):
+        raise HTTPError(req.full_url, code, msg, headers, fp)
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_308 = http_error_302
 
 
 # Readiness must inspect this local backend, without proxy routing or redirects.
@@ -69,7 +71,9 @@ class Updater:
     def config(self, compose=None, raw=False):
         arguments = ['config', '--format', 'json']
         if raw:
-            arguments.append('--no-env-resolution')
+            # Compose 2.38 resolves env_file despite --no-env-resolution unless
+            # interpolation is disabled too. Only literal installer paths qualify.
+            arguments.extend(['--no-env-resolution', '--no-interpolate'])
         return read_json(self.dc(arguments, 'Compose configuration inspection (requires JSON and --no-env-resolution support)', compose), 'Compose configuration')
 
     def policy(self, compose=None):
