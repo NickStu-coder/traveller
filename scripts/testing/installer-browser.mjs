@@ -9,10 +9,18 @@ import { join, delimiter } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
+// Optional --baseline=<image-id> --baseline-ref=<full-commit> reproduces the
+// original 403 with that revision's installer before upgrading the same database.
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const image = process.argv[2];
-const desktop = process.argv[3] === '--desktop';
-assert.ok(process.argv[3] === undefined || desktop, 'Only --desktop is supported');
+const options = process.argv.slice(3);
+const desktop = options.includes('--desktop');
+const baselineImage = options.find(value => value.startsWith('--baseline='))?.slice('--baseline='.length);
+const baselineRef = options.find(value => value.startsWith('--baseline-ref='))?.slice('--baseline-ref='.length);
+assert.ok(options.every(value => value === '--desktop' || value.startsWith('--baseline=') || value.startsWith('--baseline-ref=')), 'Unsupported option');
+assert.equal(Boolean(baselineImage), Boolean(baselineRef), 'Baseline image and source revision must be supplied together');
+if (baselineImage) assert.match(baselineImage, /^sha256:[a-f0-9]{64}$/);
+if (baselineRef) assert.match(baselineRef, /^[a-f0-9]{40}$/);
 assert.match(image ?? '', /^sha256:[a-f0-9]{64}$/, 'Pass the immutable local image ID built from the current checkout');
 const directory = await mkdtemp(join(tmpdir(), 'flight-finder-installer-'));
 const home = join(directory, 'home');
@@ -23,6 +31,8 @@ const override = join(directory, 'test-compose.yml');
 const password = 'installer-browser-test-password';
 const owner = 'installer-owner';
 await mkdir(home);
+const artifacts = process.env.INSTALLER_BROWSER_ARTIFACTS;
+if (artifacts) await mkdir(artifacts, { recursive: true });
 
 async function listen(server, port = 0) {
   await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, '0.0.0.0', resolve); });
@@ -48,14 +58,15 @@ function command(executable, args, { allowFailure = false, env = {} } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(executable, args, { cwd: root, env: { ...environment, ...env }, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     let output = '';
-    child.stdout.on('data', value => { output += value; });
+    let stdout = '';
+    child.stdout.on('data', value => { output += value; stdout += value; });
     child.stderr.on('data', value => { output += value; });
     const timeout = setTimeout(() => { process.kill(-child.pid, 'SIGKILL'); }, 240_000);
     child.once('error', error => { clearTimeout(timeout); reject(error); });
     child.once('close', code => {
       clearTimeout(timeout);
       if (code !== 0 && !allowFailure) reject(new Error(`${executable} ${args.join(' ')} exited ${code}\n${output}`));
-      else resolve({ code, output });
+      else resolve({ code, output, stdout });
     });
   });
 }
@@ -64,39 +75,91 @@ const installer = options => command('bash', ['apps/web/public/install.sh', '--n
 const access = (...args) => compose('run', '--rm', '--no-deps', '--entrypoint', 'node', 'web', '/app/packages/cli/dist/index.js', 'access', ...args);
 
 // Only isolate resources and select the image. Never supply APP_URL or origin aliases here.
-await writeFile(override, `services:
+async function selectImage(selectedImage) {
+  await writeFile(override, `services:
   db:
     ports: !reset []
   redis:
     ports: !reset []
   web:
-    image: ${image}
+    image: ${selectedImage}
     build: !reset null
     environment:
       INSTALL_CLI_PROVIDERS: "false"
       CRON_ENABLED: "false"
 `);
+}
+await selectImage(image);
 
 let browser;
 let proxy;
 let rejectedHost;
 try {
-  console.log('Installing into an empty home and database');
-  const initial = await installer();
-  assert.match(initial.output, /Local password setup is required/);
-  assert.doesNotMatch(initial.output, /Flight Finder is ready/);
   browser = await chromium.launch({ args: ['--no-proxy-server', '--host-resolver-rules=MAP finder.test 127.0.0.1, MAP unknown.test 127.0.0.1'] });
-  const setupContext = await browser.newContext();
-  try {
-    const page = await setupContext.newPage();
-    await page.goto(`http://localhost:${port}/access`);
-    await page.getByText('flight-finder access setup', { exact: true }).waitFor();
-    assert.equal(await page.locator('input[type=password]').count(), 0, 'Do not show a login form before local setup');
-    console.log(`PASS ${desktop ? 'desktop' : 'unattended'} first-run handoff to local password setup`);
-  } finally { await setupContext.close(); }
-  await command('python3', ['scripts/testing/access-setup.py', 'docker', 'compose', '-p', project, '-f', base, '-f', override,
-    'run', '--rm', '--no-deps', '--entrypoint', 'node', 'web', '/app/packages/cli/dist/index.js', 'access', 'setup']);
-  await installer();
+  let baselineSaved;
+  let baselinePrincipals;
+  if (baselineImage) {
+    console.log(`Installing unfixed revision ${baselineRef} from ${baselineImage}`);
+    const revision = (await command('docker', ['image', 'inspect', baselineImage, '--format', '{{index .Config.Labels "org.opencontainers.image.revision"}}'])).output.trim();
+    assert.match(revision, /^[a-f0-9]{7,40}$/);
+    const resolvedRevision = (await command('git', ['rev-parse', '--verify', `${revision}^{commit}`])).output.trim();
+    assert.equal(resolvedRevision, baselineRef, 'Baseline image must identify the exact archived source revision');
+    const assets = join(directory, 'baseline');
+    await mkdir(assets);
+    for (const name of ['install.sh', 'flight-finder-cli', 'flight-finder-cli-flags.sh']) {
+      const source = await command('git', ['show', `${baselineRef}:apps/web/public/${name}`]);
+      await writeFile(join(assets, name), source.output);
+    }
+    await selectImage(baselineImage);
+    const installed = await command('bash', [join(assets, 'install.sh'), '--no-browser'], {
+      env: { FLIGHT_FINDER_CLI_SOURCE: join(assets, 'flight-finder-cli') },
+    });
+    assert.match(installed.output, /Flight Finder is ready/);
+    await command('python3', ['scripts/testing/access-setup.py', 'docker', 'compose', '-p', project, '-f', base, '-f', override,
+      'run', '--rm', '--no-deps', '--entrypoint', 'node', 'web', '/app/packages/cli/dist/index.js', 'access', 'setup']);
+    baselineSaved = await readFile(join(install, '.env'), 'utf8');
+    baselinePrincipals = JSON.parse((await access('list')).stdout);
+    assert.ok(baselinePrincipals.principals.some(principal => principal.name === owner && principal.role === 'owner'));
+    await compose('up', '-d', '--wait', '--wait-timeout', '180', '--no-deps', '--force-recreate', 'web');
+    const baselineLogs = (await compose('logs', '--no-color', 'web')).output;
+    assert.match(baselineLogs, /"sourceUsers":1/);
+    assert.match(baselineLogs, /"setupComplete":false/);
+    const oldContext = await browser.newContext();
+    try {
+      const page = await oldContext.newPage();
+      await page.goto(`http://localhost:${port}/access`);
+      await page.locator('input[type=password]').fill(password);
+      const response = page.waitForResponse(response => response.url().endsWith('/api/access/household') && response.request().method() === 'POST');
+      await page.locator('button[type=submit]').click();
+      assert.equal((await response).status(), 403, 'Unfixed installer must reproduce the reported rejection with an existing owner');
+      await page.getByText('This action is not allowed.', { exact: true }).waitFor();
+      assert.equal((await oldContext.cookies()).some(cookie => cookie.name === 'ft-session'), false);
+      if (artifacts) await page.screenshot({ path: join(artifacts, 'before-login-rejected.png'), fullPage: true });
+      console.log(`REPRODUCED ${baselineRef}: installer reports ready, owner exists, valid password returns 403 and the reported UI error`);
+    } finally { await oldContext.close(); }
+    await selectImage(image);
+  }
+  console.log(baselineImage ? 'Upgrading the reproduced broken installation' : 'Installing into an empty home and database');
+  const initial = await installer();
+  if (baselineImage) {
+    assert.equal(await readFile(join(install, '.env'), 'utf8'), baselineSaved, 'Upgrade changed existing credentials or configuration');
+    assert.deepEqual(JSON.parse((await access('list')).stdout), baselinePrincipals, 'Upgrade changed existing principals');
+    console.log('PASS upgrade preserves the existing owner, credentials and configuration');
+  } else {
+    assert.match(initial.output, /Local password setup is required/);
+    assert.doesNotMatch(initial.output, /Flight Finder is ready/);
+    const setupContext = await browser.newContext();
+    try {
+      const page = await setupContext.newPage();
+      await page.goto(`http://localhost:${port}/access`);
+      await page.getByText('flight-finder access setup', { exact: true }).waitFor();
+      assert.equal(await page.locator('input[type=password]').count(), 0, 'Do not show a login form before local setup');
+      console.log(`PASS ${desktop ? 'desktop' : 'unattended'} first-run handoff to local password setup`);
+    } finally { await setupContext.close(); }
+    await command('python3', ['scripts/testing/access-setup.py', 'docker', 'compose', '-p', project, '-f', base, '-f', override,
+      'run', '--rm', '--no-deps', '--entrypoint', 'node', 'web', '/app/packages/cli/dist/index.js', 'access', 'setup']);
+    await installer();
+  }
   const config = JSON.parse((await compose('config', '--format', 'json')).output);
   const canonical = config.services.web.environment.APP_URL;
   const aliases = JSON.parse(config.services.web.environment.SIDEDOOR_PASSWORD_ORIGINS);
@@ -140,6 +203,7 @@ try {
       assert.equal(state.status, 200);
       assert.equal(state.body.data?.user?.username, 'installer-owner', 'Browser did not retain the selected profile');
       assert.equal(state.body.data?.user?.isAdmin, true, 'Browser did not reuse its authenticated Admin cookie');
+      if (artifacts && origin === canonical) await page.screenshot({ path: join(artifacts, 'after-admin-session.png'), fullPage: true });
       console.log(`PASS browser login, profile selection and session reuse: ${origin}`);
     } finally { await context.close(); }
   }
