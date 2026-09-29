@@ -16,53 +16,6 @@ pass() { PASS=$((PASS + 1)); printf "${GREEN}PASS${RESET} %s\n" "$1"; }
 fail() { FAIL=$((FAIL + 1)); printf "${RED}FAIL${RESET} %s\n" "$1"; }
 
 # ---------------------------------------------------------------------------
-# Test: flight-finder update uses `command -v` for self-path detection
-# ---------------------------------------------------------------------------
-test_update_self_path() {
-  local cli="apps/web/public/flight-finder-cli"
-  if grep -q 'command -v fairtrail' "$cli" && grep -q 'mkdir -p "\$CLI_DIR"' "$cli"; then
-    pass "flight-finder update uses dynamic self-path detection"
-  else
-    fail "flight-finder update should use 'command -v fairtrail' and mkdir"
-  fi
-}
-
-# ---------------------------------------------------------------------------
-# Test: flight-finder update shows curl errors (no 2>/dev/null on curl)
-# ---------------------------------------------------------------------------
-test_update_shows_curl_errors() {
-  local cli="apps/web/public/flight-finder-cli"
-  # The curl line inside cmd_update should NOT end with 2>/dev/null
-  local update_curl
-  update_curl=$(sed -n '/^cmd_update/,/^cmd_/p' "$cli" | grep 'curl.*flight-finder-cli' | head -1)
-  if echo "$update_curl" | grep -q '2>/dev/null'; then
-    fail "flight-finder update swallows curl errors with 2>/dev/null"
-  else
-    pass "flight-finder update shows curl errors"
-  fi
-}
-
-# ---------------------------------------------------------------------------
-# Test: flight-finder update force-recreates the web container after pull (#72)
-# ---------------------------------------------------------------------------
-# Without --force-recreate, podman-compose does not always detect a digest
-# change on :latest after `dc pull web` and skips the recreate, leaving the
-# user running the old image even though the pull succeeded.
-test_update_force_recreates_web() {
-  local cli="apps/web/public/flight-finder-cli"
-  local block
-  block=$(sed -n '/^cmd_update/,/^cmd_/p' "$cli")
-
-  # The cmd_update block must contain a `dc up -d` line that includes both
-  # --force-recreate and --no-deps targeting the `web` service.
-  if echo "$block" | grep -E 'dc up -d.*--force-recreate.*--no-deps.*web|dc up -d.*--no-deps.*--force-recreate.*web' >/dev/null; then
-    pass "flight-finder update force-recreates web after pull (#72)"
-  else
-    fail "flight-finder update should run 'dc up -d --force-recreate --no-deps web' after pull/build (#72)"
-  fi
-}
-
-# ---------------------------------------------------------------------------
 # Test: install.sh patches both .bashrc and .profile
 # ---------------------------------------------------------------------------
 test_path_patches_both_files() {
@@ -473,9 +426,7 @@ echo ""
 printf "${BOLD}Flight Finder install flow regression tests${RESET}\n"
 echo ""
 
-test_update_self_path
-test_update_shows_curl_errors
-test_update_force_recreates_web
+python3 -m unittest discover -s scripts/testing -p 'test_update*.py' -v
 test_path_patches_both_files
 test_old_dir_migration
 test_env_host_port

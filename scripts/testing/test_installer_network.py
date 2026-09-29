@@ -58,7 +58,7 @@ printf '%s\n%s\n' "$HOST_PORT" "$INSTALL_PASSWORD_ORIGINS"
         })
 
     def test_desktop_binding_does_not_enroll_lan(self):
-        for binding, saved in [('127.0.0.1', ''), ('', 'HOST_BIND_ADDRESS=127.0.0.1\n')]:
+        for binding, saved in [('127.0.0.1', ''), ('::1', ''), ('', 'HOST_BIND_ADDRESS=127.0.0.1\n')]:
             with self.subTest(binding=binding, saved=saved):
                 result = self.configure(binding=binding, saved=saved)
                 self.assertEqual(result.returncode, 0, result.stderr)
