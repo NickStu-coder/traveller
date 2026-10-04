@@ -39,6 +39,18 @@ it('omits credentials and referrers and refuses redirects at the HTTP boundary',
   expect(result).toMatchObject({ tiles: ['https://tiles.openfreemap.org/tiles/{z}/{x}/{y}.pbf'] });
 });
 
+it.each(['arrayBuffer', 'image'])('preserves binary map resource bytes for %s requests', async type => {
+  const bytes = new Uint8Array([0, 128, 255, 42]);
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(bytes)));
+  const result = await fetchHotelMapResource(base, DEFAULT_HOTEL_MAP_CONFIG, origin, type, new AbortController().signal);
+  expect(result).toEqual(bytes.buffer);
+});
+
+it('decodes text map resources as UTF-8', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('© Map contributors')));
+  await expect(fetchHotelMapResource(base, DEFAULT_HOTEL_MAP_CONFIG, origin, undefined, new AbortController().signal)).resolves.toBe('© Map contributors');
+});
+
 it('surfaces HTTP failures and oversized resources instead of substituting another provider', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('unavailable', { status: 503 })));
   await expect(fetchHotelMapResource(base, DEFAULT_HOTEL_MAP_CONFIG, origin, 'json', new AbortController().signal)).rejects.toThrow(/503/);
