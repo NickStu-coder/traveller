@@ -1,3 +1,4 @@
+import type { AddProtocolResponseData } from 'maplibre-gl';
 import { hotelMapResourceUrl, type HotelMapConfig } from './map-config';
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -33,7 +34,7 @@ function safeAttribution(value: string): string {
 }
 
 /** Normalize only documented network-bearing fields; never evaluate style data. */
-export function resolveHotelMapDocument(value: unknown, config: HotelMapConfig, appOrigin: string, base: string): unknown {
+export function resolveHotelMapDocument(value: unknown, config: HotelMapConfig, appOrigin: string, base: string): Record<string, unknown> {
   if (!record(value)) throw new Error('Invalid map document');
   const result = { ...value };
   const resolve = (url: unknown): string => {
@@ -66,7 +67,7 @@ export function resolveHotelMapDocument(value: unknown, config: HotelMapConfig, 
   return result;
 }
 
-export async function fetchHotelMapResource(url: string, config: HotelMapConfig, appOrigin: string, type: string | undefined, signal: AbortSignal): Promise<unknown> {
+export async function fetchHotelMapResource(url: string, config: HotelMapConfig, appOrigin: string, type: string | undefined, signal: AbortSignal): Promise<AddProtocolResponseData> {
   const target = hotelMapResourceUrl(url, config, appOrigin);
   const boundedSignal = AbortSignal.any([signal, AbortSignal.timeout(15000)]);
   const response = await fetch(target, { signal: boundedSignal, credentials: 'omit', redirect: 'error', referrerPolicy: 'no-referrer' });
