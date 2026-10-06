@@ -13,22 +13,22 @@ import adminNamespaces from '../../messages/en/admin.json';
 const isSelfHosted = process.env.SELF_HOSTED === 'true';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://flight-finder.org'),
+  metadataBase: new URL(process.env.APP_URL || 'http://localhost:3003'),
   title: {
-    default: 'Flight Finder: Flight, hotel and rental car price tracking',
-    template: '%s | Flight Finder',
+    default: 'Traveller: Flight, hotel and rental car price tracking',
+    template: '%s | Traveller',
   },
   description:
     'Self-host flight, hotel and rental car price tracking. Search each independently, compare price history and receive price alerts.',
   openGraph: {
-    title: 'Flight Finder: Flight, hotel and rental car price tracking',
+    title: 'Traveller: Flight, hotel and rental car price tracking',
     description:
       'Self-host flight, hotel and rental car price tracking. Search each independently, compare price history and receive price alerts.',
-    siteName: 'Flight Finder',
+    siteName: 'Traveller',
     type: 'website',
     locale: 'en_US',
     images: [
-      { url: '/og-hero.png', width: 1200, height: 630, alt: 'Flight Finder — paper plane over price evolution chart' },
+      { url: '/og-hero.png', width: 1200, height: 630, alt: 'Traveller — paper plane over price evolution chart' },
     ],
   },
   twitter: {
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Flight Finder',
+    title: 'Traveller',
   },
   icons: {
     icon: [

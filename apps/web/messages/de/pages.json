@@ -39,7 +39,7 @@
     "refreshFailed": "Deine Änderung wurde gespeichert. Die Kontodaten konnten nicht aktualisiert werden. Lade die Seite neu, um den aktuellen Stand zu sehen."
   },
   "SharedAccess": {
-    "title": "Flight Finder öffnen",
+    "title": "Traveller öffnen",
     "login": "Anmelden",
     "household": "Weiter",
     "claim": "Instanz übernehmen",
@@ -50,7 +50,7 @@
     "recoverDescription": "Stelle den Zugang mit einem Wiederherstellungscode wieder her.",
     "name": "Kontoname",
     "householdAccountLabel": "Gemeinsames Konto",
-    "householdAccount": "Flight Finder",
+    "householdAccount": "Traveller",
     "password": "Passwort",
     "code": "Wiederherstellungs- oder Eigentümercode",
     "passkey": "Mit einem Passkey anmelden",
@@ -94,7 +94,7 @@
     "tagComingSoon": "Bald verfügbar",
     "customProxy": "Eigener Proxy",
     "vpnHint": "Teste den Mythos: Ändern sich Flugpreise, wenn du aus verschiedenen Ländern surfst?",
-    "stealthSummary": "Was Flight Finder über den IP-Wechsel hinaus tut",
+    "stealthSummary": "Was Traveller über den IP-Wechsel hinaus tut",
     "stealthTimezone": "Zeitzone, Locale und Accept-Language auf das Zielland abgestimmt",
     "stealthGeolocation": "Geolocation-API liefert passende Koordinaten",
     "stealthWebrtc": "WebRTC-Leak-Schutz (echte IP wird nie über ICE-Kandidaten offengelegt)",
@@ -116,13 +116,13 @@
     "how2Text": "Beschreibe einen Flug, einen Aufenthalt oder einen Mietwagen in natürlicher Sprache. Hotel- und Mietwagenformulare funktionieren auch ohne KI. Prüfe vor der Suche die Daten, Gäste oder Fahrer.",
     "how3Title": "Sieh den echten Trend",
     "how3Text": "Verfolge den Preisverlauf und erhalte Benachrichtigungen. Flugpreisdiagramme lassen sich teilen; Hotel- und Mietwagenpreisverläufe bleiben auf deiner Instanz. Öffne den Anbieterlink, wenn du buchen möchtest.",
-    "notTitle": "Was Flight Finder nicht ist",
+    "notTitle": "Was Traveller nicht ist",
     "notAggregatorTitle": "Kein Aggregator",
-    "notAggregatorText": "Flight Finder verkauft keine Platzierungen und erhält keine Buchungsprovision. Links von Reiseanbietern können eigene Tracking-Parameter enthalten.",
+    "notAggregatorText": "Traveller verkauft keine Platzierungen und erhält keine Buchungsprovision. Links von Reiseanbietern können eigene Tracking-Parameter enthalten.",
     "notAiTitle": "Kein KI-Anbieter",
     "notAiText": "KI wird zur Massenware — wir bündeln oder verkaufen sie nicht weiter. Bring deinen eigenen Key mit, nutze Claude Code / Codex oder betreibe Ollama / llama.cpp / vLLM lokal.",
     "notPredictorTitle": "Kein Preisorakel",
-    "notPredictorText": "Keine Blackbox-Ratschläge à la „Jetzt kaufen“. Flight Finder zeigt dir den echten Preisverlauf und lässt dich entscheiden, wann der richtige Moment ist.",
+    "notPredictorText": "Keine Blackbox-Ratschläge à la „Jetzt kaufen“. Traveller zeigt dir den echten Preisverlauf und lässt dich entscheiden, wann der richtige Moment ist.",
     "selfHostTitle": "Warum self-hosted?",
     "selfHostLead": "Dezentralisierung ist keine Philosophie — es ist das einzige Design, das funktioniert.",
     "benefit1Title": "Anders geht es nicht",
@@ -144,7 +144,7 @@
     "carsText": "Suche bei DiscoverCars und Auto Europe. Vergleiche verifizierte Gesamtpreise der geprüften Angebote, lies die Fahrerbedingungen und sieh Kaution und Selbstbeteiligung getrennt. Ungeprüfte Gebühren und unbestätigte Extras bleiben sichtbar.",
     "hotelsText": "Suche bei Google Hotels und Booking.com nach Reisedaten, Zimmern und Gästen. Verfolge ein Hotel oder einen Zimmertarif und lege einen Preisalarm fest.",
     "travelHousehold": "Im Mehrbenutzermodus öffnet das gemeinsame Passwort oder ein Passkey die Profilauswahl. Jedes Profil hat eigene Tracker. Nutze Flüge, Hotels und Mietwagen in beliebiger Kombination.",
-    "travelAvailability": "Die Suchen laufen auf deiner eigenen Installation. Jeder Tracker arbeitet unabhängig. Buche beim Anbieter; Flight Finder bündelt keine Reservierungen zu Pauschalreisen."
+    "travelAvailability": "Die Suchen laufen auf deiner eigenen Installation. Jeder Tracker arbeitet unabhängig. Buche beim Anbieter; Traveller bündelt keine Reservierungen zu Pauschalreisen."
   },
   "QueryPage": {
     "routeName": "{origin} nach {destination}",
@@ -167,7 +167,7 @@
   "Login": {
     "loading": "Lädt…",
     "signingIn": "Anmeldung…",
-    "pickerTitle": "Wer nutzt Flight Finder?",
+    "pickerTitle": "Wer nutzt Traveller?",
     "noProfiles": "Noch keine Profile vorhanden.",
     "invalidCredentials": "Dieses Profil konnte nicht geöffnet werden."
   },
@@ -258,20 +258,20 @@
     "androidStep2": "Tippe auf das Menü (drei Punkte).",
     "androidStep3": "Tippe auf <strong>App installieren</strong> oder <strong>Zum Startbildschirm hinzufügen</strong>.",
     "desktopNote": "Am Computer? Lade die Desktop-App von <link>der Download-Seite</link> herunter oder öffne die URL einfach in einem Browser.",
-    "shareMessage": "Verfolge mit mir Flüge und Hotels in Flight Finder",
+    "shareMessage": "Verfolge mit mir Flüge und Hotels in Traveller",
     "share": "Teilen…",
     "email": "E-Mail",
     "copied": "Kopiert",
     "copy": "Kopieren"
   },
   "Download": {
-    "title": "Flight Finder herunterladen",
+    "title": "Traveller herunterladen",
     "subtitle": "Nutze Flüge, Hotels oder beides auf deiner eigenen Instanz. Die Desktop-App startet sie auf deinem Computer oder verbindet sich mit einer bestehenden Instanz, ohne Terminal.",
     "latest": "Aktuell: v{version}",
     "download": "Herunterladen",
     "notInRelease": "Nicht in diesem Release",
     "noRelease": "Es ist noch kein Desktop-Release veröffentlicht.",
-    "terminalHint": "Du kannst Flight Finder weiterhin aus dem Terminal starten:",
+    "terminalHint": "Du kannst Traveller weiterhin aus dem Terminal starten:",
     "readmeNote": "Lieber Terminal oder ein Server? Im <link>README</link> findest du den Ein-Befehl-Installer und das VPS-Setup."
   },
   "Explore": {
@@ -279,7 +279,7 @@
     "tagline": "{count, plural, one {Flugpreisdaten aus der Community von # Mitwirkendem} other {Flugpreisdaten aus der Community von # Mitwirkenden}}",
     "stats": "{snapshots, number} Preispunkte auf {routes} Routen",
     "emptyTitle": "Noch keine Community-Daten",
-    "emptyText": "Hoste Flight Finder selbst und aktiviere das Community-Teilen, um die erste offene Flugpreis-Datenbank der Welt mit aufzubauen.",
+    "emptyText": "Hoste Traveller selbst und aktiviere das Community-Teilen, um die erste offene Flugpreis-Datenbank der Welt mit aufzubauen.",
     "getStarted": "Loslegen",
     "from": "ab",
     "avg": "Ø",
@@ -307,7 +307,7 @@
     "trackRoute": "Diese Route verfolgen"
   },
   "Setup": {
-    "title": "Flight Finder Einrichtung",
+    "title": "Traveller Einrichtung",
     "subtitlePassword": "Lege dein Admin-Passwort fest",
     "subtitleProvider": "Wähle deinen LLM-Anbieter",
     "subtitleCommunity": "Tritt der Community bei",

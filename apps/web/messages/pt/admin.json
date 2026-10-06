@@ -34,14 +34,14 @@
     "recover": "Confirmar recuperação"
   },
   "AdminLogin": {
-    "title": "Administração do Flight Finder",
+    "title": "Administração do Traveller",
     "passwordPlaceholder": "Senha",
     "invalidPassword": "Senha inválida",
     "signIn": "Entrar",
     "signingIn": "Entrando..."
   },
   "AdminNav": {
-    "brand": "Flight Finder",
+    "brand": "Traveller",
     "dashboard": "Painel",
     "search": "Busca",
     "queries": "Consultas",
@@ -175,13 +175,13 @@
     "savePassword": "Salvar Senha",
     "passwordUpdated": "Senha atualizada",
     "communityTitle": "Compartilhamento de Dados com a Comunidade",
-    "communityIntro": "O Flight Finder fica melhor quando as instâncias reúnem seus históricos de preços. Ative o compartilhamento para contribuir com seus pontos de dados anonimizados (apenas rota, preço, companhia e data, nunca nada pessoal) para um conjunto de tarifas compartilhado que todos podem explorar e, em troca, você vê preços da comunidade em rotas que você mesmo não extraiu. É totalmente opcional e pode ser desativado a qualquer momento.",
+    "communityIntro": "O Traveller fica melhor quando as instâncias reúnem seus históricos de preços. Ative o compartilhamento para contribuir com seus pontos de dados anonimizados (apenas rota, preço, companhia e data, nunca nada pessoal) para um conjunto de tarifas compartilhado que todos podem explorar e, em troca, você vê preços da comunidade em rotas que você mesmo não extraiu. É totalmente opcional e pode ser desativado a qualquer momento.",
     "sharingEnabled": "Compartilhamento ativado",
     "sharingDisabled": "Compartilhamento desativado",
     "sharingHint": "Contribua com os preços anonimizados desta instância (rota, preço, companhia, data) para o conjunto de dados da comunidade.",
     "hubAccepting": "Operar um hub: aceitando colaboradores",
     "hubClosed": "Operar um hub: fechado",
-    "hubHint": "Permite que outras instâncias do Flight Finder se registrem nesta e enviem seus dados anonimizados para cá. Relevante apenas para o hub central. Novos registros têm limite de taxa e um teto global.",
+    "hubHint": "Permite que outras instâncias do Traveller se registrem nesta e enviem seus dados anonimizados para cá. Relevante apenas para o hub central. Novos registros têm limite de taxa e um teto global.",
     "providerDetails": "Detalhes do Provedor",
     "apiKeyDetail": "Chave de API:",
     "apiKeySaved": "armazenada criptografada nesta instância",

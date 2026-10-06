@@ -10,5 +10,9 @@ export async function register() {
     await startCron();
     const { startTravelScheduler } = await import('./lib/travel/schedule');
     startTravelScheduler();
+    if (process.env.TRAVELLER_AUTH_MODE === 'individual') {
+      const { startTravellerScheduler } = await import('./lib/traveller/scheduler/runtime');
+      await startTravellerScheduler();
+    }
   }
 }

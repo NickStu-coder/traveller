@@ -3,7 +3,7 @@ name: Car and shared travel workflows
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, traveller]
 
 permissions:
   contents: read

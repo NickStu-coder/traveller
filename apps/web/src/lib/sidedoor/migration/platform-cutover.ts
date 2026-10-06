@@ -227,7 +227,7 @@ async function prepareInTransaction(database: Database): Promise<CutoverRecord> 
       for (const principal of principals)
         if (principal.role === 'owner') principal.passwordHash = gateHash;
     await initializeAccess(accessStore, ACCESS_IMPORT, {
-      mode: 'household',
+      mode: process.env.TRAVELLER_AUTH_MODE === 'individual' ? 'individual' : 'household',
       householdPasswordHash: gateHash,
       principals,
     });

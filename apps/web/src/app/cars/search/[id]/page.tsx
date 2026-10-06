@@ -23,5 +23,5 @@ export default async function CarSearchPage({ params }: { params: Promise<{ id: 
     }
   })();
   const t = await getTranslations('Cars');
-  return <main className={styles.page}><ThemeToggle /><header className={styles.pageHeader}><p className={styles.eyebrow}>Flight Finder</p><h1>{t('searchTitle')}</h1></header><CarSearchStatus key={`${data.actor.userId ?? 'single'}:${id}`} initial={data.run} actorScope={data.actor.userId ?? 'single'} /></main>;
+  return <main className={styles.page}><ThemeToggle /><header className={styles.pageHeader}><p className={styles.eyebrow}>Traveller</p><h1>{t('searchTitle')}</h1></header><CarSearchStatus key={`${data.actor.userId ?? 'single'}:${id}`} initial={data.run} actorScope={data.actor.userId ?? 'single'} /></main>;
 }

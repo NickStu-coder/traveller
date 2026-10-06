@@ -16,7 +16,7 @@ import { LinkImport } from './travel/LinkImport';
 import { LinkBanner, type CreatedTracker } from './LinkBanner';
 import { ManualEntryForm, type ManualFormValues } from './ManualEntryForm';
 
-// "ft-" prefix kept across the Flight Finder rename so existing browsers preserve state.
+// "ft-" prefix kept across the Traveller rename so existing browsers preserve state.
 const PREVIEW_STORAGE_KEY_BASE = 'ft-preview-run';
 // This is an inactivity cutoff, not a hard runtime cap. A successful active
 // status response renews the timestamp so an in-flight final task cannot make

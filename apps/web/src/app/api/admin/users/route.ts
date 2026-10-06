@@ -21,6 +21,7 @@ export async function GET() {
   if (!auth.ok) return apiError('Unauthorized', auth.status);
 
   const users = await prisma.user.findMany({
+    where: { disabledAt: null },
     orderBy: [{ isAdmin: 'desc' }, { username: 'asc' }],
     select: {
       id: true,
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest) {
   try {
     const context = await accountMutationContext(request);
     if (context.response) return context.response;
+    if (process.env.TRAVELLER_AUTH_MODE === 'individual') return apiError('Create individual accounts with an invitation', 409);
     const body = await accountMutationBody(request);
     if (!body) return apiError('Invalid JSON body', 400);
     if (Object.keys(body).some(key => !['username', 'displayName', 'avatar'].includes(key))) return apiError('Unsupported account field', 400);

@@ -17,7 +17,7 @@ export function ShareButtons({ url }: { url: string }) {
 
   const nativeShare = async () => {
     try {
-      await navigator.share({ title: 'Flight Finder', text: MESSAGE, url });
+      await navigator.share({ title: 'Traveller', text: MESSAGE, url });
     } catch {
       // User dismissed the share sheet; nothing to do.
     }
@@ -49,7 +49,7 @@ export function ShareButtons({ url }: { url: string }) {
       >
         Telegram
       </a>
-      <a className={styles.shareBtn} href={`mailto:?subject=${enc('Flight Finder')}&body=${enc(`${MESSAGE}: ${url}`)}`}>
+      <a className={styles.shareBtn} href={`mailto:?subject=${enc('Traveller')}&body=${enc(`${MESSAGE}: ${url}`)}`}>
         {t('email')}
       </a>
     </div>

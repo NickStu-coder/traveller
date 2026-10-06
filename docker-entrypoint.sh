@@ -2,7 +2,7 @@
 set -e
 
 echo "============================================"
-echo "  Flight Finder — Flight Price Tracker"
+echo "  Traveller — Travel intelligence"
 echo "============================================"
 
 # --- App mode + CLI provider install flags ---
@@ -66,20 +66,17 @@ node /app/packages/cli/dist/index.js access prepare
 # Use the Prisma CLI bundled into the image (see the prismacli stage in the
 # Dockerfile) instead of fetching it with npx at runtime, which round-trips the
 # registry and failed when it could not resolve the CLI. Run it directly and
-# honor the exit code so a failed push halts startup instead of masking the
+# honor the exit code so a failed migration halts startup instead of masking the
 # error behind a misleading "Schema ready".
 #
-# Prisma 7 notes: --skip-generate is gone (db push no longer generates), and the
-# schema's datasource has no url, so we pass it with --url. We deliberately do
-# NOT ship prisma.config.ts to the runtime image: loading it needs `prisma` on
-# the runtime node_modules (it is a devDependency, omitted from the lean image),
-# so the entrypoint drives the CLI with explicit --schema/--url flags instead.
+# The standalone runtime config needs no devDependency imports. Committed
+# migrations preserve data and refuse unbaselined existing databases.
 echo "[setup] Applying database schema..."
-if node /app/prisma-cli/node_modules/prisma/build/index.js db push \
-     --accept-data-loss --schema=apps/web/prisma/schema.prisma --url="$DATABASE_URL"; then
+if node /app/prisma-cli/node_modules/prisma/build/index.js migrate deploy \
+     --config=/app/scripts/traveller/prisma.config.ts; then
   echo "[setup] Schema ready"
 else
-  echo "[setup] ERROR: database schema push failed" >&2
+  echo "[setup] ERROR: database migration failed" >&2
   exit 1
 fi
 
@@ -174,5 +171,5 @@ if [ -n "${PORT:-}" ] && [ "$PORT" != "3003" ]; then
   echo "[setup]   Use HOST_PORT in .env to change the external port instead."
 fi
 export PORT=3003
-echo "[setup] Starting Flight Finder on port ${PORT}..."
+echo "[setup] Starting Traveller on port ${PORT}..."
 exec node apps/web/server.js

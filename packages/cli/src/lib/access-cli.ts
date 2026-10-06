@@ -41,8 +41,12 @@ export function registerAccessCommands(program: Command): void {
             console.log(`Access origin configured: ${publicBaseUrl}. Open this address to sign in. Additional addresses require SIDEDOOR_PASSWORD_ORIGINS.`);
             return;
           }
-          if (!['initialize', 'setup', 'reset', 'list', 'device', 'prepare', 'finalize'].includes(operation))
+          if (process.env.TRAVELLER_AUTH_MODE !== 'individual' && ['claim', 'recover'].includes(operation))
             throw new Error('Use access initialize, setup, reset, list, device, or origin.');
+          if (!['initialize', 'setup', 'reset', 'list', 'device', 'claim', 'recover', 'prepare', 'finalize'].includes(operation))
+            throw new Error('Use access initialize, setup, reset, list, device, claim, recover, or origin.');
+          if (process.env.TRAVELLER_AUTH_MODE === 'individual' && operation === 'reset')
+            throw new Error('Individual accounts use access recover <principalId>. Complete recovery at /access; shared password reset is unavailable.');
           if (operation === "prepare" || operation === "finalize") {
             if (args.length !== 1)
               throw new Error(`Use access ${operation}.`);
@@ -75,6 +79,12 @@ export function registerAccessCommands(program: Command): void {
             await import("../../../../apps/web/src/lib/sidedoor/access/access-store");
           const store = new FlightFinderAccessStore();
           const access = new AccessService({ store });
+          if (process.env.TRAVELLER_AUTH_MODE === 'individual' && operation === 'setup') {
+            if (args.length !== 1) throw new Error('Use access setup without arguments');
+            console.log(await executeAccessCommand(access, ['claim']));
+            console.log('Open /access on the configured HTTPS origin and claim your individual administrator account. Enter its password there.');
+            return;
+          }
           console.log(
             await executeAccessCommand(access, args, {
               initialize: async () => {

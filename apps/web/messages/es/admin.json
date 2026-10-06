@@ -34,14 +34,14 @@
     "recover": "Confirmar recuperación"
   },
   "AdminLogin": {
-    "title": "Administración de Flight Finder",
+    "title": "Administración de Traveller",
     "passwordPlaceholder": "Contraseña",
     "invalidPassword": "Contraseña inválida",
     "signIn": "Iniciar sesión",
     "signingIn": "Iniciando sesión..."
   },
   "AdminNav": {
-    "brand": "Flight Finder",
+    "brand": "Traveller",
     "dashboard": "Panel",
     "search": "Buscar",
     "queries": "Consultas",
@@ -175,13 +175,13 @@
     "savePassword": "Guardar contraseña",
     "passwordUpdated": "Contraseña actualizada",
     "communityTitle": "Intercambio de datos comunitarios",
-    "communityIntro": "Flight Finder mejora cuando las instancias comparten su historial de precios. Activa el intercambio para aportar tus puntos de datos anonimizados (solo ruta, precio, aerolínea y fecha, nunca nada personal) a un conjunto de tarifas compartido que todos pueden explorar, y a cambio ves precios de la comunidad en rutas que tú no has extraído. Es totalmente opcional y puedes desactivarlo en cualquier momento.",
+    "communityIntro": "Traveller mejora cuando las instancias comparten su historial de precios. Activa el intercambio para aportar tus puntos de datos anonimizados (solo ruta, precio, aerolínea y fecha, nunca nada personal) a un conjunto de tarifas compartido que todos pueden explorar, y a cambio ves precios de la comunidad en rutas que tú no has extraído. Es totalmente opcional y puedes desactivarlo en cualquier momento.",
     "sharingEnabled": "Compartir activado",
     "sharingDisabled": "Compartir desactivado",
     "sharingHint": "Aporta los precios anonimizados de esta instancia (ruta, precio, aerolínea, fecha) al conjunto de datos de la comunidad.",
     "hubAccepting": "Operar un hub: aceptando contribuidores",
     "hubClosed": "Operar un hub: cerrado",
-    "hubHint": "Permite que otras instancias de Flight Finder se registren con esta y envíen aquí sus datos anonimizados. Solo relevante para el hub central. Los registros nuevos tienen límite de tasa y un tope global.",
+    "hubHint": "Permite que otras instancias de Traveller se registren con esta y envíen aquí sus datos anonimizados. Solo relevante para el hub central. Los registros nuevos tienen límite de tasa y un tope global.",
     "providerDetails": "Detalles del proveedor",
     "apiKeyDetail": "Clave de API:",
     "apiKeySaved": "guardada cifrada en esta instancia",

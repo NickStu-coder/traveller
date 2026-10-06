@@ -2,9 +2,9 @@ name: Desktop CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, traveller]
   pull_request:
-    branches: [main]
+    branches: [main, traveller]
 
 permissions:
   contents: read

@@ -1,11 +1,11 @@
 import { travelImportUrl } from '../travel/import-url';
 import type { ParsedFlightQuery } from './parse-query';
 
-interface Field { id: number; value: bigint | Uint8Array }
+export interface GoogleFlightField { id: number; value: bigint | Uint8Array }
 export interface FlightLinkSegment { origin: string; destination: string; date: string; airline: string; number: string }
 export interface FlightLink { url: string; legs: FlightLinkSegment[][]; cabinClass: ParsedFlightQuery['cabinClass'] }
 
-function fields(bytes: Uint8Array): Field[] {
+export function googleFlightFields(bytes: Uint8Array): GoogleFlightField[] {
   let offset = 0;
   const integer = (): bigint => {
     let value = 0n;
@@ -17,7 +17,7 @@ function fields(bytes: Uint8Array): Field[] {
     }
     throw new Error('Invalid Google Flights link data');
   };
-  const result: Field[] = [];
+  const result: GoogleFlightField[] = [];
   while (offset < bytes.length) {
     const tag = Number(integer()), wire = tag & 7;
     if (tag < 8 || result.length >= 100) throw new Error('Invalid Google Flights link fields');
@@ -29,11 +29,11 @@ function fields(bytes: Uint8Array): Field[] {
   }
   return result;
 }
-function message(field: Field): Field[] {
+function message(field: GoogleFlightField): GoogleFlightField[] {
   if (!(field.value instanceof Uint8Array)) throw new Error('Invalid itinerary in Google Flights link');
-  return fields(field.value);
+  return googleFlightFields(field.value);
 }
-function text(entries: Field[], id: number, pattern: RegExp): string {
+function text(entries: GoogleFlightField[], id: number, pattern: RegExp): string {
   const values = entries.filter(field => field.id === id);
   const value = values[0]?.value;
   if (values.length !== 1 || !(value instanceof Uint8Array)) throw new Error('The link does not contain a complete selected itinerary');
@@ -41,7 +41,7 @@ function text(entries: Field[], id: number, pattern: RegExp): string {
   if (!pattern.test(decoded)) throw new Error('Invalid flight details in the selected link');
   return decoded;
 }
-function date(entries: Field[], id: number): string {
+function date(entries: GoogleFlightField[], id: number): string {
   const value = text(entries, id, /^\d{4}-\d{2}-\d{2}$/);
   if (!Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value) throw new Error('Invalid flight date');
   return value;
@@ -54,7 +54,7 @@ export function readFlightLink(raw: unknown): FlightLink {
   let bytes: Uint8Array;
   try { bytes = Uint8Array.from(atob(encoded.replace(/-/g, '+').replace(/_/g, '/')), char => char.charCodeAt(0)); }
   catch { throw new Error('Invalid Google Flights itinerary encoding'); }
-  const root = fields(bytes);
+  const root = googleFlightFields(bytes);
   const legs = root.filter(field => field.id === 3).map(field => {
     const leg = message(field), departure = date(leg, 2);
     const segments = leg.filter(field => field.id === 4).map(field => {

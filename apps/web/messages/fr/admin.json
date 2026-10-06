@@ -34,14 +34,14 @@
     "recover": "Confirmer la récupération"
   },
   "AdminLogin": {
-    "title": "Admin Flight Finder",
+    "title": "Admin Traveller",
     "passwordPlaceholder": "Mot de passe",
     "invalidPassword": "Mot de passe invalide",
     "signIn": "Se connecter",
     "signingIn": "Connexion..."
   },
   "AdminNav": {
-    "brand": "Flight Finder",
+    "brand": "Traveller",
     "dashboard": "Tableau de bord",
     "search": "Recherche",
     "queries": "Requêtes",
@@ -175,13 +175,13 @@
     "savePassword": "Enregistrer le mot de passe",
     "passwordUpdated": "Mot de passe mis à jour",
     "communityTitle": "Partage de données communautaire",
-    "communityIntro": "Flight Finder s’améliore quand les instances mettent en commun leur historique de prix. Active le partage pour contribuer tes points de données anonymisés (itinéraire, prix, compagnie et date uniquement, jamais rien de personnel) à un jeu de données tarifaires partagé que tout le monde peut explorer ; en retour, tu vois les prix communautaires sur des itinéraires que tu n’as pas extraits toi-même. C’est entièrement facultatif et tu peux le désactiver à tout moment.",
+    "communityIntro": "Traveller s’améliore quand les instances mettent en commun leur historique de prix. Active le partage pour contribuer tes points de données anonymisés (itinéraire, prix, compagnie et date uniquement, jamais rien de personnel) à un jeu de données tarifaires partagé que tout le monde peut explorer ; en retour, tu vois les prix communautaires sur des itinéraires que tu n’as pas extraits toi-même. C’est entièrement facultatif et tu peux le désactiver à tout moment.",
     "sharingEnabled": "Partage activé",
     "sharingDisabled": "Partage désactivé",
     "sharingHint": "Contribue les prix anonymisés de cette instance (itinéraire, prix, compagnie, date) au jeu de données communautaire.",
     "hubAccepting": "Héberger un hub : contributeurs acceptés",
     "hubClosed": "Héberger un hub : fermé",
-    "hubHint": "Permet à d’autres instances Flight Finder de s’enregistrer auprès de celle-ci et d’y envoyer leurs données anonymisées. Utile uniquement pour le hub central. Les nouvelles inscriptions sont limitées en débit et plafonnées globalement.",
+    "hubHint": "Permet à d’autres instances Traveller de s’enregistrer auprès de celle-ci et d’y envoyer leurs données anonymisées. Utile uniquement pour le hub central. Les nouvelles inscriptions sont limitées en débit et plafonnées globalement.",
     "providerDetails": "Détails du fournisseur",
     "apiKeyDetail": "Clé API :",
     "apiKeySaved": "stockée chiffrée dans cette instance",

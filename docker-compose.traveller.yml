@@ -1,0 +1,74 @@
+name: ${COMPOSE_PROJECT_NAME:-traveller-prod}
+services:
+  db:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: traveller
+      POSTGRES_USER: traveller
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a strong database password}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U traveller -d traveller']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: &logs
+      driver: json-file
+      options: {max-size: 10m, max-file: '3'}
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    restart: unless-stopped
+    command: [redis-server, --appendonly, 'yes']
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logs
+
+  web:
+    # Complete immutable reference, e.g. ghcr.io/nickstu-coder/traveller@sha256:...
+    image: ${TRAVELLER_IMAGE:?Set the verified Traveller image digest}
+    restart: unless-stopped
+    init: true
+    shm_size: 256mb
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    ports:
+      - '127.0.0.1:${WEB_PORT:-3003}:3003'
+    volumes:
+      - appdata:/app/data
+    environment:
+      DATABASE_URL: postgresql://traveller:${POSTGRES_PASSWORD:?Set a database password}@db:5432/traveller
+      REDIS_URL: redis://redis:6379
+      ADMIN_SESSION_SECRET: ${ADMIN_SESSION_SECRET:?Set a persistent encryption/session secret}
+      CRON_SECRET: ${CRON_SECRET:?Set a persistent cron secret}
+      APP_URL: ${APP_URL:?Set the public HTTPS origin}
+      SELF_HOSTED: 'true'
+      TRAVELLER_AUTH_MODE: individual
+      INSTALL_CLI_PROVIDERS: 'false'
+      CRON_ENABLED: ${CRON_ENABLED:-true}
+      ANALYTICS_DB_PATH: /app/data/analytics.db
+      NODE_ENV: production
+      CHROME_PATH: /usr/bin/chromium-browser
+      TRUSTED_FORWARDED_FOR: 'true'
+    healthcheck:
+      test: [CMD, curl, -fsS, http://localhost:3003/api/health]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    logging: *logs
+
+volumes:
+  pgdata:
+  redisdata:
+  appdata:

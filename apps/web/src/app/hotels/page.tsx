@@ -23,5 +23,5 @@ export default async function HotelsPage() {
   } catch {
     mapSettings = { config: { ...DEFAULT_HOTEL_MAP_CONFIG, enabled: false }, preferences: DEFAULT_HOTEL_MAP_PREFERENCES, account: !!user, error: t('mapSettingsError') };
   }
-  return <main className={styles.root}><ThemeToggle /><TravelNav active="hotels" /><header className={styles.hero}><span className={styles.eyebrow}>Flight Finder</span><h1>{t('headline')}</h1><p className={styles.muted}>{t('intro')}</p></header><HotelSearchExperience key={user?.id ?? 'solo'} mapSettings={mapSettings} /><HotelTrackers /></main>;
+  return <main className={styles.root}><ThemeToggle /><TravelNav active="hotels" /><header className={styles.hero}><span className={styles.eyebrow}>Traveller</span><h1>{t('headline')}</h1><p className={styles.muted}>{t('intro')}</p></header><HotelSearchExperience key={user?.id ?? 'solo'} mapSettings={mapSettings} /><HotelTrackers /></main>;
 }

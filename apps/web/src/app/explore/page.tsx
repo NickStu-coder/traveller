@@ -88,7 +88,7 @@ export default async function ExplorePage() {
 
       <div className={styles.hero}>
         <h1 className={styles.title}>
-          <Link href="/">Flight Finder</Link>
+          <Link href="/">Traveller</Link>
           {' '}
           <span className={styles.titleAccent}>{t('explore')}</span>
         </h1>

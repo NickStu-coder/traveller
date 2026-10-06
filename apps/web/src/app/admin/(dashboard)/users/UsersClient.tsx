@@ -19,13 +19,14 @@ interface UserRow {
 
 interface Props {
   initialUsers: UserRow[];
+  individual?: boolean;
 }
 
-// "ft-" prefix kept across the Flight Finder rename so existing browsers preserve state.
+// "ft-" prefix kept across the Traveller rename so existing browsers preserve state.
 const BACKFILL_BANNER_KEY = 'ft-backfill-banner-dismissed';
 const BACKFILL_COUNT_KEY = 'ft-backfill-count';
 
-export function UsersClient({ initialUsers }: Props) {
+export function UsersClient({ initialUsers, individual = false }: Props) {
   const t = useTranslations('AdminUsers');
   const security = useTranslations('SharedSecurity');
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
@@ -120,11 +121,11 @@ export function UsersClient({ initialUsers }: Props) {
       )}
 
       <p className={styles.rowMeta}>{security('verify')} <a href="/access/security">{security('title')}</a></p>
-      <AddUserForm onCreated={refresh} />
+      {!individual && <AddUserForm onCreated={refresh} />}
 
-      <button type="button" className={styles.action} onClick={handleQuickAddGuest}>
+      {!individual && <button type="button" className={styles.action} onClick={handleQuickAddGuest}>
         {t('addGuest')}
-      </button>
+      </button>}
 
       <div className={styles.list}>
         {users.length === 0 ? (
@@ -154,7 +155,7 @@ export function UsersClient({ initialUsers }: Props) {
         )}
       </div>
 
-      <div className={styles.addForm}>
+      {!individual && <div className={styles.addForm}>
         <h2 className={styles.formTitle}>{t('dangerZone')}</h2>
         <p className={styles.rowMeta}>
           {t('dangerText')}
@@ -162,7 +163,7 @@ export function UsersClient({ initialUsers }: Props) {
         <button className={styles.danger} onClick={handleDisableMultiUser}>
           {t('disableMultiUser')}
         </button>
-      </div>
+      </div>}
     </>
   );
 }

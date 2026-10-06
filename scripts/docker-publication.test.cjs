@@ -31,6 +31,13 @@ test('a failed newer run cannot inherit an older success', async () => {
   await assert.rejects(requireChecks({ github: checks(runs), sha, attempts: 1 }), /did not pass.*failure/);
 });
 
+test('publication admits the Traveller branch only with every exact-commit check', async () => {
+  const runs = Object.fromEntries(REQUIRED_WORKFLOWS.map(name => [name, [{ ...successful, head_branch: 'traveller' }]]));
+  await requireChecks({ github: checks(runs), sha, attempts: 1 });
+  runs['ci.yml'] = [{ ...successful, head_branch: 'untrusted-branch' }];
+  await assert.rejects(requireChecks({ github: checks(runs), sha, attempts: 1 }), /Missing completed checks/);
+});
+
 test('publication waits for checks still running and rejects a failed rerun', async () => {
   const runs = Object.fromEntries(REQUIRED_WORKFLOWS.map((name) => [name, [{ ...successful, status: 'in_progress' }]]));
   await requireChecks({ github: checks(runs), sha, attempts: 2, wait: async () => {

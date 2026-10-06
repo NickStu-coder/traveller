@@ -19,7 +19,8 @@ function runCli(args: string[], env: NodeJS.ProcessEnv = {}) {
   });
 }
 
-describe('flight CLI entrypoint alongside hotel and car commands', () => {
+// Each subprocess has a 15-second ceiling; leave time for the process callback on slower NAS CPUs.
+describe('flight CLI entrypoint alongside hotel and car commands', { timeout: 20_000 }, () => {
   let directory = '';
   let server: Server;
   let serverUrl = '';
@@ -79,6 +80,18 @@ describe('flight CLI entrypoint alongside hotel and car commands', () => {
     expect(result.stderr).toContain('setup');
     expect(result.stdout).toBe('');
   });
+  it('allows individual claim and rejects shared password reset before database access', async () => {
+    const claim = await runCli(['access', 'claim'], { TRAVELLER_AUTH_MODE: 'individual' });
+    expect(claim.code).toBe(1);
+    expect(claim.stderr).toContain('Error:');
+    expect(claim.stderr).not.toContain('Use access');
+    expect(claim.stdout).toBe('');
+    const reset = await runCli(['access', 'reset'], { TRAVELLER_AUTH_MODE: 'individual' });
+    expect(reset.code).toBe(1);
+    expect(reset.stderr).toContain('access recover <principalId>');
+    expect(reset.stderr).not.toContain('Prisma');
+    expect(reset.stdout).toBe('');
+  }, 35_000);
 
   it.each([[], ['https://finder.example/path'], ['https://user:secret@finder.example'], ['https://*.example'], ['https://finder.example', 'extra']].map(args => ({ args })))('rejects invalid origin configuration before accessing the database: $args', async ({ args }) => {
     const result = await runCli(['access', 'origin', ...args]);

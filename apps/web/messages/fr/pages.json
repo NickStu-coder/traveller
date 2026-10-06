@@ -39,7 +39,7 @@
     "refreshFailed": "La modification a été enregistrée. Les informations du compte n’ont pas pu être actualisées. Rechargez la page pour voir l’état actuel."
   },
   "SharedAccess": {
-    "title": "Ouvrir Flight Finder",
+    "title": "Ouvrir Traveller",
     "login": "Se connecter",
     "household": "Continuer",
     "claim": "Revendiquer l’instance",
@@ -50,7 +50,7 @@
     "recoverDescription": "Rétablissez l’accès avec un code de récupération.",
     "name": "Nom du compte",
     "householdAccountLabel": "Compte partagé",
-    "householdAccount": "Flight Finder",
+    "householdAccount": "Traveller",
     "password": "Mot de passe",
     "code": "Code de récupération ou de propriétaire",
     "passkey": "Se connecter avec une clé d’accès",
@@ -94,7 +94,7 @@
     "tagComingSoon": "Bientôt disponible",
     "customProxy": "Proxy personnalisé",
     "vpnHint": "Teste le mythe : les prix des vols changent-ils quand tu navigues depuis un autre pays ?",
-    "stealthSummary": "Ce que Flight Finder fait au-delà du changement d’IP",
+    "stealthSummary": "Ce que Traveller fait au-delà du changement d’IP",
     "stealthTimezone": "Fuseau horaire, locale et Accept-Language alignés sur le pays cible",
     "stealthGeolocation": "L’API Geolocation renvoie des coordonnées correspondantes",
     "stealthWebrtc": "Prévention des fuites WebRTC (l’IP réelle n’est jamais exposée via les candidats ICE)",
@@ -116,13 +116,13 @@
     "how2Text": "Décris un vol, un séjour ou une location de voiture en langage naturel. Les formulaires d’hôtels et de voitures fonctionnent aussi sans IA. Vérifie les dates, les voyageurs ou les conducteurs avant la recherche.",
     "how3Title": "Vois la vraie tendance",
     "how3Text": "Consulte l’historique des prix et reçois des alertes. Les graphiques de vols peuvent être partagés ; les historiques d’hôtels et de voitures restent sur ton instance. Ouvre le lien du fournisseur lorsque tu souhaites réserver.",
-    "notTitle": "Ce que Flight Finder n’est pas",
+    "notTitle": "Ce que Traveller n’est pas",
     "notAggregatorTitle": "Pas un agrégateur",
-    "notAggregatorText": "Flight Finder ne vend pas de places dans les résultats et ne touche pas de commission sur les réservations. Les liens des fournisseurs de voyages peuvent contenir leurs propres paramètres de suivi.",
+    "notAggregatorText": "Traveller ne vend pas de places dans les résultats et ne touche pas de commission sur les réservations. Les liens des fournisseurs de voyages peuvent contenir leurs propres paramètres de suivi.",
     "notAiTitle": "Pas un fournisseur d’IA",
     "notAiText": "L’IA devient une commodité — on ne la revend pas et on ne l’impose pas. Apporte ta propre clé, utilise Claude Code / Codex, ou fais tourner Ollama / llama.cpp / vLLM en local.",
     "notPredictorTitle": "Pas un prédicteur de prix",
-    "notPredictorText": "Pas de conseil opaque du type « achète maintenant ». Flight Finder te montre l’historique réel des prix et te laisse décider du bon moment.",
+    "notPredictorText": "Pas de conseil opaque du type « achète maintenant ». Traveller te montre l’historique réel des prix et te laisse décider du bon moment.",
     "selfHostTitle": "Pourquoi auto-hébergé ?",
     "selfHostLead": "La décentralisation n’est pas une philosophie — c’est la seule architecture qui fonctionne.",
     "benefit1Title": "Ça ne peut pas marcher autrement",
@@ -144,7 +144,7 @@
     "carsText": "Recherche sur DiscoverCars et Auto Europe. Compare les totaux vérifiés parmi les offres examinées, consulte les conditions du conducteur et distingue cautions et franchises. Les frais non vérifiés et les suppléments non confirmés restent visibles.",
     "hotelsText": "Recherche sur Google Hotels et Booking.com par dates, chambres et voyageurs. Suis un hôtel ou un tarif de chambre et définis une alerte de prix cible.",
     "travelHousehold": "En mode multiutilisateur, le mot de passe partagé ou une clé d’accès ouvre le choix du profil. Chaque profil a ses propres suivis. Combine vols, hôtels et voitures de location selon tes besoins.",
-    "travelAvailability": "Les recherches s’exécutent sur ta propre installation. Chaque suivi fonctionne indépendamment. Réserve auprès du fournisseur ; Flight Finder ne regroupe pas les réservations en forfaits."
+    "travelAvailability": "Les recherches s’exécutent sur ta propre installation. Chaque suivi fonctionne indépendamment. Réserve auprès du fournisseur ; Traveller ne regroupe pas les réservations en forfaits."
   },
   "QueryPage": {
     "routeName": "{origin} vers {destination}",
@@ -167,7 +167,7 @@
   "Login": {
     "loading": "Chargement…",
     "signingIn": "Connexion…",
-    "pickerTitle": "Qui utilise Flight Finder ?",
+    "pickerTitle": "Qui utilise Traveller ?",
     "noProfiles": "Aucun profil pour le moment.",
     "invalidCredentials": "Impossible d’ouvrir ce profil."
   },
@@ -258,20 +258,20 @@
     "androidStep2": "Touche le menu (trois points).",
     "androidStep3": "Touche <strong>Installer l’application</strong> ou <strong>Ajouter à l’écran d’accueil</strong>.",
     "desktopNote": "Sur un ordinateur ? Télécharge l’appli de bureau depuis <link>la page de téléchargement</link>, ou ouvre simplement l’URL dans n’importe quel navigateur.",
-    "shareMessage": "Suis des vols et des hôtels avec moi sur Flight Finder",
+    "shareMessage": "Suis des vols et des hôtels avec moi sur Traveller",
     "share": "Partager…",
     "email": "E-mail",
     "copied": "Copié",
     "copy": "Copier"
   },
   "Download": {
-    "title": "Télécharger Flight Finder",
+    "title": "Télécharger Traveller",
     "subtitle": "Utilise les vols, les hôtels ou les deux sur ta propre instance. L’appli de bureau la lance sur ton ordinateur ou se connecte à une instance existante, sans terminal.",
     "latest": "Dernière version : v{version}",
     "download": "Télécharger",
     "notInRelease": "Absent de cette version",
     "noRelease": "Aucune version de bureau n’est encore publiée.",
-    "terminalHint": "Tu peux toujours lancer Flight Finder depuis le terminal :",
+    "terminalHint": "Tu peux toujours lancer Traveller depuis le terminal :",
     "readmeNote": "Tu préfères le terminal, ou une installation sur serveur ? Consulte le <link>README</link> pour l’installateur en une commande et la configuration VPS."
   },
   "Explore": {
@@ -279,7 +279,7 @@
     "tagline": "Données communautaires de prix de vols provenant de {count, plural, one {# contributeur} other {# contributeurs}}",
     "stats": "{snapshots, number} points de prix sur {routes} itinéraires",
     "emptyTitle": "Pas encore de données communautaires",
-    "emptyText": "Auto-héberge Flight Finder et active le partage communautaire pour aider à bâtir la première base de données ouverte de prix de vols au monde.",
+    "emptyText": "Auto-héberge Traveller et active le partage communautaire pour aider à bâtir la première base de données ouverte de prix de vols au monde.",
     "getStarted": "Commencer",
     "from": "à partir de",
     "avg": "moy.",
@@ -307,7 +307,7 @@
     "trackRoute": "Suivre cet itinéraire"
   },
   "Setup": {
-    "title": "Configuration de Flight Finder",
+    "title": "Configuration de Traveller",
     "subtitlePassword": "Définis ton mot de passe admin",
     "subtitleProvider": "Choisis ton fournisseur LLM",
     "subtitleCommunity": "Rejoins la communauté",
@@ -344,7 +344,7 @@
     "apiKeyPastePlaceholder": "Colle ta clé API {provider}",
     "apiKeyHint": "Stockée chiffrée dans cette instance.",
     "communityTitle": "Aide à bâtir la première base de données ouverte de prix de vols au monde",
-    "communityText": "Partage des données de prix anonymisées (itinéraire, prix, compagnie, date) avec la communauté Flight Finder. Aucune info personnelle n’est jamais envoyée.",
+    "communityText": "Partage des données de prix anonymisées (itinéraire, prix, compagnie, date) avec la communauté Traveller. Aucune info personnelle n’est jamais envoyée.",
     "sharingEnabled": "Partage activé",
     "notSharing": "Partage désactivé",
     "communityHint": "Tu peux changer ça à tout moment dans le panneau d’administration.",

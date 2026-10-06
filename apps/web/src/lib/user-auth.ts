@@ -10,11 +10,12 @@ export async function getCurrentUser(): Promise<User | null> {
   if (!token) return null;
   try {
     const state = await sharedAccess.store.read();
+    if (process.env.TRAVELLER_AUTH_MODE === 'individual' && state.mode !== 'individual') return null;
     const auth = sharedAccess.sessionFromState(state, token);
     const id = auth.principal?.id ?? sharedProfiles.selectedFromState(state, token)?.id;
     if (!id) return null;
     const user = await prisma.user.findUnique({ where: { id } });
-    return user ? { ...user, isAdmin: user.isAdmin && sharedAccess.householdOwnerFromState(state, token) } : null;
+    return user && !user.disabledAt ? { ...user, isAdmin: user.isAdmin && (auth.principal?.role === 'owner' || sharedAccess.householdOwnerFromState(state, token)) } : null;
   } catch (error) {
     if (isAccessError(error) && error.code === 'unauthorized') return null;
     throw error;

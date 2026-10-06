@@ -34,6 +34,8 @@ export async function registerForCommunity(): Promise<string> {
 }
 
 export async function syncToHub(): Promise<void> {
+  // Household-wide opt-in cannot authorize disclosure of individual accounts.
+  if (process.env.TRAVELLER_AUTH_MODE === 'individual') return;
   const config = await prisma.extractionConfig.findFirst({
     where: { id: 'singleton' },
   });

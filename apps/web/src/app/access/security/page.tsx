@@ -3,5 +3,5 @@ import { SecurityScreen } from './SecurityScreen';
 export const dynamic = 'force-dynamic';
 
 export default function SecurityPage() {
-  return <SecurityScreen hosted={process.env.SELF_HOSTED !== 'true'} />;
+  return <SecurityScreen hosted={process.env.SELF_HOSTED !== 'true' || process.env.TRAVELLER_AUTH_MODE === 'individual'} />;
 }

@@ -2,9 +2,9 @@ name: Hotel integration
 
 on:
   push:
-    branches: [main]
+    branches: [main, traveller]
   pull_request:
-    branches: [main]
+    branches: [main, traveller]
 
 jobs:
   travel-surfaces:

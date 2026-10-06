@@ -39,7 +39,7 @@
     "refreshFailed": "A alteração foi salva. Não foi possível atualizar os dados da conta. Recarregue para ver o estado atual."
   },
   "SharedAccess": {
-    "title": "Abrir Flight Finder",
+    "title": "Abrir Traveller",
     "login": "Iniciar sessão",
     "household": "Continuar",
     "claim": "Assumir a instância",
@@ -50,7 +50,7 @@
     "recoverDescription": "Restaure o acesso com um código de recuperação.",
     "name": "Nome da conta",
     "householdAccountLabel": "Conta compartilhada",
-    "householdAccount": "Flight Finder",
+    "householdAccount": "Traveller",
     "password": "Senha",
     "code": "Código de recuperação ou de proprietário",
     "passkey": "Entrar com uma chave de acesso",
@@ -94,7 +94,7 @@
     "tagComingSoon": "Em breve",
     "customProxy": "Proxy personalizado",
     "vpnHint": "Teste o mito: os preços dos voos mudam quando você navega de países diferentes?",
-    "stealthSummary": "O que o Flight Finder faz além de trocar seu IP",
+    "stealthSummary": "O que o Traveller faz além de trocar seu IP",
     "stealthTimezone": "Fuso horário, localidade e Accept-Language alinhados ao país de destino",
     "stealthGeolocation": "A API de geolocalização retorna coordenadas correspondentes",
     "stealthWebrtc": "Prevenção de vazamento via WebRTC (o IP real nunca é exposto por candidatos ICE)",
@@ -116,13 +116,13 @@
     "how2Text": "Descreva um voo, uma estadia ou um aluguel de carro em linguagem natural. Os formulários de hotéis e carros também funcionam sem IA. Confira datas, hóspedes ou motoristas antes de buscar.",
     "how3Title": "Veja a tendência real",
     "how3Text": "Veja o histórico de preços e receba alertas. Os gráficos de voos podem ser compartilhados; os históricos de hotéis e carros ficam na sua instância. Abra o link do fornecedor quando quiser reservar.",
-    "notTitle": "O que o Flight Finder não é",
+    "notTitle": "O que o Traveller não é",
     "notAggregatorTitle": "Não é um agregador",
-    "notAggregatorText": "O Flight Finder não vende posições nos resultados nem recebe comissões por reservas. Os links de fornecedores de viagens podem conter seus próprios parâmetros de rastreamento.",
+    "notAggregatorText": "O Traveller não vende posições nos resultados nem recebe comissões por reservas. Os links de fornecedores de viagens podem conter seus próprios parâmetros de rastreamento.",
     "notAiTitle": "Não é um provedor de IA",
     "notAiText": "A IA está virando commodity — não a empacotamos nem a revendemos. Traga sua própria chave, use Claude Code / Codex, ou rode Ollama / llama.cpp / vLLM localmente.",
     "notPredictorTitle": "Não é um previsor de preços",
-    "notPredictorText": "Sem conselhos de caixa-preta do tipo “compre agora”. O Flight Finder mostra o histórico real de preços e deixa você decidir quando é o momento certo.",
+    "notPredictorText": "Sem conselhos de caixa-preta do tipo “compre agora”. O Traveller mostra o histórico real de preços e deixa você decidir quando é o momento certo.",
     "selfHostTitle": "Por que auto-hospedado?",
     "selfHostLead": "Descentralização não é uma filosofia — é o único design que funciona.",
     "benefit1Title": "Não tem como funcionar de outro jeito",
@@ -144,7 +144,7 @@
     "carsText": "Pesquise no DiscoverCars e na Auto Europe. Compare totais verificados entre as ofertas conferidas, leia os requisitos do motorista e veja cauções e franquias separadamente. Taxas não verificadas e extras não confirmados continuam visíveis.",
     "hotelsText": "Pesquise no Google Hotels e no Booking.com por datas, quartos e hóspedes. Acompanhe um hotel ou uma tarifa de quarto e defina um alerta de preço-alvo.",
     "travelHousehold": "No modo multiusuário, a senha compartilhada ou uma chave de acesso abre a seleção de perfis. Cada perfil tem seus próprios acompanhamentos. Combine voos, hotéis e carros de aluguel como preferir.",
-    "travelAvailability": "As buscas são executadas na sua própria instalação. Cada acompanhamento funciona de forma independente. Faça as reservas com o fornecedor; o Flight Finder não agrupa reservas em pacotes."
+    "travelAvailability": "As buscas são executadas na sua própria instalação. Cada acompanhamento funciona de forma independente. Faça as reservas com o fornecedor; o Traveller não agrupa reservas em pacotes."
   },
   "QueryPage": {
     "routeName": "{origin} para {destination}",
@@ -167,7 +167,7 @@
   "Login": {
     "loading": "Carregando…",
     "signingIn": "Entrando…",
-    "pickerTitle": "Quem está usando o Flight Finder?",
+    "pickerTitle": "Quem está usando o Traveller?",
     "noProfiles": "Ainda não há perfis.",
     "invalidCredentials": "Não foi possível abrir este perfil."
   },
@@ -258,20 +258,20 @@
     "androidStep2": "Toque no menu (três pontos).",
     "androidStep3": "Toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.",
     "desktopNote": "Está em um computador? Baixe o app para desktop na <link>página de download</link>, ou simplesmente abra a URL em qualquer navegador.",
-    "shareMessage": "Acompanhe voos e hotéis comigo no Flight Finder",
+    "shareMessage": "Acompanhe voos e hotéis comigo no Traveller",
     "share": "Compartilhar…",
     "email": "E-mail",
     "copied": "Copiado",
     "copy": "Copiar"
   },
   "Download": {
-    "title": "Baixe o Flight Finder",
+    "title": "Baixe o Traveller",
     "subtitle": "Use voos, hotéis ou ambos na sua própria instância. O app de desktop a executa no seu computador ou se conecta a uma instância existente, sem terminal.",
     "latest": "Mais recente: v{version}",
     "download": "Baixar",
     "notInRelease": "Não incluído nesta versão",
     "noRelease": "Nenhuma versão para desktop foi publicada ainda.",
-    "terminalHint": "Você ainda pode rodar o Flight Finder pelo terminal:",
+    "terminalHint": "Você ainda pode rodar o Traveller pelo terminal:",
     "readmeNote": "Prefere o terminal, ou rodar em um servidor? Veja o <link>README</link> para o instalador de um comando e a configuração em VPS."
   },
   "Explore": {
@@ -279,7 +279,7 @@
     "tagline": "Dados de preços de voos da comunidade, de {count, plural, one {# colaborador} other {# colaboradores}}",
     "stats": "{snapshots, number} pontos de preço em {routes} rotas",
     "emptyTitle": "Ainda não há dados da comunidade",
-    "emptyText": "Auto-hospede o Flight Finder e ative o compartilhamento comunitário para ajudar a construir o primeiro banco de dados aberto de preços de voos do mundo.",
+    "emptyText": "Auto-hospede o Traveller e ative o compartilhamento comunitário para ajudar a construir o primeiro banco de dados aberto de preços de voos do mundo.",
     "getStarted": "Começar",
     "from": "a partir de",
     "avg": "média",
@@ -307,7 +307,7 @@
     "trackRoute": "Rastrear esta rota"
   },
   "Setup": {
-    "title": "Configuração do Flight Finder",
+    "title": "Configuração do Traveller",
     "subtitlePassword": "Defina sua senha de administrador",
     "subtitleProvider": "Escolha seu provedor de LLM",
     "subtitleCommunity": "Participe da comunidade",
@@ -344,7 +344,7 @@
     "apiKeyPastePlaceholder": "Cole sua chave de API da {provider}",
     "apiKeyHint": "Armazenada criptografada nesta instância.",
     "communityTitle": "Ajude a construir o primeiro banco de dados aberto de preços de voos do mundo",
-    "communityText": "Compartilhe dados de preços anonimizados (rota, preço, companhia, data) com a comunidade do Flight Finder. Nenhuma informação pessoal é enviada.",
+    "communityText": "Compartilhe dados de preços anonimizados (rota, preço, companhia, data) com a comunidade do Traveller. Nenhuma informação pessoal é enviada.",
     "sharingEnabled": "Compartilhamento ativado",
     "notSharing": "Sem compartilhamento",
     "communityHint": "Você pode mudar isso a qualquer momento no painel de administração.",

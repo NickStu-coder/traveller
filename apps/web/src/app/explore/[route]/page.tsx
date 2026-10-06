@@ -78,7 +78,7 @@ export default async function ExploreRoutePage({ params }: Props) {
 
       <div className={shell.hero}>
         <h1 className={shell.title}>
-          <Link href="/">Flight Finder</Link>{' '}
+          <Link href="/">Traveller</Link>{' '}
           <span className={shell.titleAccent}>{origin} &rarr; {destination}</span>
         </h1>
         <p className={shell.tagline}>

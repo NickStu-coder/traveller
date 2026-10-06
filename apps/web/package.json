@@ -34,7 +34,8 @@
     "thesidedoor": "0.3.4",
     "thesidedoor-core": "0.3.4",
     "ua-parser-js": "^2.0.10",
-    "undici": "^8.11.2"
+    "undici": "^8.11.2",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@copilotkit/aimock": "^1.43.0",

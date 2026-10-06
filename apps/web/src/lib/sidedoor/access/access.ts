@@ -20,7 +20,7 @@ export async function accessHandler() {
     access: sharedAccess,
     devices,
     profiles: sharedProfiles,
-    name: "Flight Finder",
+    name: "Traveller",
     origin,
     passwordOrigins,
     trustedProxy: new URL(origin).protocol === "https:",
@@ -28,6 +28,13 @@ export async function accessHandler() {
     cookieName: SHARED_SESSION_COOKIE,
   });
   return async (request: Request, action: string) => {
+    if (process.env.TRAVELLER_AUTH_MODE === 'individual') {
+      const state = await sharedAccess.store.read();
+      if (state.mode !== 'individual')
+        return Response.json({ error: 'Individual account migration is required' }, { status: 503 });
+      if (['household', 'open-profile', 'select-profile', 'configure-household', 'set-mode'].includes(action))
+        return Response.json({ error: 'Household access is disabled in Traveller' }, { status: 403 });
+    }
     const response = await handler(request, action);
     if (response.status !== 403 || action !== 'household' || request.method !== 'POST') return response;
     const headers = new Headers(request.headers);

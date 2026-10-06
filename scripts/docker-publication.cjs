@@ -17,9 +17,9 @@ async function requireChecks({ github, owner, repo, sha, wait = (ms) => new Prom
   for (let attempt = 0; attempt < attempts; attempt++) {
     const pending = [];
     for (const workflow_id of REQUIRED_WORKFLOWS) {
-      const { data } = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id, head_sha: sha, event: 'push', branch: 'main', per_page: 100 });
+      const { data } = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id, head_sha: sha, event: 'push', per_page: 100 });
       const run = data.workflow_runs
-        .filter((candidate) => candidate.head_sha === sha && candidate.event === 'push' && candidate.head_branch === 'main')
+        .filter((candidate) => candidate.head_sha === sha && candidate.event === 'push' && ['main', 'traveller'].includes(candidate.head_branch))
         .sort((a, b) => b.id - a.id || b.run_attempt - a.run_attempt)[0];
       if (!run || run.status !== 'completed') pending.push(workflow_id);
       else if (run.conclusion !== 'success') throw new Error(`${workflow_id} did not pass for ${sha}: ${run.conclusion}`);

@@ -713,6 +713,8 @@ export async function runFullScrapeForQuery(
 }
 
 export async function cleanupUnvisitedQueries(): Promise<number> {
+  // Traveller retains collected history even when the user never opens a tracker.
+  if (process.env.TRAVELLER_AUTH_MODE === 'individual') return 0;
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const result = await prisma.query.deleteMany({
     where: { firstViewedAt: null, createdAt: { lt: cutoff }, isSeed: false },

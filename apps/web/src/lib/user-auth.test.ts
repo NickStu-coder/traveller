@@ -23,6 +23,19 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe('shared account identity', () => {
+  it('rejects household admission in Traveller and retains individual owner authority', async () => {
+    const fixture = boundary.fixture!;
+    const owner = await fixture.issue('owner', true);
+    await fixture.access.configureHousehold(owner, 'household test password');
+    boundary.token = await fixture.access.enterHousehold('household test password');
+    await fixture.profiles.select(boundary.token, 'owner');
+    boundary.user = { id: 'owner', username: 'owner', isAdmin: true };
+    vi.stubEnv('TRAVELLER_AUTH_MODE', 'individual');
+    expect(await getCurrentUser()).toBeNull();
+    await fixture.access.setMode(boundary.token, 'individual');
+    boundary.token = await fixture.access.login('owner', 'household test password');
+    expect(await requireAdminUser()).toMatchObject({ id: 'owner', isAdmin: true });
+  });
   it('requires a persisted session and rejects non-Sidedoor or tampered cookie values', async () => {
     expect(await getCurrentUser()).toBeNull();
     boundary.token = 'user:member:1700000000000.invalid-signature';

@@ -30,20 +30,16 @@ export async function dispatchNotifications(
   deliveredChannelIds: string[] = [],
   control?: NotificationDeliveryControl,
 ): Promise<NotifyOutcome[]> {
-  // A query owned by a user must still fire the global (userId:null) channels:
-  // those are the only channels the current UI can create. Without OR-ing in the
-  // globals, enabling multi-user mode (which reassigns every query to a user id)
-  // would match zero channels and silently kill all alerts, including the
-  // admin's own. When per-user channels land, both a user's own and the globals
-  // fire — the natural household behavior.
+  // Individual accounts never inherit household/global recipients.
+  const individual = process.env.TRAVELLER_AUTH_MODE === 'individual';
   const read = <T>(query: (tx: Prisma.TransactionClient) => Promise<T>) => control ? notificationTransaction(query, control.signal) : query(prisma);
   const channels = await read(tx => tx.notificationChannel.findMany({
     where: {
       enabled: true,
       ...(deliveredChannelIds.length ? { id: { notIn: deliveredChannelIds } } : {}),
       // SQL `IN (id, NULL)` never matches NULL rows, so OR the two explicitly.
-      ...(ownerUserId === null
-        ? { userId: null }
+      ...(individual || ownerUserId === null
+        ? { userId: ownerUserId }
         : { OR: [{ userId: ownerUserId }, { userId: null }] }),
     },
     select: { id: true, type: true, config: true, userId: true },
@@ -53,6 +49,7 @@ export async function dispatchNotifications(
   const send = async (ch: (typeof channels)[number]): Promise<NotifyOutcome> => {
     const type = ch.type as ChannelType;
     try {
+      if (individual && ch.userId !== ownerUserId) throw new Error('Notification channel belongs to another account');
       // Thread the owner id through: a per-user channel (userId set) stays
       // untrusted, so its outbound host is SSRF-checked at send time.
       await sendToChannel({ id: ch.id, type, config: ch.config, userId: ch.userId }, message, { signal: control?.signal });
@@ -72,7 +69,7 @@ export async function dispatchNotifications(
     control.signal.throwIfAborted();
     // A channel can be disabled, removed or reassigned after batch enumeration.
     const channel = await read(tx => tx.notificationChannel.findUnique({ where: { id: entry.id } }));
-    if (!channel?.enabled || (channel.userId !== null && channel.userId !== ownerUserId)) continue;
+    if (!channel?.enabled || (individual ? channel.userId !== ownerUserId : channel.userId !== null && channel.userId !== ownerUserId)) continue;
     await control.beforeSend(entry.id);
     control.signal.throwIfAborted();
     const outcome = await send(channel);

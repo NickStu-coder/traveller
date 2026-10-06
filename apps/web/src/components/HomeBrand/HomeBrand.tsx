@@ -28,7 +28,7 @@ export function HomeBrand() {
   return (
     <Link href="/" className={travelPage ? `${styles.root} ${styles.hotel}` : styles.root} aria-label={t('home')}>
       <span className={styles.mark} aria-hidden="true" />
-      <span className={styles.word}>Flight Finder</span>
+      <span className={styles.word}>Traveller</span>
     </Link>
   );
 }

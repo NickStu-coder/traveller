@@ -11,6 +11,7 @@ const CACHE_KEY = 'ft:multi-user';
  */
 export async function isMultiUserEnabled(): Promise<boolean> {
   if (process.env.SELF_HOSTED !== 'true') return false;
+  if (process.env.TRAVELLER_AUTH_MODE === 'individual') return true;
   const cfg = await prisma.extractionConfig.findUnique({
     where: { id: 'singleton' }, select: { multiUserMode: true },
   });

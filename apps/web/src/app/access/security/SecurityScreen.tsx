@@ -22,7 +22,7 @@ export function SecurityScreen({ hosted }: { hosted: boolean }) {
     confirmHouseholdPassword: t('confirmHouseholdPassword'), defaultPasskeyName: t('defaultPasskeyName'),
     continueToProfiles: t('continueToProfiles'), householdPasswordTitle: t('householdPasswordTitle'),
     householdPasswordHint: t('householdPasswordHint'), sessionsHint: t('sessionsHint'),
-    otherSessions: t('otherSessions'), savedBrowser: t('savedBrowser'), passwordManagerName: 'Flight Finder',
+    otherSessions: t('otherSessions'), savedBrowser: t('savedBrowser'), passwordManagerName: 'Traveller',
     title: t('title'), verify: t('verify'), currentPassword: t('currentPassword'),
     verifyPassword: t('verifyPassword'), verifyPasskey: t('verifyPasskey'),
     passkeys: t('passkeys'), householdPasskeys: t('householdPasskeys'), passkeyName: t('passkeyName'), addPasskey: t('addPasskey'),
@@ -36,7 +36,7 @@ export function SecurityScreen({ hosted }: { hosted: boolean }) {
   };
   return <main className={styles.root}>
     <div className={styles.content}>
-      <p className={styles.brand}>Flight Finder</p>
+      <p className={styles.brand}>Traveller</p>
       <AccessSecurity copy={copy} showRecoveryCodes={hosted} classes={{ root: styles.access, form: styles.form, label: styles.label, input: styles.input, button: styles.button, secondary: styles.secondary, error: styles.error, hint: styles.hint }}
         onSignInRequired={() => window.location.assign('/access?next=%2Faccess%2Fsecurity')}
         onHouseholdEntered={() => window.location.assign('/login?next=%2Faccess%2Fsecurity')} />

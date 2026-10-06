@@ -34,14 +34,14 @@
     "recover": "Wiederherstellung bestätigen"
   },
   "AdminLogin": {
-    "title": "Flight Finder Admin",
+    "title": "Traveller Admin",
     "passwordPlaceholder": "Passwort",
     "invalidPassword": "Ungültiges Passwort",
     "signIn": "Anmelden",
     "signingIn": "Anmeldung..."
   },
   "AdminNav": {
-    "brand": "Flight Finder",
+    "brand": "Traveller",
     "dashboard": "Dashboard",
     "search": "Suche",
     "queries": "Anfragen",
@@ -175,7 +175,7 @@
     "savePassword": "Passwort speichern",
     "passwordUpdated": "Passwort aktualisiert",
     "communityTitle": "Community-Datenfreigabe",
-    "communityIntro": "Flight Finder wird besser, wenn Instanzen ihre Preisverläufe zusammenlegen. Aktiviere das Teilen, um deine anonymisierten Datenpunkte (nur Route, Preis, Airline und Datum, nie etwas Persönliches) zu einem gemeinsamen Preisdatensatz beizutragen, den alle erkunden können — im Gegenzug siehst du Community-Preise auf Routen, die du selbst nicht abrufst. Vollständig freiwillig und jederzeit abschaltbar.",
+    "communityIntro": "Traveller wird besser, wenn Instanzen ihre Preisverläufe zusammenlegen. Aktiviere das Teilen, um deine anonymisierten Datenpunkte (nur Route, Preis, Airline und Datum, nie etwas Persönliches) zu einem gemeinsamen Preisdatensatz beizutragen, den alle erkunden können — im Gegenzug siehst du Community-Preise auf Routen, die du selbst nicht abrufst. Vollständig freiwillig und jederzeit abschaltbar.",
     "sharingEnabled": "Teilen aktiviert",
     "sharingDisabled": "Teilen deaktiviert",
     "sharingHint": "Trägt die anonymisierten Preise dieser Instanz (Route, Preis, Airline, Datum) zum Community-Datensatz bei.",

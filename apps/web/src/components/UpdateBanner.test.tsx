@@ -51,7 +51,7 @@ describe('UpdateBanner', () => {
       versionResponse({ current: '0.8.0', latest: '0.8.1', updateAvailable: true, renameAnnouncement: null })
     );
     render(<UpdateBanner />);
-    expect(await screen.findByText(/Flight Finder/)).toBeTruthy();
+    expect(await screen.findByText(/Traveller/)).toBeTruthy();
     expect(await screen.findByText(/v0\.8\.1/)).toBeTruthy();
     expect(await screen.findByText('flight-finder update')).toBeTruthy();
   });

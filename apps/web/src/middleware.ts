@@ -161,7 +161,7 @@ export async function middleware(request: NextRequest) {
         destination.searchParams.set("next", pathname + request.nextUrl.search);
         destination.searchParams.set(
           "mode",
-          isSelfHosted ? "household" : hasOwner
+          policy.mode === 'individual' ? 'login' : isSelfHosted ? "household" : hasOwner
             ? policy.mode === "household"
               ? "household"
               : "login"

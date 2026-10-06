@@ -32,9 +32,21 @@ beforeEach(() => {
   );
   vi.stubGlobal('fetch', fetchMock);
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe('dispatchNotifications', () => {
+  it('keeps individual account recipients private even if a channel is reassigned during delivery', async () => {
+    vi.stubEnv('TRAVELLER_AUTH_MODE', 'individual');
+    mockFindMany.mockResolvedValue([{ id: 'owned', type: 'webhook', config: {}, userId: 'user-1' }]);
+    mockFindUnique.mockResolvedValue({ id: 'owned', enabled: true, type: 'webhook', config: { url: 'http://127.0.0.1/hook' }, userId: null });
+    const beforeSend = vi.fn();
+    expect(await dispatchNotifications('user-1', MESSAGE, [], {
+      signal: new AbortController().signal, beforeSend, onDelivered: async () => undefined,
+    })).toEqual([]);
+    expect(mockFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: { enabled: true, userId: 'user-1' } }));
+    expect(beforeSend).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
   it('stops guarded delivery when persisting an accepted channel fails', async () => {
     const channels = ['a', 'b'].map(id => ({ id, type: 'webhook', enabled: true, config: { url: `http://127.0.0.1/${id}` }, userId: null }));
     mockFindMany.mockResolvedValue(channels);

@@ -5,12 +5,14 @@ import { cached } from '@/lib/redis';
 import { filterSnapshotsByTrackerFilters } from '@/lib/snapshot-filters';
 import { MAX_TRACKER_EDIT_EVENTS } from '@/lib/tracker-edit-events';
 import { ACTUAL_FLIGHT_FARE_WHERE, isLegacySplitFare } from '@/lib/flight-pricing';
+import { canReadTravellerQuery } from '@/lib/traveller/access';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  if (!(await canReadTravellerQuery(id))) return apiError('Query not found', 404);
 
   const query = await prisma.query.findUnique({
     where: { id },

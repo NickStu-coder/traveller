@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma, TravelAdmission, TravelLease } from '@/generated/prisma/client';
 import { TravelJobError } from './errors';
 import { interruptTravelRun } from './interruption';
+import { lockTravelAdmission } from './admission/lock';
+export { lockTravelAdmission } from './admission/lock';
 
 export interface TravelLeaseToken { id: string; owner: string; generation: number; topologyVersion: number }
 const DEFAULT_LEASE_MS = 120_000;
@@ -12,10 +14,6 @@ const EPOCH = new Date(0);
  * 761932105 is reserved for admission; 761932104 protects schema setup.
  * Never hold this lock during browser, VPN or notification execution.
  */
-export async function lockTravelAdmission(tx: Prisma.TransactionClient): Promise<void> {
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(761932105)`;
-}
-
 async function admissionRow(tx: Prisma.TransactionClient): Promise<TravelAdmission> {
   await lockTravelAdmission(tx);
   return tx.travelAdmission.upsert({ where: { id: 'singleton' }, create: { id: 'singleton' }, update: {} });

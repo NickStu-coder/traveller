@@ -1,4 +1,4 @@
-export const LOCALES = ['en', 'es', 'pt', 'de', 'fr'] as const;
+export const LOCALES = ['en', 'sl', 'es', 'pt', 'de', 'fr'] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
@@ -8,6 +8,7 @@ export const LOCALE_COOKIE = 'ft-locale';
 
 export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'English',
+  sl: 'Slovenščina',
   es: 'Español',
   pt: 'Português',
   de: 'Deutsch',

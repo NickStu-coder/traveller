@@ -28,6 +28,12 @@ export async function authorizeMutation(
   query: { deleteToken: string | null; userId?: string | null },
   token: string | undefined | null,
 ): Promise<AuthResult> {
+  if (process.env.TRAVELLER_AUTH_MODE === 'individual') {
+    const user = await getCurrentProfile();
+    if (!user) return { ok: false, status: 401, error: 'Unauthorized' };
+    if (query.userId === user.id || user.isAdmin) return { ok: true };
+    return { ok: false, status: 404, error: 'Tracker not found' };
+  }
   const isSelfHosted = process.env.SELF_HOSTED === 'true';
   const multiUser = isSelfHosted ? await isMultiUserEnabled() : false;
 

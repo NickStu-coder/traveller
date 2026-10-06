@@ -12,6 +12,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sharedStateStore } from "./store";
 import { serializable } from "./transaction";
+import { lockTravelAdmission } from '../../travel/admission/lock';
 
 const INITIALIZATION = "flight-finder-platform-v1";
 export class AccountNotFoundError extends Error {}
@@ -24,6 +25,7 @@ const storeFor = (database: Prisma.TransactionClient) =>
   );
 const accountSelection = {
   id: true,
+  disabledAt: true,
   username: true,
   isAdmin: true,
   createdAt: true,
@@ -44,7 +46,7 @@ async function performInitialization(): Promise<void> {
     const store = storeFor(database);
     if ((await store.read()).initializations.includes(INITIALIZATION)) return;
     await initializeAccess(store, INITIALIZATION, {
-      mode: "household",
+      mode: process.env.TRAVELLER_AUTH_MODE === 'individual' ? 'individual' : 'household',
       householdPasswordHash: null,
       principals: [],
     });
@@ -104,6 +106,7 @@ export class FlightFinderAccessStore implements StateStore<AccessState> {
   ) {
     await assertAccessInitialized();
     return serializable(async (database) => {
+      if (process.env.TRAVELLER_AUTH_MODE === 'individual' && prepared.kind === 'delete') await lockTravelAdmission(database);
       const store = storeFor(database);
       const state = await store.read();
       const users = await database.user.findMany({ select: accountSelection });
@@ -120,8 +123,24 @@ export class FlightFinderAccessStore implements StateStore<AccessState> {
         throw new AccountNotFoundError();
       const id = prepared.apply(state, ownerToken);
       const validated = accessStateSchema.parse(state);
+      if (process.env.TRAVELLER_AUTH_MODE === 'individual' && validated.mode !== 'individual')
+        throw new Error('Traveller requires individual authentication. Use local account migration.');
       const principal = validated.principals.find((item) => item.id === id);
       if (!principal) {
+        if (process.env.TRAVELLER_AUTH_MODE === 'individual') {
+          // Revoked credentials must not turn private trackers into global data.
+          const now = new Date();
+          await database.query.updateMany({ where: { userId: id }, data: { active: false } });
+          await database.hotelTracker.updateMany({ where: { userId: id }, data: { active: false } });
+          await database.carTracker.updateMany({ where: { userId: id }, data: { active: false } });
+          await database.watchProfile.updateMany({ where: { userId: id }, data: { active: false } });
+          await database.travellerJob.updateMany({ where: { profile: { userId: id }, state: { in: ['queued', 'running'] } }, data: { state: 'cancelled', leaseToken: null, leaseUntil: null, completedAt: now } });
+          await database.travelJob.updateMany({ where: { userId: id, status: { in: ['queued', 'running'] } }, data: { status: 'cancelled', activeKey: null, leaseResource: null, leaseOwner: null, leaseGeneration: null, cancelledAt: now, completedAt: now } });
+          await database.notificationChannel.updateMany({ where: { userId: id }, data: { enabled: false } });
+          await database.user.update({ where: { id }, data: { disabledAt: now, isAdmin: false } });
+          await store.transact(current => { Object.assign(current, validated); });
+          return null;
+        }
         // Preserve tracker history as promised by the account deletion screen.
         await database.hotelTracker.updateMany({
           where: { userId: id },
@@ -187,6 +206,8 @@ export class FlightFinderAccessStore implements StateStore<AccessState> {
 
   /** Local operator recovery may omit the token; HTTP callers must pass their owner session. */
   async disableProfiles(ownerToken?: string): Promise<void> {
+    if (process.env.TRAVELLER_AUTH_MODE === 'individual')
+      throw new Error('Traveller requires individual authentication');
     await assertAccessInitialized();
     await serializable(async (database) => {
       const store = storeFor(database);
@@ -256,6 +277,8 @@ export class FlightFinderAccessStore implements StateStore<AccessState> {
         throw new Error("Access transactions must be synchronous");
       const detached = structuredClone(result);
       const validated = accessStateSchema.parse(state);
+      if (process.env.TRAVELLER_AUTH_MODE === 'individual' && validated.mode !== 'individual')
+        throw new Error('Traveller requires individual authentication');
       if (validated.mode === "individual")
         await database.extractionConfig.upsert({
           where: { id: "singleton" },
@@ -265,7 +288,7 @@ export class FlightFinderAccessStore implements StateStore<AccessState> {
       if (
         users.some(
           (user) =>
-            !validated.principals.some((principal) => principal.id === user.id),
+            !user.disabledAt && !validated.principals.some((principal) => principal.id === user.id),
         )
       )
         throw new Error(

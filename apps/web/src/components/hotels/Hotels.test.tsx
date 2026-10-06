@@ -38,14 +38,14 @@ describe('Hotel search and tracking', () => {
   });
   it('offers each travel section from an account without marking one as the current page', () => {
     render(<TravelNav />);
-    expect(screen.getByRole('link', { name: 'Flights' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Flights' })).toHaveAttribute('href', '/flights');
     expect(screen.getByRole('link', { name: 'Hotels' })).toHaveAttribute('href', '/hotels');
     expect(screen.getByRole('link', { name: 'Cars' })).toHaveAttribute('href', '/cars');
     expect(screen.getAllByRole('link').every(link => !link.hasAttribute('aria-current'))).toBe(true);
   });
   it.each(['flights', 'hotels', 'cars'] as const)('marks only the active %s section as the current page', active => {
     render(<TravelNav active={active} />);
-    expect(screen.getByRole('link', { current: 'page' })).toHaveAttribute('href', active === 'flights' ? '/' : `/${active}`);
+      expect(screen.getByRole('link', { current: 'page' })).toHaveAttribute('href', `/${active}`);
   });
   it('submits room allocation, child ages and filters without requiring a flight', async () => {
     const fetcher = vi.fn().mockResolvedValue(response({ id: 's1', status: 'unavailable', result: { offers: [], errors: [], completed: 2, total: 2 } })); vi.stubGlobal('fetch', fetcher);

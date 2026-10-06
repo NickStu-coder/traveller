@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/prisma';
+import { canReadTravellerQuery } from '@/lib/traveller/access';
 import { ACTUAL_FLIGHT_FARE_WHERE } from '@/lib/flight-pricing';
 import { PriceChart } from '@/components/PriceChart';
 import { BestPrice } from '@/components/BestPrice';
@@ -33,6 +34,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
+  if (!(await canReadTravellerQuery(id))) notFound();
   const query = await prisma.query.findUnique({ where: { id } });
 
   if (!query) return {};
@@ -230,6 +232,7 @@ function buildStackedItem(qData: QueryWithSnapshots, t: Translator): StackedItem
 }
 
 async function loadQueryWithSnapshots(id: string): Promise<QueryWithSnapshots | null> {
+  if (!(await canReadTravellerQuery(id))) notFound();
   const query = await prisma.query.findUnique({ where: { id } });
   if (!query) return null;
 
@@ -386,7 +389,7 @@ export default async function ChartPage({ params }: Props) {
         name: `${primary.query.originName} to ${primary.query.destinationName} Flight Prices`,
         description: `Flight price tracker for ${primary.query.origin} → ${primary.query.destination}`,
         url: `https://flight-finder.org/q/${id}`,
-        isPartOf: { '@type': 'WebSite', name: 'Flight Finder', url: 'https://flight-finder.org' },
+        isPartOf: { '@type': 'WebSite', name: 'Traveller', url: 'https://flight-finder.org' },
       },
       {
         '@type': 'BreadcrumbList',
@@ -405,7 +408,7 @@ export default async function ChartPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <nav className={styles.topBar}>
-        <Link href="/" className={styles.brand}>Flight Finder</Link>
+        <Link href="/" className={styles.brand}>Traveller</Link>
         <ThemeToggle />
       </nav>
 

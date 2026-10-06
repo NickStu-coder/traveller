@@ -32,5 +32,5 @@ export default async function CarsPage() {
   ]);
   const scope = actor.userId ?? 'single';
   const options = carFormOptions(await getLocale());
-  return <main className={styles.page}><ThemeToggle /><TravelNav active="cars" /><header className={styles.pageHeader}><p className={styles.eyebrow}>Flight Finder</p><h1>{t('carsTitle')}</h1></header><CarPrivateBoundary key={randomUUID()}><CarSearchForm actorScope={scope} defaultCurrency={user?.defaultCurrency ?? config?.defaultCurrency ?? 'USD'} defaultSources={effectiveCarProviders(user?.preferredCarProviders ?? [])} options={options} /><CarRecentSearches /><CarTrackers /></CarPrivateBoundary></main>;
+  return <main className={styles.page}><ThemeToggle /><TravelNav active="cars" /><header className={styles.pageHeader}><p className={styles.eyebrow}>Traveller</p><h1>{t('carsTitle')}</h1></header><CarPrivateBoundary key={randomUUID()}><CarSearchForm actorScope={scope} defaultCurrency={user?.defaultCurrency ?? config?.defaultCurrency ?? 'USD'} defaultSources={effectiveCarProviders(user?.preferredCarProviders ?? [])} options={options} /><CarRecentSearches /><CarTrackers /></CarPrivateBoundary></main>;
 }

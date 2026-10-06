@@ -15,6 +15,17 @@ import { authorizeMutation, canManageQueryWithoutToken } from './query-auth';
 beforeEach(() => { boundary.fixture!.reset(); boundary.token = ''; boundary.user = null; boundary.multiUser = false; });
 afterEach(() => vi.unstubAllEnvs());
 describe('tracker mutation authority', () => {
+  it('does not let a Traveller member use a leaked capability for another account', async () => {
+    const fixture = boundary.fixture!;
+    await fixture.access.setMode(await fixture.issue('owner', true), 'individual');
+    vi.stubEnv('SELF_HOSTED', 'true'); vi.stubEnv('TRAVELLER_AUTH_MODE', 'individual');
+    boundary.user = { id: 'member', isAdmin: false };
+    boundary.token = await boundary.fixture!.issue('member');
+    expect((await authorizeMutation({ userId: 'other', deleteToken: 'leaked' }, 'leaked')).status).toBe(404);
+    expect((await authorizeMutation({ userId: 'member', deleteToken: null }, null)).ok).toBe(true);
+    boundary.token = '';
+    expect((await authorizeMutation({ userId: 'member', deleteToken: 'leaked' }, 'leaked')).status).toBe(401);
+  });
   it.each(['true', 'false'])('requires owner authority or a matching capability in solo deployments with SELF_HOSTED=%s', async selfHosted => {
     vi.stubEnv('SELF_HOSTED', selfHosted);
     const query = { userId: null, deleteToken: 'tracker-capability' };

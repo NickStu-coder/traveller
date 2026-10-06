@@ -12,6 +12,16 @@ function githubReleases(releases: { tag_name: string; prerelease?: boolean; draf
 describe('GET /api/version', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it('does not offer an upstream CLI update for an immutable Traveller deployment', async () => {
+    vi.stubEnv('TRAVELLER_AUTH_MODE', 'individual');
+    const fetch = vi.spyOn(globalThis, 'fetch');
+    const data = (await (await GET()).json()).data;
+    expect(data.updateAvailable).toBe(false);
+    expect(data.renameAnnouncement).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('ignores desktop releases when resolving the latest web version', async () => {

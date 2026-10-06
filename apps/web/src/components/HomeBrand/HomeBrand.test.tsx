@@ -17,7 +17,7 @@ describe('HomeBrand', () => {
   it.each(['/account', '/', '/hotels', '/hotels/saved-stay', '/cars', '/cars/search/owned-search', '/cars/saved-rental'])('provides a home link on %s', (path) => {
     vi.mocked(usePathname).mockReturnValue(path);
     render(<HomeBrand />);
-    expect(screen.getByRole('link', { name: /Flight Finder home/i })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /Traveller home/i })).toHaveAttribute('href', '/');
   });
 
   it.each(['/admin', '/admin/users', '/setup', '/login'])(

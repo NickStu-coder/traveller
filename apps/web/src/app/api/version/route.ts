@@ -18,6 +18,10 @@ function compareSemver(a: string, b: string): number {
 
 export async function GET() {
   const current = pkg.version;
+  if (process.env.TRAVELLER_AUTH_MODE === 'individual') {
+    // Traveller is deployed by immutable image; upstream releases cannot update it.
+    return apiSuccess({ current, commit: process.env.NEXT_PUBLIC_COMMIT_SHA ?? 'dev', latest: null, updateAvailable: false, renameAnnouncement: null });
+  }
   let latest: string | null = null;
 
   try {

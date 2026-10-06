@@ -63,7 +63,7 @@
     "findOut": "Finde es heraus.",
     "vpnNotConfigured": "VPN ist noch nicht konfiguriert. Richte ExpressVPN ein, um Preise aus verschiedenen Ländern zu vergleichen.",
     "goToSettings": "Zu den Einstellungen",
-    "sidecarNotRunning": "Der ExpressVPN-Sidecar läuft nicht. Starte Flight Finder mit VPN-Unterstützung:",
+    "sidecarNotRunning": "Der ExpressVPN-Sidecar läuft nicht. Starte Traveller mit VPN-Unterstützung:",
     "moreRegions": "+ {count} weitere Regionen",
     "edit": "Bearbeiten",
     "previewTaskCount": "Diese Suche führt {count, plural, one {# Google-Flights-Abfrage} other {# Google-Flights-Abfragen}} aus ({origins, plural, one {# Abflug} other {# Abflüge}} × {destinations, plural, one {# Ziel} other {# Ziele}} × {dates, plural, one {# Datumspaar} other {# Datumspaare}}).",
@@ -115,7 +115,7 @@
     "refreshNow": "Jetzt aktualisieren"
   },
   "HomeBrand": {
-    "home": "Flight Finder Startseite"
+    "home": "Traveller Startseite"
   },
   "InstallCommand": {
     "copyToClipboard": "In die Zwischenablage kopieren",
@@ -376,7 +376,7 @@
   "UpdateBanner": {
     "renamed": "Umbenannt in <strong>{to}</strong>. Führe den Upgrade-Befehl aus, um deine Installation zu migrieren.",
     "dismiss": "Ausblenden",
-    "updateAvailable": "Flight Finder <strong>v{version}</strong> ist verfügbar."
+    "updateAvailable": "Traveller <strong>v{version}</strong> ist verfügbar."
   },
   "UsageStats": {
     "tracking": "Verfolgt",

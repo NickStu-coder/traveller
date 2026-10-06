@@ -15,6 +15,7 @@ export default async function UsersPage() {
 
   const t = await getTranslations('AdminUsers');
   const users = await prisma.user.findMany({
+    where: { disabledAt: null },
     orderBy: [{ isAdmin: 'desc' }, { username: 'asc' }],
     select: {
       id: true,
@@ -30,8 +31,9 @@ export default async function UsersPage() {
   return (
     <div className={styles.root}>
       <h1 className={styles.title}>{t('title')}</h1>
-      {process.env.SELF_HOSTED !== 'true' && <AccessInvitation />}
+      {(process.env.SELF_HOSTED !== 'true' || process.env.TRAVELLER_AUTH_MODE === 'individual') && <AccessInvitation />}
       <UsersClient
+        individual={process.env.TRAVELLER_AUTH_MODE === 'individual'}
         initialUsers={users.map((u) => ({
           id: u.id,
           username: u.username,

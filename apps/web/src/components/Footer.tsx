@@ -7,7 +7,7 @@ export async function Footer() {
   return (
     <footer className={styles.root}>
       <p className={styles.links}>
-        <Link href="/">Flight Finder</Link>
+        <Link href="/">Traveller</Link>
         {' '}&mdash; {t('tagline')}
         {' '}&middot;{' '}
         <Link href="/explore">{t('explore')}</Link>

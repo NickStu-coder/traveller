@@ -1,6 +1,6 @@
 {
-  "name": "Flight Finder",
-  "short_name": "Flight Finder",
+  "name": "Traveller",
+  "short_name": "Traveller",
   "description": "Self-host flight, hotel and rental car price tracking. Search each independently.",
   "start_url": "/",
   "display": "standalone",

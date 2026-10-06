@@ -88,7 +88,7 @@ export function ClarificationCard({
               className={`${styles.turn} ${turn.role === 'assistant' ? styles.assistantTurn : styles.userTurn}`}
             >
               <span className={styles.turnLabel}>
-                {turn.role === 'assistant' ? 'Flight Finder' : t('you')}
+                {turn.role === 'assistant' ? 'Traveller' : t('you')}
               </span>
               <span className={styles.turnContent}>{turn.content}</span>
             </div>
