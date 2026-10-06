@@ -1,8 +1,9 @@
 import { prisma } from '../../prisma';
 import { initializeTravellerSources, scheduleTravellerDiscovery } from './store';
 import { runTravellerJob } from './worker';
+import { deliverTravellerAlerts } from '../alerts/delivery';
 
-const runtime = globalThis as typeof globalThis & { travellerTimer?: ReturnType<typeof setTimeout>; travellerPump?: Promise<void> };
+const runtime = globalThis as typeof globalThis & { travellerTimer?: ReturnType<typeof setTimeout>; travellerPump?: Promise<void>; travellerStarting?: Promise<void> };
 export async function pumpTraveller(): Promise<void> {
   if (runtime.travellerPump) return runtime.travellerPump;
   runtime.travellerPump = (async () => {
@@ -10,13 +11,15 @@ export async function pumpTraveller(): Promise<void> {
     if (config?.enabled === false) return;
     await scheduleTravellerDiscovery();
     await runTravellerJob();
+    await deliverTravellerAlerts();
   })().catch(() => { console.error(JSON.stringify({ event: 'traveller_scheduler', state: 'failed', error: 'Scheduler unavailable; inspect database and travel admission health' })); })
     .finally(() => { runtime.travellerPump = undefined; });
   return runtime.travellerPump;
 }
 export async function startTravellerScheduler(): Promise<void> {
   if (process.env.TRAVELLER_AUTH_MODE !== 'individual' || process.env.CRON_ENABLED === 'false' || runtime.travellerTimer) return;
-  await initializeTravellerSources();
+  if (runtime.travellerStarting) return runtime.travellerStarting;
+  runtime.travellerStarting = initializeTravellerSources().then(() => {
   const tick = async () => {
     await pumpTraveller();
     runtime.travellerTimer = setTimeout(() => { void tick(); }, 60_000);
@@ -24,4 +27,6 @@ export async function startTravellerScheduler(): Promise<void> {
   };
   runtime.travellerTimer = setTimeout(() => { void tick(); }, 10_000);
   runtime.travellerTimer.unref();
+  }).finally(() => { runtime.travellerStarting = undefined; });
+  return runtime.travellerStarting;
 }

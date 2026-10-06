@@ -33,6 +33,88 @@ jobs:
       - run: bash scripts/cli-runtime-test.sh
       - run: python3 -m unittest discover -s scripts -p 'test_deploy*.py' -v
 
+  traveller-database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: traveller-test-only
+          POSTGRES_DB: traveller_test
+        ports:
+          - 55443:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d traveller_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:traveller-test-only@127.0.0.1:55443/traveller_test
+      TRAVELLER_DATABASE_TESTS: '1'
+      TRAVEL_BROWSER_TESTS: '1'
+      REDIS_URL: ''
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run db:push
+      - run: npx playwright install chromium --with-deps
+      - name: Private profiles, fenced workers, trip history, alert receipts and repeatable fresh migrations
+        run: >-
+          npm run test --workspace=@flight-finder/web --
+          src/lib/traveller/profile-store.integration.test.ts
+          src/lib/traveller/scheduler/worker.integration.test.ts
+          src/lib/traveller/alerts/alerts.integration.test.ts
+          src/lib/traveller/migrations.integration.test.ts
+          src/lib/traveller/engine/trips/pipeline.integration.test.ts
+          src/lib/travel/navigation.browser.test.ts --maxWorkers=1
+
+  traveller-surfaces:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: traveller-browser-test-only
+          POSTGRES_DB: traveller_surfaces
+        ports:
+          - 55443:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d traveller_surfaces"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:traveller-browser-test-only@127.0.0.1:55443/traveller_surfaces
+      TRAVELLER_AUTH_MODE: individual
+      SELF_HOSTED: 'true'
+      APP_URL: http://127.0.0.1:3019
+      ADMIN_SESSION_SECRET: traveller-browser-test-only-session-key
+      TRAVELLER_BROWSER_OUTPUT: /tmp/traveller-browser
+      REDIS_URL: ''
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run db:push
+      - run: npm run build
+      - run: npx playwright install chromium --with-deps
+      - name: Individual claim/login, private profiles and channels, Slovenian and mobile surfaces
+        run: node scripts/traveller/browser.mjs
+      - name: Failed browser diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: traveller-browser-failure
+          path: /tmp/traveller-browser
+          retention-days: 3
+
   account-lifecycle:
     runs-on: ubuntu-latest
     timeout-minutes: 15

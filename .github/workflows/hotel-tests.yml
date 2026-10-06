@@ -45,6 +45,7 @@ jobs:
         with:
           name: travel-surfaces-evidence
           path: /tmp/flight-finder-travel-surfaces
+          retention-days: 3
 
   hotel-workflows:
     runs-on: ubuntu-latest
@@ -142,3 +143,4 @@ jobs:
         with:
           name: hotel-browser-evidence
           path: /tmp/flight-finder-hotel-browser
+          retention-days: 3

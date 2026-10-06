@@ -35,4 +35,8 @@ Do not use `--clean` against a production database. Restore appdata and encrypti
 
 Stop writers, preserve the current database and logs, identify the backup/image pair, and rehearse restore on separate storage. Replacing production data is destructive and requires explicit operator approval. Never run `docker compose down -v`, delete a persistent volume, or reset Prisma in an attempt to fix deployment.
 
-Backup existence and restore capability have not been verified for the user's NAS because no runtime access was supplied.
+Production backup existence and restore capability are not yet confirmed. NAS access has been supplied; validation runs only in separate disposable databases and cannot establish the backup status of future production volumes.
+
+## Recorded isolated rehearsal
+
+On 2026-10-06, the dedicated PostgreSQL 16 validation container successfully created a custom-format `pg_dump`, validated its archive contents and used `pg_restore --no-owner --exit-on-error` into a newly created `traveller_restore_rehearsal` database. Restored counts were one individual owner, one private Watch Profile, one encrypted notification channel and five completed migrations. The application then verified original password login, session logout/revocation, profile ownership and decryption with the original test encryption key. No mail was sent. This rehearsal contained disposable test fixtures, not production user data or off-NAS production backups.

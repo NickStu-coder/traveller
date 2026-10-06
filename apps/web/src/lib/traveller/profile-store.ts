@@ -1,10 +1,12 @@
 import type { Prisma } from '@/generated/prisma/client';
 import type { WatchConstraints } from './profiles';
 import { serializable } from '../sidedoor/access/transaction';
+import { positioningDistances } from './engine/positioning/geography';
 
 export class ProfileConflict extends Error {}
 
 export async function saveProfile(userId: string, constraints: WatchConstraints, existing?: { id: string; revision: number; active: boolean }) {
+  await positioningDistances(constraints).catch(error => { throw new ProfileConflict(error instanceof Error ? error.message : 'Positioning geography is unavailable'); });
   return serializable(async tx => {
     const channelIds = [...new Set(constraints.alerts.channelIds)];
     if (channelIds.length && await tx.notificationChannel.count({ where: { id: { in: channelIds }, userId } }) !== channelIds.length)

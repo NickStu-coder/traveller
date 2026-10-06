@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flight-finder-v2';
+const CACHE_NAME = 'traveller-v1';
 // Only the icon is precached. The HTML document ('/') is intentionally NOT
 // cached: caching it risks serving a stale shell (old bundle refs, old theme)
 // after a redeploy. Pages and assets go through the network-first handler below.
@@ -23,19 +23,18 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
-  // Only cache GET requests for pages and static assets
+  // Private HTML, RSC payloads, API data and optimized user images stay on the
+  // network. Only versioned public bundles can survive an account switch.
   if (request.method !== 'GET') return;
-
-  // Skip API routes — always go to network
   const url = new URL(request.url);
-  if (url.pathname.startsWith('/api/')) return;
+  if (url.origin !== self.location.origin || !url.pathname.startsWith('/_next/static/')) return;
 
   event.respondWith(
     fetch(request)
       .then((response) => {
         // Cache only hashed static assets (immutable across deploys). The HTML
         // document is never cached so a redeploy is picked up on next load.
-        if (response.ok && url.pathname.startsWith('/_next/')) {
+        if (response.ok && response.type === 'basic' && !/private|no-store/i.test(response.headers.get('cache-control') || '')) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }

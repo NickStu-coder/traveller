@@ -45,7 +45,7 @@ DO $$ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TravelAlertDelivery_reference_check' AND conrelid = '"TravelAlertDelivery"'::regclass) THEN
     ALTER TABLE "TravelAlertDelivery" ADD CONSTRAINT "TravelAlertDelivery_reference_check"
-      CHECK (num_nonnulls("queryId", "hotelAlertId", "carTrackerId") = 1);
+      CHECK (num_nonnulls("queryId", "hotelAlertId", "carTrackerId", "travellerAlertId") = 1);
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'CarTracker_amounts_check' AND conrelid = '"CarTracker"'::regclass) THEN
     ALTER TABLE "CarTracker" ADD CONSTRAINT "CarTracker_amounts_check" CHECK (

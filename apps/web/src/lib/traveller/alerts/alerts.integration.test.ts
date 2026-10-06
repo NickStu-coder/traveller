@@ -1,0 +1,95 @@
+import { randomUUID } from 'node:crypto';
+import { afterAll, beforeAll, expect, it, vi } from 'vitest';
+import type { Prisma } from '@/generated/prisma/client';
+import type { NotificationDeliveryControl } from '../../notifications/notify';
+import { prisma } from '../../prisma';
+import { profileSchema } from '../profiles';
+import { saveProfile } from '../profile-store';
+import { exactFlight } from '../sources/flights/google-exact';
+import { parseExploreCards } from '../sources/google-explore';
+import fixture from '../sources/flights/fixtures/google-booking.json';
+import directFixture from '../sources/airlines/fixtures/lufthansa-cart.json';
+import { verifyLufthansa } from '../sources/airlines/lufthansa';
+import { flightComparison, flightIdentity, recordFlights } from '../engine/pipeline';
+import { DEFAULT_WEIGHTS } from '../engine/policy';
+import { DEFAULT_SCHEDULER } from '../scheduler/policy';
+import { deliverTravellerAlerts } from './delivery';
+
+const dispatch = vi.hoisted(() => vi.fn());
+vi.mock('../../notifications/notify', () => ({ dispatchNotifications: dispatch }));
+const enabled = process.env.TRAVELLER_DATABASE_TESTS === '1';
+const owners = ['traveller-alert-owner-' + randomUUID(), 'traveller-alert-other-' + randomUUID()];
+let validated = false;
+beforeAll(async () => {
+  if (!enabled) return;
+  const url = new URL(process.env.DATABASE_URL ?? '');
+  if (!['database', 'localhost', '127.0.0.1'].includes(url.hostname) || url.pathname !== '/traveller_test') throw new Error('Alert integration requires the dedicated traveller_test database');
+  validated = true;
+  for (const id of owners) await prisma.user.create({ data: { id, username: id, locale: 'sl' } });
+});
+afterAll(async () => {
+  if (!validated) return;
+  const profiles = await prisma.watchProfile.findMany({ where: { userId: { in: owners } }, select: { id: true } });
+  const ids = profiles.map(profile => profile.id);
+  await prisma.travelAlertDelivery.deleteMany({ where: { travellerAlert: { profileId: { in: ids } } } });
+  await prisma.travellerAlert.deleteMany({ where: { profileId: { in: ids } } });
+  await prisma.travellerVerification.deleteMany({ where: { observation: { profileId: { in: ids } } } });
+  await prisma.travellerTrip.deleteMany({ where: { profileId: { in: ids } } });
+  await prisma.travellerObservation.deleteMany({ where: { profileId: { in: ids } } });
+  await prisma.travellerJob.deleteMany({ where: { profileId: { in: ids } } });
+  await prisma.watchProfileRevision.deleteMany({ where: { profileId: { in: ids } } });
+  await prisma.watchProfile.deleteMany({ where: { id: { in: ids } } });
+  await prisma.user.deleteMany({ where: { id: { in: owners } } });
+  vi.unstubAllEnvs(); await prisma.$disconnect();
+});
+it.skipIf(!enabled)('records measured private alerts once, persists selected-channel receipts and cancels stale profile delivery', async () => {
+  vi.stubEnv('APP_URL', 'https://traveller.example');
+  const channel = await prisma.notificationChannel.create({ data: { userId: owners[0]!, type: 'webhook', config: { url: 'https://example.com/test-only-never-contacted' } } });
+  const constraints = profileSchema.parse({ name: 'Zasebna ponudba', origins: ['LJU'], destination: { kind: 'anywhere' }, dates: { mode: 'rolling', days: 365 }, duration: { minNights: 5, maxNights: 12 }, passengers: { adults: 2 }, cabin: 'business', flight: { allowSelfTransfer: true }, hotel: { enabled: false }, positioning: { homeAirports: ['LJU'] }, alerts: { channelIds: [channel.id] } });
+  const profile = await saveProfile(owners[0]!, constraints), other = await saveProfile(owners[1]!, { ...constraints, alerts: { ...constraints.alerts, channelIds: [] } });
+  const broad = parseExploreCards([{ entity: '/m/05qtj', name: 'Paris', flightPrice: '961', currency: 'EUR', stops: '1 stop', duration: '3 hr 30 min' }], { origin: 'LJU', destination: null, departure: '2027-04-01', returnDate: '2027-04-07' }, constraints)[0]!;
+  const candidate = exactFlight(broad, constraints, fixture.url, fixture.legs, fixture.fares)!;
+  for (let day = 1; day <= 12; day++) await prisma.travellerObservation.create({ data: { profileId: profile.id, profileRevision: 1, kind: 'flight', source: 'google_flights', provenance: 'cached', identity: flightIdentity(candidate), comparisonKey: flightComparison(candidate), amount: '2000', currency: 'EUR', observedAt: new Date(Date.now() - day * 86400000), details: candidate as unknown as Prisma.InputJsonValue } });
+  const job = await prisma.travellerJob.create({ data: { profileId: profile.id, profileRevision: 1, source: 'google_flights', kind: 'verification', dedupKey: randomUUID() } });
+  const record = (amount: number) => prisma.$transaction(tx => recordFlights(tx, job, owners[0]!, constraints, [{ ...candidate, amount, observedAt: new Date().toISOString() }], { baseCurrency: 'EUR', weights: DEFAULT_WEIGHTS }, null, DEFAULT_SCHEDULER));
+  await record(961); await record(961);
+  expect(await prisma.travellerAlert.count({ where: { profileId: profile.id } })).toBe(1);
+  const alert = await prisma.travellerAlert.findFirstOrThrow({ where: { profileId: profile.id }, include: { delivery: true } });
+  expect(alert).toMatchObject({ confidence: 'medium', channelIds: [channel.id] });
+  expect(alert.score).toBeLessThan(90);
+  expect(alert.delivery?.message).toMatchObject({ url: expect.stringContaining('https://traveller.example/discover/'), body: expect.stringContaining('celotno skupino') });
+  await expect(prisma.travellerAlert.create({ data: { profileId: other.id, profileRevision: 1, observationId: alert.observationId, identity: 'foreign', eventKey: randomUUID(), amount: '961', currency: 'EUR', score: 89, confidence: 'medium' } })).rejects.toMatchObject({ code: 'P2003' });
+  dispatch.mockImplementation(async (owner: string, _message: unknown, acknowledged: string[], control: NotificationDeliveryControl) => {
+    expect(owner).toBe(owners[0]); expect(control.channelIds).toEqual([channel.id]); expect(acknowledged).toEqual([]);
+    await control.beforeSend(channel.id); await control.onDelivered(channel.id);
+    return [{ channelId: channel.id, type: 'webhook', ok: true }];
+  });
+  await deliverTravellerAlerts(); await deliverTravellerAlerts();
+  expect(dispatch).toHaveBeenCalledTimes(1);
+  expect(await prisma.travelAlertDelivery.findUnique({ where: { travellerAlertId: alert.id } })).toMatchObject({ pending: false, deliveredIds: [channel.id] });
+  await prisma.travellerAlert.update({ where: { id: alert.id }, data: { createdAt: new Date(Date.now() - 25 * 3600000) } });
+  await record(800);
+  expect(await prisma.travellerAlert.count({ where: { profileId: profile.id } })).toBe(2);
+  await saveProfile(owners[0]!, constraints, { id: profile.id, revision: 1, active: false });
+  await deliverTravellerAlerts();
+  expect(dispatch).toHaveBeenCalledTimes(1);
+  expect(await prisma.travelAlertDelivery.count({ where: { travellerAlert: { profileId: profile.id }, pending: true } })).toBe(0);
+});
+
+it.skipIf(!enabled)('uses actual direct confirmation for high confidence and the default protected-itinerary requirement', async () => {
+  const constraints = profileSchema.parse({ name: 'Confirmed direct fare', origins: ['LJU'], destination: { kind: 'anywhere' }, dates: { mode: 'rolling', days: 365 }, duration: { minNights: 5, maxNights: 12 }, passengers: { adults: 2 }, cabin: 'business', hotel: { enabled: false }, positioning: { homeAirports: ['LJU'] } });
+  const profile = await saveProfile(owners[1]!, constraints);
+  const broad = parseExploreCards([{ entity: '/m/05qtj', name: 'Paris', flightPrice: '961', currency: 'EUR', stops: '1 stop', duration: '3 hr 30 min' }], { origin: 'LJU', destination: null, departure: '2027-04-01', returnDate: '2027-04-07' }, constraints)[0]!;
+  const candidate = verifyLufthansa(exactFlight(broad, constraints, fixture.url, fixture.legs, fixture.fares)!, constraints, directFixture)!;
+  for (let day = 1; day <= 12; day++) await prisma.travellerObservation.create({ data: { profileId: profile.id, profileRevision: 1, kind: 'flight', source: 'airline_direct', provenance: 'live',
+    identity: flightIdentity(candidate), comparisonKey: flightComparison(candidate), amount: '2000', currency: 'EUR', observedAt: new Date(Date.now() - day * 86400000), details: candidate as unknown as Prisma.InputJsonValue } });
+  const job = await prisma.travellerJob.create({ data: { profileId: profile.id, profileRevision: 1, source: 'airline_direct', kind: 'verification', dedupKey: randomUUID() } });
+  await prisma.$transaction(tx => recordFlights(tx, job, owners[1]!, constraints, [candidate], { baseCurrency: 'EUR', weights: DEFAULT_WEIGHTS }, null, DEFAULT_SCHEDULER));
+  const observation = await prisma.travellerObservation.findFirstOrThrow({ where: { profileId: profile.id, observedAt: new Date(candidate.observedAt) }, include: { evidence: true } });
+  expect(observation.score).toMatchObject({ confidence: 'high', eligibility: [] });
+  expect(observation.evidence).toEqual([expect.objectContaining({ direct: true, independentGroup: 'airline_direct', contextConfirmed: true })]);
+  const alert = await prisma.travellerAlert.findFirstOrThrow({ where: { profileId: profile.id } });
+  expect(alert.confidence).toBe('high');
+  expect(alert.score).toBeGreaterThanOrEqual(90);
+  expect(alert.amount.toString()).toBe('960.12');
+});

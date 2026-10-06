@@ -1,0 +1,73 @@
+{
+  "allFlights": true,
+  "bounds": [
+    {
+      "fare": "Business ComfortRebooking Not allowedRefundability Not allowed1 personal item max. 40 x 30 x 15cmCarry-on bags 2 x 8kg (18lb)\nmax. 55 x 40 x 23cmChecked baggage 1× 32kg (70lb)Seat reservation (where available) IncludedEmpty middle seat IncludedSecurity Fast Lane (where available) IncludedLounge (where available) IncludedPriority boarding (where available) Included",
+      "heading": "Departure flightLjubljana to Paris-Thursday, 1 April 2027",
+      "segments": [
+        {
+          "airports": [
+            "(LJU)",
+            "(MUC)"
+          ],
+          "arrival": "14:20",
+          "cabin": "Business",
+          "departure": "13:20",
+          "duration": "Flight duration 1 hour and 0 minutes",
+          "flight": "LH 1697",
+          "operator": "Lufthansa"
+        },
+        {
+          "airports": [
+            "(MUC)",
+            "(CDG)"
+          ],
+          "arrival": "17:15",
+          "cabin": "Business",
+          "departure": "15:40",
+          "duration": "Flight duration 1 hour and 35 minutes",
+          "flight": "LH 2232",
+          "operator": "Lufthansa"
+        }
+      ],
+      "summary": "13:20Departure date: Thursday, 1 April 2027 at 13:20, from Joze PucnikLJU1Munich1h 20mThis flight has one stop at Munich for 1h 20m.17:15Arrival date: Thursday, 1 April 2027 at 17:15, at Charles De Gaulle, terminal 1CDGTerminal 1Duration 3h 55m3 hours and 55 minutesOperated by LufthansaMember of Lufthansa GroupMember of LUFTHANSA GROUPBusiness ComfortShow flight details from Ljubljana to Munich"
+    },
+    {
+      "fare": "Business ComfortRebooking Not allowedRefundability Not allowed1 personal item max. 40 x 30 x 15cmCarry-on bags 2 x 8kg (18lb)\nmax. 55 x 40 x 23cmChecked baggage 1× 32kg (70lb)Seat reservation (where available) IncludedEmpty middle seat IncludedSecurity Fast Lane (where available) IncludedLounge (where available) IncludedPriority boarding (where available) Included",
+      "heading": "Return flightParis to Ljubljana-Wednesday, 7 April 2027",
+      "segments": [
+        {
+          "airports": [
+            "(CDG)",
+            "(MUC)"
+          ],
+          "arrival": "15:45",
+          "cabin": "Business",
+          "departure": "14:15",
+          "duration": "Flight duration 1 hour and 30 minutes",
+          "flight": "LH 4617",
+          "operator": "Lufthansa City Airlines"
+        },
+        {
+          "airports": [
+            "(MUC)",
+            "(LJU)"
+          ],
+          "arrival": "19:25",
+          "cabin": "Business",
+          "departure": "18:35",
+          "duration": "Flight duration 0 hours and 50 minutes",
+          "flight": "LH 1698",
+          "operator": "Lufthansa"
+        }
+      ],
+      "summary": "14:15Departure date: Wednesday, 7 April 2027 at 14:15, from Charles De Gaulle, terminal 1CDG1Munich2h 50mThis flight has one stop at Munich for 2h 50m.19:25Arrival date: Wednesday, 7 April 2027 at 19:25, at Joze PucnikLJUTerminal 1Duration 5h 10m5 hours and 10 minutesOperated by Lufthansa City Airlines, LufthansaMember of Lufthansa GroupMember of LUFTHANSA GROUPBusiness ComfortShow flight details from Munich to Paris"
+    }
+  ],
+  "party": [
+    "2 Adults EUR960.12"
+  ],
+  "total": "Total price:EUR960.12",
+  "url": "https://shop.lufthansa.com/booking/cart",
+  "wholeParty": true
+}

@@ -12,7 +12,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
   const policy = await sharedAccessStore.admissionPolicy();
   const individual = policy.mode === 'individual';
   if ((hosted || individual) && params.mode === 'invite') return <InvitationScreen next={next ?? '/'} />;
-  const mode = hosted || individual ? (params.mode === 'recover' ? 'recover' : 'login') : 'household';
-  const needsLocalSetup = !hosted && !policy.hasOwner;
-  return <AccessScreen next={next} mode={mode} hosted={hosted || individual} needsLocalSetup={needsLocalSetup} />;
+  const mode = individual && !policy.hasOwner ? 'claim' : hosted || individual ? (params.mode === 'recover' ? 'recover' : 'login') : 'household';
+  const needsLocalSetup = !hosted && !individual && !policy.hasOwner;
+  return <AccessScreen next={next ?? (individual ? '/discover' : null)} mode={mode} hosted={hosted || individual} individual={individual} needsLocalSetup={needsLocalSetup} />;
 }

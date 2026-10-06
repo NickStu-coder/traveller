@@ -24,4 +24,10 @@
 .table { width: 100%; border-collapse: collapse; }
 .table td, .table th { text-align: left; padding: 14px 8px; border-bottom: 1px solid var(--border, #b8c8ce); }
 .scroll { overflow-x: auto; }
+.chart { margin: 24px 0; max-width: 760px; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart text { fill: currentColor; font-size: 13px; }
+.chartAxis { stroke: var(--border, #b8c8ce); }
+.chartLine { stroke: var(--accent, #438ea1); stroke-width: 2; fill: none; }
+.chartPoint { fill: var(--accent, #438ea1); }
 @media (max-width: 600px) { .shell { padding: 14px; } .header { flex-wrap: wrap; } .header select { width: auto; } .nav a { flex: 1 0 auto; text-align: center; } .form fieldset { padding: 12px; } }

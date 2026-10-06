@@ -15,6 +15,8 @@ it('validates and retains the actual Anywhere Business constraints without expan
 it.each([
   { userId: 'attacker' }, { origins: ['bad'] }, { currency: 'ZZZ' },
   { dates: { mode: 'window', from: '2026-02-31', to: '2026-03-10' } },
+  { dates: { mode: 'window', from: '2026-01-01', to: '9999-12-31' } },
+  { dates: { mode: 'rolling', days: 2 } },
   { duration: { minNights: 12, maxNights: 5 } },
   { passengers: { adults: 1, infants: 2 } },
   { flight: { minLayoverMinutes: 500, maxLayoverMinutes: 100 } },

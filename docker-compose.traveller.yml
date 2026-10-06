@@ -1,7 +1,7 @@
 name: ${COMPOSE_PROJECT_NAME:-traveller-prod}
 services:
   db:
-    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea}
     restart: unless-stopped
     environment:
       POSTGRES_DB: traveller
@@ -19,7 +19,7 @@ services:
       options: {max-size: 10m, max-file: '3'}
 
   redis:
-    image: ${REDIS_IMAGE:-redis:7-alpine}
+    image: ${REDIS_IMAGE:-redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499}
     restart: unless-stopped
     command: [redis-server, --appendonly, 'yes']
     volumes:

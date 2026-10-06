@@ -25,7 +25,9 @@ it('penalizes weak hotel evidence and rejects missing review counts', () => {
 });
 it('requires dated FX and all party costs, including positioning', () => {
   expect(() => convertMoney({ amount: '100', currency: 'USD' }, 'EUR')).toThrow(/quote/);
-  expect(convertMoney({ amount: '100.10', currency: 'USD' }, 'EUR', { from: 'USD', to: 'EUR', rate: '0.9', source: 'ECB', at: now })).toEqual({ amount: '90.0900', currency: 'EUR' });
+  expect(() => convertMoney({ amount: '0', currency: 'EUR' }, 'EUR')).toThrow(/amount/);
+  expect(() => convertMoney({ amount: '100', currency: 'USD' }, 'EUR', { from: 'USD', to: 'EUR', rate: '0', source: 'ECB', at: now }, now)).toThrow(/amount/);
+  expect(convertMoney({ amount: '100.10', currency: 'USD' }, 'EUR', { from: 'USD', to: 'EUR', rate: '0.9', source: 'ECB', at: now }, now)).toEqual({ amount: '90.0900', currency: 'EUR' });
   const flight = { amount: '1087', currency: 'EUR' }, hotel = { amount: '1160', currency: 'EUR' };
   expect(tripTotal(flight, hotel, positioningCost('VIE', ['LJU'], [], 'EUR'))).toBeNull();
   expect(tripTotal(flight, hotel, positioningCost('VIE', ['LJU'], [{ airport: 'VIE', partyCost: 150 }], 'EUR'))).toEqual({ amount: '2397.0000', currency: 'EUR' });

@@ -59,9 +59,6 @@ until node -e "
 done
 echo "[setup] Database is ready"
 
-echo "[setup] Preparing shared platform state..."
-node /app/packages/cli/dist/index.js access prepare
-
 # --- Run migrations ---
 # Use the Prisma CLI bundled into the image (see the prismacli stage in the
 # Dockerfile) instead of fetching it with npx at runtime, which round-trips the
@@ -79,6 +76,12 @@ else
   echo "[setup] ERROR: database migration failed" >&2
   exit 1
 fi
+
+# A fresh database must remain empty until Prisma records the baseline. Legacy
+# installations require a separately reviewed credential cutover and baseline;
+# startup deliberately refuses to adopt an unknown existing schema.
+echo "[setup] Preparing shared platform state..."
+node /app/packages/cli/dist/index.js access prepare
 
 # Relational job invariants and partial indexes are not represented by Prisma.
 node /app/scripts/apply-travel-constraints.mjs

@@ -1,5 +1,19 @@
 {
-  "SharedProviderFields": {"stored":"Saved on this instance","unset":"Not configured","unchanged":"Leave blank to keep the current value","clear":"Remove saved value","unavailable":"Stored credentials could not be read. Replace or remove them before saving.","fields":{"apiKey":"API key","baseUrl":"API endpoint","compatibleApiKey":"Custom endpoint API key","allowAnonymous":"Endpoint needs no API key"},"reset":"Remove all saved settings and credentials for this provider when saving.","endpointMismatch":"This saved key belongs to a different endpoint. Enter a key for the current endpoint to use it."},
+  "SharedProviderFields": {
+    "stored": "Saved on this instance",
+    "unset": "Not configured",
+    "unchanged": "Leave blank to keep the current value",
+    "clear": "Remove saved value",
+    "unavailable": "Stored credentials could not be read. Replace or remove them before saving.",
+    "fields": {
+      "apiKey": "API key",
+      "baseUrl": "API endpoint",
+      "compatibleApiKey": "Custom endpoint API key",
+      "allowAnonymous": "Endpoint needs no API key"
+    },
+    "reset": "Remove all saved settings and credentials for this provider when saving.",
+    "endpointMismatch": "This saved key belongs to a different endpoint. Enter a key for the current endpoint to use it."
+  },
   "SharedSecurity": {
     "householdTitle": "App access",
     "householdHint": "One shared password opens the app. Everyone then chooses a profile.",
@@ -75,7 +89,8 @@
     "outcome_unknown": "The request may have completed. Check whether you can sign in before trying again.",
     "network_error": "Could not reach the instance. Check your connection.",
     "invalid_password": "Use at least 12 characters and no more than 1024 UTF-8 bytes.",
-    "failed": "The request could not be completed."
+    "failed": "The request could not be completed.",
+    "individualSetupRequired": "Run the local setup command to obtain a single-use administrator claim code. Enter the code and choose your individual account below."
   },
   "Landing": {
     "settings": "Settings",

@@ -1,5 +1,19 @@
 {
-  "SharedProviderFields": {"stored":"Guardado en esta instancia","unset":"Sin configurar","unchanged":"Déjalo vacío para conservar el valor actual","clear":"Eliminar el valor guardado","unavailable":"No se pudieron leer las credenciales guardadas. Sustitúyelas o elimínalas antes de guardar.","fields":{"apiKey":"Clave de API","baseUrl":"Dirección de la API","compatibleApiKey":"Clave de API del servidor personalizado","allowAnonymous":"El servidor no necesita una clave de API"},"reset":"Al guardar, elimina todos los ajustes y credenciales guardados de este proveedor.","endpointMismatch":"Esta clave guardada pertenece a otro endpoint. Introduce una clave para el endpoint actual."},
+  "SharedProviderFields": {
+    "stored": "Guardado en esta instancia",
+    "unset": "Sin configurar",
+    "unchanged": "Déjalo vacío para conservar el valor actual",
+    "clear": "Eliminar el valor guardado",
+    "unavailable": "No se pudieron leer las credenciales guardadas. Sustitúyelas o elimínalas antes de guardar.",
+    "fields": {
+      "apiKey": "Clave de API",
+      "baseUrl": "Dirección de la API",
+      "compatibleApiKey": "Clave de API del servidor personalizado",
+      "allowAnonymous": "El servidor no necesita una clave de API"
+    },
+    "reset": "Al guardar, elimina todos los ajustes y credenciales guardados de este proveedor.",
+    "endpointMismatch": "Esta clave guardada pertenece a otro endpoint. Introduce una clave para el endpoint actual."
+  },
   "SharedSecurity": {
     "householdTitle": "Acceso a la aplicación",
     "householdHint": "Una contraseña compartida abre la aplicación. Después, cada persona elige su perfil.",
@@ -75,7 +89,8 @@
     "outcome_unknown": "Es posible que la solicitud se haya completado. Comprueba si puedes iniciar sesión antes de volver a intentarlo.",
     "network_error": "No se pudo conectar con la instancia. Revisa tu conexión.",
     "invalid_password": "Usa al menos 12 caracteres y no más de 1024 bytes UTF-8.",
-    "failed": "No se pudo completar la solicitud."
+    "failed": "No se pudo completar la solicitud.",
+    "individualSetupRequired": "Run the local setup command to obtain a single-use administrator claim code. Enter the code and choose your individual account below."
   },
   "Landing": {
     "settings": "Configuración",

@@ -10,6 +10,7 @@ dist/
 !.env.traveller.example
 .audit/
 .tool-logs/
+__pycache__/
 .doppler.yaml
 
 *.db

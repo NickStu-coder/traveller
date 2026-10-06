@@ -1,0 +1,30 @@
+import { expect, it } from 'vitest';
+import { fxQuote, parseEcb } from './fx';
+import { convertMoney } from './money';
+import { dealScore, priceEvidence } from './scoring';
+const now = new Date('2026-10-06T12:00:00Z');
+const rates = { USD: '2', JPY: '100', GBP: '0.8', CHF: '0.9', PLN: '4', SEK: '10', CAD: '1.5', NOK: '11', AUD: '1.6', CZK: '24' };
+const xml = '<Envelope xmlns="http://www.ecb.int/vocabulary/2002-08-01/eurofxref"><Cube><Cube time="2026-10-05">' + Object.entries(rates).map(([currency, rate]) => `<Cube currency='${currency}' rate='${rate}'/>`).join('') + '</Cube></Cube></Envelope>';
+it('cross-converts reference rates, preserves the reference date and refuses stale or absent currencies', () => {
+  const data = parseEcb(xml, now);
+  const quote = fxQuote(data, 'USD', 'GBP', now)!;
+  expect(quote.rate).toBe('0.40000000');
+  expect(convertMoney({ amount: '100', currency: 'USD' }, 'GBP', quote, now)).toEqual({ amount: '40.0000', currency: 'GBP' });
+  expect(quote.at.toISOString()).toBe('2026-10-05T00:00:00.000Z');
+  expect(fxQuote(data, 'USD', 'RUB', now)).toBeUndefined();
+  expect(fxQuote({ ...data, rates: { ...data.rates, USD: '0' } }, 'USD', 'GBP', now)).toBeUndefined();
+  expect(fxQuote(data, 'USD', 'EUR', new Date('2026-10-14'))).toBeUndefined();
+  expect(() => convertMoney({ amount: '100', currency: 'USD' }, 'GBP', quote, new Date('2026-10-14'))).toThrow(/stale/);
+  expect(() => parseEcb(xml.replace('2026-10-05', '2026-10-07'), now)).toThrow(/future/);
+  expect(() => parseEcb(xml.replace('</Cube></Cube>', "<Cube currency='USD' rate='2'/></Cube></Cube>"), now)).toThrow(/duplicate/);
+  expect(() => parseEcb('<!DOCTYPE data>' + xml, now)).toThrow(/Invalid/);
+});
+it('uses configurable weights while retaining evidence and confidence gates', () => {
+  const history = Array.from({ length: 15 }, (_, index) => ({ key: 'same', price: 2000, observedAt: new Date(now.getTime() - (index + 1) * 86400000) }));
+  const evidence = priceEvidence('same', 1000, history, now);
+  const weights = { discount: 100, percentile: 0, quality: 0, verification: 0 };
+  expect(dealScore(evidence, 0, 'high', true, weights).score).toBe(100);
+  expect(dealScore(evidence, 0, 'low', true, weights).score).toBe(79);
+  expect(dealScore(null, 1, 'high', true, weights).score).toBeNull();
+  expect(() => dealScore(evidence, 1, 'high', true, { ...weights, percentile: 1 })).toThrow(/Weights/);
+});

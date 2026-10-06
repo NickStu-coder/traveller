@@ -9,6 +9,7 @@ import { isThemeId } from '@/lib/theme';
 import { CABIN_CLASSES, isCabinClass } from '@/lib/cabin-class';
 import { validateCarProviders } from '@/lib/cars/preferences';
 import { hotelMapActorScope, validateHotelMapPreferences } from '@/lib/hotels/map-config';
+import { isLocale } from '@/i18n/locales';
 
 async function requireUser() {
   if (!(await isMultiUserEnabled())) return { ok: false as const, status: 404 };
@@ -24,6 +25,7 @@ export async function GET() {
   const { user } = auth;
   return apiSuccess({
     username: user.username,
+    locale: user.locale,
     displayName: user.displayName,
     avatar: user.avatar,
     theme: user.theme,
@@ -47,6 +49,10 @@ export async function PATCH(request: NextRequest) {
   if (!body) return apiError('Invalid JSON body', 400);
 
   const data: Record<string, unknown> = {};
+  if (body.locale !== undefined) {
+    if (!isLocale(body.locale)) return apiError('Unsupported language', 400);
+    data.locale = body.locale;
+  }
 
   if (body.hotelMapPreferences !== undefined) {
     if (request.headers.get('X-Hotel-Map-Actor') !== hotelMapActorScope(auth.user.id)) return apiError('Account changed; reload map preferences before saving', 409);
@@ -140,6 +146,7 @@ export async function PATCH(request: NextRequest) {
     data,
     select: {
       username: true,
+      locale: true,
       displayName: true,
       avatar: true,
       theme: true,

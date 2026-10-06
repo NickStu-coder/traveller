@@ -7,6 +7,7 @@ export interface ExploreCard { entity: string; name: string; flightPrice: string
 export interface ExploreControls {
   url: string; loading: boolean; origin: string; cabin: string; departure: string; returnDate: string;
   adultCount: number; childCount: number; infantSeatCount: number; infantLapCount: number;
+  destinationEntity?: string;
 }
 /** This function also runs inside the page; keep it independent of module state. */
 export function readExploreCardElements(elements: Element[], currency: string): ExploreCard[] {
@@ -22,7 +23,7 @@ const cabinNames = { economy: 'Economy', premium_economy: 'Premium economy', bus
 const displayDate = (date: string) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 
 /** Never accept old cards while the selected search is still loading. */
-export function confirmExploreContext(controls: ExploreControls, request: DiscoveryRequest, profile: WatchConstraints): void {
+export function confirmExploreContext(controls: ExploreControls, request: DiscoveryRequest, profile: WatchConstraints, paths = ['/travel/explore']): void {
   const categories = googlePassengerCategories(profile);
   const count = (category: number) => categories.filter(value => value === category).length;
   if (controls.loading || !controls.origin.endsWith(' ' + request.origin) || controls.cabin !== cabinNames[profile.cabin]
@@ -30,7 +31,7 @@ export function confirmExploreContext(controls: ExploreControls, request: Discov
     || controls.adultCount !== count(1) || controls.childCount !== count(2) || controls.infantSeatCount !== 0 || controls.infantLapCount !== count(4))
     throw new SourceError('degraded', 'Google Explore did not confirm the selected search context');
   const url = new URL(controls.url);
-  if (url.hostname !== 'www.google.com' || url.pathname !== '/travel/explore' || url.searchParams.get('curr') !== profile.currency) throw new SourceError('degraded', 'Google Explore changed the search origin or currency');
+  if (url.hostname !== 'www.google.com' || !paths.includes(url.pathname) || url.searchParams.get('curr') !== profile.currency) throw new SourceError('degraded', 'Google changed the search origin or currency');
   const encoded = url.searchParams.get('tfs') ?? '';
   if (encoded.length > 12000 || !/^[A-Za-z0-9_-]+={0,2}$/.test(encoded)) throw new SourceError('degraded', 'Google Explore did not retain date state');
   const root = googleFlightFields(Buffer.from(encoded, 'base64url'));
@@ -38,7 +39,14 @@ export function confirmExploreContext(controls: ExploreControls, request: Discov
   const dates = legs.map(leg => leg.find(value => value.id === 2)?.value).map(value => value !== undefined && typeof value !== 'bigint' ? Buffer.from(value).toString() : '');
   const selectedCabin = root.find(value => value.id === 9)?.value;
   const selectedPassengers = root.filter(value => value.id === 8).map(value => Number(value.value)).sort();
-  if (dates.length !== 2 || dates[0] !== request.departure || dates[1] !== request.returnDate
+  const destination = legs[0]?.find(value => value.id === 14)?.value;
+  const destinationFields = destination !== undefined && typeof destination !== 'bigint' ? googleFlightFields(destination) : [];
+  const destinationCode = destinationFields.find(value => value.id === 2)?.value;
+  const selectedDestination = destinationCode !== undefined && typeof destinationCode !== 'bigint' ? Buffer.from(destinationCode).toString() : null;
+  const expectedDestination = controls.destinationEntity ?? request.destination;
+  if (root.find(value => value.id === 2)?.value !== (url.pathname === '/travel/explore' ? 3n : 2n)
+    || dates.length !== 2 || dates[0] !== request.departure || dates[1] !== request.returnDate
+    || selectedDestination !== expectedDestination || root.find(value => value.id === 14)?.value !== 1n
     || selectedCabin !== BigInt(Object.keys(cabinNames).indexOf(profile.cabin) + 1) || selectedPassengers.join() !== [...categories].sort().join())
     throw new SourceError('degraded', 'Google Explore changed date, cabin or passenger state');
 }

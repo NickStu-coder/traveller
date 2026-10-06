@@ -1,21 +1,37 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { prisma } from '../../prisma';
-import type { Prisma, TravellerJob } from '@/generated/prisma/client';
+import type { Prisma, TravellerJob, TravellerObservation } from '@/generated/prisma/client';
 import { acquireTravelLease, lockTravelLease, quarantineTravelLease, releaseTravelLease, renewTravelLease, type TravelLeaseToken } from '../../travel/admission';
 import { TravelExecution, TravelCleanupError, withTravelExecution } from '../../travel/execution';
-import { profileSchema } from '../profiles';
+import { matchesDates, profileSchema } from '../profiles';
 import type { FlightCandidate } from '../sources/types';
-import { SourceError } from '../sources/types';
+import { ProfileSearchError, SourceError } from '../sources/types';
 import { googleExploreAdapter } from '../sources/explore-adapter';
+import { googleExactAdapter } from '../sources/flights/exact-adapter';
+import { lufthansaAdapter } from '../sources/airlines/adapter';
+import { flightCandidateSchema } from '../sources/flights/schema';
+import { discoverGoogleHotels } from '../sources/hotels/adapter';
+import { discoverBookingHotels } from '../sources/hotels/booking-adapter';
+import type { HotelCandidate } from '../sources/hotels/schema';
+import { recordFlights } from '../engine/pipeline';
+import { recordHotels } from '../engine/trips/pipeline';
+import { engineSettings } from '../engine/settings';
+import { referenceRates } from '../engine/fx';
+import { positioningDistances } from '../engine/positioning/geography';
 import { nextCheck } from './policy';
-import { reserveSourceRequest, schedulerSettings } from './store';
+import { IMPLEMENTED_SOURCES, reserveSourceRequest, schedulerSettings } from './store';
 
 const requestSchema = z.object({ origin: z.string().regex(/^[A-Z]{3}$/), destination: z.string().max(100).nullable(), departure: z.iso.date(), returnDate: z.iso.date() }).strict();
 const expiry = () => new Date(Date.now() + 120_000);
+type JobResult = { kind: 'flights'; candidates: FlightCandidate[] } | { kind: 'hotels'; candidates: HotelCandidate[]; flight: FlightCandidate; observation: TravellerObservation };
 
 async function fence(tx: Prisma.TransactionClient, job: TravellerJob, lease: TravelLeaseToken): Promise<void> {
   await lockTravelLease(tx, lease);
+  // Lock owner, then profile, then job: edits/disabling cannot race immutable result ingestion.
+  await tx.$queryRaw`SELECT u.id FROM "User" u JOIN "WatchProfile" p ON p."userId" = u.id WHERE p.id = ${job.profileId} FOR UPDATE OF u`;
+  await tx.$queryRaw`SELECT id FROM "WatchProfile" WHERE id = ${job.profileId} FOR UPDATE`;
+  await tx.$queryRaw`SELECT id FROM "TravellerJob" WHERE id = ${job.id} FOR UPDATE`;
   if (!await tx.travellerJob.count({ where: { id: job.id, state: 'running', leaseToken: job.leaseToken, leaseUntil: { gt: new Date() }, profile: { revision: job.profileRevision, active: true, archivedAt: null, user: { disabledAt: null } } } }))
     throw new Error('Traveller job no longer owns the current profile revision');
 }
@@ -26,30 +42,31 @@ async function claim(lease: TravelLeaseToken): Promise<TravellerJob | null> {
     const now = new Date(), day = now.toISOString().slice(0, 10);
     // The shared browser is exclusively owned; old jobs cannot still run after verified recovery.
     await tx.travellerJob.updateMany({ where: { state: 'running', leaseUntil: { lte: now } }, data: { state: 'failed', leaseToken: null, leaseUntil: null, error: 'Worker stopped; prior observations retained', completedAt: now } });
-    const sources = await tx.travellerSourceState.findMany({ where: { source: 'google_explore', enabled: true, nextAllowedAt: { lte: now } } });
+    const sources = await tx.travellerSourceState.findMany({ where: { source: { in: [...IMPLEMENTED_SOURCES] }, enabled: true, nextAllowedAt: { lte: now } } });
     const eligible = sources.filter(source => source.budgetDate !== day || source.usedToday < source.budgetPerDay).map(source => source.source);
     const jobs = await tx.travellerJob.findMany({ where: { state: 'queued', source: { in: eligible }, runAt: { lte: now }, profile: { active: true, archivedAt: null, user: { disabledAt: null } } }, orderBy: [{ priority: 'desc' }, { runAt: 'asc' }], take: 20, include: { profile: { select: { revision: true } } } });
-    const job = jobs.find(value => value.profileRevision === value.profile.revision);
+    const requiredUnits: Record<string, number> = { google_explore: 1, google_flights: 3, google_hotels: 4, booking: 3, airline_direct: 2 };
+    const available = (source: string, units: number) => {
+      const state = sources.find(value => value.source === source);
+      return state && (state.budgetDate !== day ? 0 : state.usedToday) + units <= state.budgetPerDay;
+    };
+    const job = jobs.find(value => value.profileRevision === value.profile.revision && available(value.source, requiredUnits[value.source] ?? 1)
+      && (value.source !== 'airline_direct' || available('google_flights', 1)));
     if (!job) return null;
     return tx.travellerJob.update({ where: { id: job.id }, data: { state: 'running', leaseToken: randomUUID(), leaseUntil: expiry(), startedAt: now, attempts: { increment: 1 }, error: null } });
   });
 }
 
-function candidateIdentity(candidate: FlightCandidate): string {
-  return createHash('sha256').update(JSON.stringify([candidate.origin, candidate.destination, candidate.departure, candidate.returnDate, candidate.cabin, candidate.passengers])).digest('hex');
-}
-async function finish(job: TravellerJob, lease: TravelLeaseToken, candidates: FlightCandidate[], started: number): Promise<void> {
+async function finish(job: TravellerJob, lease: TravelLeaseToken, result: JobResult, started: number): Promise<void> {
+  const candidates = result.candidates;
+  const [engine, scheduler] = await Promise.all([engineSettings(), schedulerSettings()]);
+  const fx = candidates.some(candidate => candidate.currency !== engine.baseCurrency) ? await referenceRates() : null;
   await prisma.$transaction(async tx => {
     await fence(tx, job, lease);
-    for (const candidate of candidates) {
-      const identity = candidateIdentity(candidate);
-      // Discovery history is kept separately from confirmed itinerary evidence.
-      const comparisonKey = createHash('sha256').update(JSON.stringify(['explore-v1', candidate.origin, candidate.destination, candidate.cabin, candidate.passengers, candidate.currency, candidate.departure.slice(5, 7), (Date.parse(candidate.returnDate) - Date.parse(candidate.departure)) / 86400000])).digest('hex');
-      await tx.travellerObservation.createMany({ skipDuplicates: true, data: [{ profileId: job.profileId, profileRevision: job.profileRevision, kind: 'flight', source: candidate.source,
-        provenance: candidate.provenance, identity, comparisonKey, amount: String(candidate.amount), currency: candidate.currency,
-        observedAt: new Date(candidate.observedAt), expiresAt: new Date(Date.parse(candidate.observedAt) + 24 * 3600000),
-        bookingUrl: candidate.bookingUrl, details: candidate as unknown as Prisma.InputJsonValue }] });
-    }
+    const profile = await tx.watchProfile.findUniqueOrThrow({ where: { id: job.profileId } });
+    const constraints = profileSchema.parse(profile.constraints);
+    if (result.kind === 'flights') await recordFlights(tx, job, profile.userId, constraints, result.candidates, engine, fx, scheduler);
+    else await recordHotels(tx, job, profile.userId, constraints, result.observation, result.flight, result.candidates, engine, fx);
     await tx.travellerJob.update({ where: { id: job.id }, data: { state: 'completed', completedAt: new Date(), leaseToken: null, leaseUntil: null, durationMs: Date.now() - started, resultCount: candidates.length } });
     await tx.travellerSourceState.updateMany({ where: { source: job.source, enabled: true }, data: { status: 'healthy', lastSuccessAt: new Date(), failures: 0, lastError: null } });
   });
@@ -80,16 +97,38 @@ export async function runTravellerJob(): Promise<boolean> {
     };
     heartbeat = setInterval(() => { if (!renewing) renewing = renew().catch(error => activeExecution.abort(error)).finally(() => { renewing = undefined; }); }, 20_000);
     heartbeat.unref();
-    const candidates = await withTravelExecution(activeExecution, async () => {
+    const result = await withTravelExecution(activeExecution, async (): Promise<JobResult> => {
       const profile = await prisma.watchProfile.findUniqueOrThrow({ where: { id: current.profileId } });
       const constraints = profileSchema.parse(profile.constraints);
-      const request = requestSchema.parse(current.request);
-      return googleExploreAdapter.discover(request, { profile: constraints, signal: activeExecution.signal,
-        reserveRequest: () => prisma.$transaction(async tx => { await fence(tx, current, lease); await reserveSourceRequest(tx, current.source, settings.sourceSpacingSeconds); }) });
+      await positioningDistances(constraints).catch(error => { throw new ProfileSearchError(error instanceof Error ? error.message : 'Positioning geography is unavailable'); });
+      const context = { profile: constraints, signal: activeExecution.signal,
+        reserveRequest: (units?: number) => prisma.$transaction(async tx => {
+          await fence(tx, current, lease);
+          if (current.source === 'airline_direct') await reserveSourceRequest(tx, 'google_flights', settings.sourceSpacingSeconds, 1);
+          await reserveSourceRequest(tx, current.source, settings.sourceSpacingSeconds, units);
+        }) };
+      if (current.kind === 'discovery' && current.source === 'google_explore') return { kind: 'flights', candidates: await googleExploreAdapter.discover(requestSchema.parse(current.request), context) };
+      const hotelJob = current.kind === 'hotel_discovery' && ['google_hotels', 'booking'].includes(current.source);
+      const adapter = current.source === 'airline_direct' ? lufthansaAdapter : googleExactAdapter;
+      if (!hotelJob && (current.kind !== 'verification' || !['google_flights', 'airline_direct'].includes(current.source) || !adapter.verify)) throw new ProfileSearchError('Job does not have a supported adapter');
+      const request = z.object({ observationId: z.string().min(1).max(100), recheck: z.boolean().default(false) }).strict().parse(current.request);
+      const observation = await prisma.travellerObservation.findFirst({ where: { id: request.observationId, profileId: profile.id, profileRevision: current.profileRevision, kind: 'flight', ...(!request.recheck ? { expiresAt: { gt: new Date() } } : {}) } });
+      if (!observation) throw new ProfileSearchError('Candidate expired or no longer belongs to the active profile revision');
+      // An old observation supplies route context for a new provider lookup, never a reusable price.
+      const candidate = flightCandidateSchema.parse(observation.details);
+      if (!matchesDates(constraints, candidate.departure, candidate.returnDate)) throw new ProfileSearchError('Candidate no longer falls within the travel window');
+      if (hotelJob) {
+        if (!constraints.hotel.enabled) throw new ProfileSearchError('Hotel discovery is disabled for this profile');
+        return { kind: 'hotels', candidates: await (current.source === 'booking' ? discoverBookingHotels : discoverGoogleHotels)(candidate, context), observation, flight: candidate };
+      }
+      const verified = await adapter.verify!(candidate, context);
+      return { kind: 'flights', candidates: verified ? [verified] : [] };
     });
     if (heartbeat) clearInterval(heartbeat);
     await renewing;
-    await finish(current, lease, candidates.sort((a, b) => a.amount - b.amount).slice(0, settings.maxCandidatesPerJob), started);
+    const candidates = result.candidates;
+    result.candidates = candidates.sort((a, b) => a.amount - b.amount).slice(0, settings.maxCandidatesPerJob) as typeof result.candidates;
+    await finish(current, lease, result, started);
     console.log(JSON.stringify({ event: 'traveller_job', jobId: current.id, profileId: current.profileId, source: current.source, startedAt: new Date(started).toISOString(), durationMs: Date.now() - started, resultCount: candidates.length, state: 'completed' }));
     return true;
   } catch (error) {
@@ -98,15 +137,18 @@ export async function runTravellerJob(): Promise<boolean> {
     if (job) {
       const current = job;
       const status = error instanceof SourceError ? error.status : 'degraded';
-      const message = error instanceof SourceError ? error.message : cleanupFailed ? 'Browser cleanup requires administrator recovery' : 'Source context could not be confirmed; review source health';
-      await prisma.$transaction(async tx => {
+      const message = error instanceof SourceError || error instanceof ProfileSearchError ? error.message : cleanupFailed ? 'Browser cleanup requires administrator recovery' : 'Source context could not be confirmed; review source health';
+      const settings = await schedulerSettings();
+      const recorded = await prisma.$transaction(async tx => {
         await lockTravelLease(tx, lease);
         const changed = await tx.travellerJob.updateMany({ where: { id: current.id, state: 'running', leaseToken: current.leaseToken }, data: { state: 'failed', error: message, completedAt: new Date(), durationMs: Date.now() - started, leaseToken: null, leaseUntil: null } });
-        if (!changed.count) return;
+        if (!changed.count) return false;
+        if (error instanceof ProfileSearchError) return true;
         const source = await tx.travellerSourceState.findUniqueOrThrow({ where: { source: current.source } });
-        await tx.travellerSourceState.update({ where: { source: source.source }, data: { status, failures: { increment: 1 }, lastError: message, nextAllowedAt: nextCheck(source.source, 'WATCH', source.failures + 1) } });
-      }).catch(() => { /* Fencing can reject a cancelled job or quarantined lease. */ });
-      console.log(JSON.stringify({ event: 'traveller_job', jobId: current.id, profileId: current.profileId, source: current.source, startedAt: new Date(started).toISOString(), durationMs: Date.now() - started, resultCount: 0, state: 'failed', error: message }));
+        await tx.travellerSourceState.update({ where: { source: source.source }, data: { status, enabled: status !== 'blocked' && source.failures + 1 < settings.maxFailures, failures: { increment: 1 }, lastError: message, nextAllowedAt: nextCheck(source.source, 'WATCH', source.failures + 1, new Date(), settings) } });
+        return true;
+      }).catch(() => null);
+      console.log(JSON.stringify({ event: 'traveller_job', jobId: current.id, profileId: current.profileId, source: current.source, startedAt: new Date(started).toISOString(), durationMs: Date.now() - started, resultCount: 0, state: recorded === true ? 'failed' : recorded === false ? 'cancelled' : 'fenced', error: recorded === false ? 'Results discarded after cancellation' : message }));
     }
     return false;
   } finally {

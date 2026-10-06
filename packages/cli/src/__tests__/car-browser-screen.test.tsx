@@ -131,7 +131,8 @@ it.each([
       await vi.waitFor(() => expect(stripVTControlCharacters(output)).toContain('RETRY SAVED REQUEST'));
       output = ''; stdin.push('yes'); await vi.waitFor(() => expect(stripVTControlCharacters(output)).toContain('Enter: yes')); stdin.push('\r');
       await vi.waitFor(() => expect(browser.getSnapshot().recoveries[0]?.outcome).toBe('confirmed'));
-      await vi.waitFor(() => expect(browser.getSnapshot().busy).toBe(false));
+      await vi.waitFor(() => expect(browser.getSnapshot()).toMatchObject({ busy: false, mutationBusy: false }));
+      await instance.waitUntilRenderFlush();
       expect(jobs.size).toBe(1);
       output = ''; stdin.push('p');
       await vi.waitFor(() => expect(stripVTControlCharacters(output)).toContain('Pause tracking'));

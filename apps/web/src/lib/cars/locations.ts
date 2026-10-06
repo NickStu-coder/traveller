@@ -13,6 +13,7 @@ import { normalizeCarPlace, type CarCatalogRecord, type CarLocationChoice } from
 interface IndexedPlace { place: CarLocationChoice; text: string; population: number }
 interface Catalog { rows: IndexedPlace[]; byId: Map<string, CarLocationChoice>; cityNames: Map<string, string | null>; regionalCityNames: Map<string, string | null> }
 let loading: Promise<Catalog> | undefined;
+let airportLoading: Promise<Map<string, CarLocationChoice | null>> | undefined;
 const digest = (value: Uint8Array) => createHash('sha256').update(value).digest('hex');
 
 export async function carLocationDataPath(): Promise<string> {
@@ -103,6 +104,22 @@ export async function searchCarLocations(query: string): Promise<CarLocationChoi
   }
   matches.sort((a, b) => b.rank - a.rank || b.population - a.population || a.place.id.localeCompare(b.place.id));
   return matches.slice(0, 12).map(row => row.place);
+}
+
+/** Airport consumers do not need the much larger normalized city-search index. */
+export async function getCarCatalogAirport(iata: string): Promise<CarLocationChoice | null> {
+  if (!/^[A-Z]{3}$/.test(iata)) return null;
+  if (!airportLoading) airportLoading = (async () => {
+    const airports = new Map<string, CarLocationChoice | null>();
+    await readCatalog(record => {
+      if (record.kind !== 'airport' || !record.iata) return;
+      const { aliases: _aliases, population: _population, ...place } = record;
+      const previous = airports.get(record.iata);
+      airports.set(record.iata, previous === undefined ? { ...place, version: manifest.version } : null);
+    });
+    return airports;
+  })().catch(error => { airportLoading = undefined; throw error; });
+  return (await airportLoading).get(iata) ?? null;
 }
 
 export async function getCarCatalogPlace(id: string, version?: string): Promise<CarLocationChoice> {

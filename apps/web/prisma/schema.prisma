@@ -170,6 +170,7 @@ model SidedoorState {
 model User {
   id                String   @id @default(cuid())
   disabledAt        DateTime?
+  locale            String @default("en")
   username          String   @unique
   displayName       String?
   isAdmin           Boolean  @default(false)
@@ -219,6 +220,8 @@ model WatchProfile {
   revisions WatchProfileRevision[]
   observations TravellerObservation[]
   jobs TravellerJob[]
+  trips TravellerTrip[]
+  alerts TravellerAlert[]
   @@index([userId, archivedAt])
   @@index([active, nextCheckAt])
 }
@@ -259,6 +262,11 @@ model TravellerObservation {
   score Json?
   profile WatchProfile @relation(fields: [profileId], references: [id], onDelete: Restrict)
   evidence TravellerVerification[]
+  trip TravellerTrip? @relation("tripObservation")
+  flightTrips TravellerTrip[] @relation("tripFlight")
+  hotelTrips TravellerTrip[] @relation("tripHotel")
+  alerts TravellerAlert[]
+  @@unique([id, profileId])
   @@unique([profileId, source, identity, observedAt])
   @@index([profileId, observedAt])
   @@index([comparisonKey, observedAt])
@@ -277,6 +285,41 @@ model TravellerVerification {
   contextConfirmed Boolean @default(false)
   observation TravellerObservation @relation(fields: [observationId], references: [id], onDelete: Restrict)
   @@index([observationId, verifiedAt])
+}
+
+model TravellerTrip {
+  id String @id @default(cuid())
+  profileId String
+  observationId String
+  flightObservationId String
+  hotelObservationId String
+  createdAt DateTime @default(now())
+  profile WatchProfile @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  observation TravellerObservation @relation("tripObservation", fields: [observationId, profileId], references: [id, profileId], onDelete: Restrict)
+  flight TravellerObservation @relation("tripFlight", fields: [flightObservationId, profileId], references: [id, profileId], onDelete: Restrict)
+  hotel TravellerObservation @relation("tripHotel", fields: [hotelObservationId, profileId], references: [id, profileId], onDelete: Restrict)
+  @@unique([profileId, flightObservationId, hotelObservationId])
+  @@unique([observationId, profileId])
+  @@index([profileId, createdAt])
+}
+
+model TravellerAlert {
+  id String @id @default(cuid())
+  profileId String
+  profileRevision Int
+  observationId String
+  identity String
+  eventKey String @unique
+  amount Decimal @db.Decimal(18, 4)
+  currency String
+  score Int
+  confidence String
+  channelIds String[] @default([])
+  createdAt DateTime @default(now())
+  profile WatchProfile @relation(fields: [profileId], references: [id], onDelete: Restrict)
+  observation TravellerObservation @relation(fields: [observationId, profileId], references: [id, profileId], onDelete: Restrict)
+  delivery TravelAlertDelivery?
+  @@index([profileId, identity, createdAt])
 }
 
 model TravellerSourceState {
@@ -645,6 +688,7 @@ model TravelAlertDelivery {
   queryId       String?
   hotelAlertId  String? @unique
   carTrackerId  String?
+  travellerAlertId String? @unique
   eventKey      String @unique
   message       Json
   deliveredIds  String[] @default([])
@@ -657,6 +701,7 @@ model TravelAlertDelivery {
   query         Query? @relation(fields: [queryId], references: [id], onDelete: Cascade)
   hotelAlert    HotelAlert? @relation(fields: [hotelAlertId], references: [id], onDelete: Cascade)
   carTracker    CarTracker? @relation(fields: [carTrackerId], references: [id], onDelete: Cascade)
+  travellerAlert TravellerAlert? @relation(fields: [travellerAlertId], references: [id], onDelete: Restrict)
 
   @@index([pending, nextAttemptAt])
 }

@@ -15,6 +15,7 @@ export interface NotificationDeliveryControl {
   signal: AbortSignal;
   beforeSend: (channelId: string) => Promise<void>;
   onDelivered: (channelId: string) => Promise<void>;
+  channelIds?: readonly string[];
 }
 
 /**
@@ -36,7 +37,10 @@ export async function dispatchNotifications(
   const channels = await read(tx => tx.notificationChannel.findMany({
     where: {
       enabled: true,
-      ...(deliveredChannelIds.length ? { id: { notIn: deliveredChannelIds } } : {}),
+      ...((deliveredChannelIds.length || control?.channelIds !== undefined) ? { id: {
+        ...(deliveredChannelIds.length ? { notIn: deliveredChannelIds } : {}),
+        ...(control?.channelIds !== undefined ? { in: [...control.channelIds] } : {}),
+      } } : {}),
       // SQL `IN (id, NULL)` never matches NULL rows, so OR the two explicitly.
       ...(individual || ownerUserId === null
         ? { userId: ownerUserId }

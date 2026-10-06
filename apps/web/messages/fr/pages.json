@@ -1,5 +1,19 @@
 {
-  "SharedProviderFields": {"stored":"Enregistré sur cette instance","unset":"Non configuré","unchanged":"Laissez vide pour conserver la valeur actuelle","clear":"Supprimer la valeur enregistrée","unavailable":"Impossible de lire les identifiants enregistrés. Remplacez-les ou supprimez-les avant d’enregistrer.","fields":{"apiKey":"Clé API","baseUrl":"Adresse de l’API","compatibleApiKey":"Clé API du serveur personnalisé","allowAnonymous":"Le serveur ne nécessite pas de clé API"},"reset":"Lors de l’enregistrement, supprimer tous les paramètres et identifiants enregistrés de ce fournisseur.","endpointMismatch":"Cette clé enregistrée appartient à un autre point de terminaison. Saisissez une clé pour le point de terminaison actuel."},
+  "SharedProviderFields": {
+    "stored": "Enregistré sur cette instance",
+    "unset": "Non configuré",
+    "unchanged": "Laissez vide pour conserver la valeur actuelle",
+    "clear": "Supprimer la valeur enregistrée",
+    "unavailable": "Impossible de lire les identifiants enregistrés. Remplacez-les ou supprimez-les avant d’enregistrer.",
+    "fields": {
+      "apiKey": "Clé API",
+      "baseUrl": "Adresse de l’API",
+      "compatibleApiKey": "Clé API du serveur personnalisé",
+      "allowAnonymous": "Le serveur ne nécessite pas de clé API"
+    },
+    "reset": "Lors de l’enregistrement, supprimer tous les paramètres et identifiants enregistrés de ce fournisseur.",
+    "endpointMismatch": "Cette clé enregistrée appartient à un autre point de terminaison. Saisissez une clé pour le point de terminaison actuel."
+  },
   "SharedSecurity": {
     "householdTitle": "Accès à l’application",
     "householdHint": "Un mot de passe partagé ouvre l’application. Chacun choisit ensuite son profil.",
@@ -75,7 +89,8 @@
     "outcome_unknown": "La demande a peut-être abouti. Vérifiez si vous pouvez vous connecter avant de réessayer.",
     "network_error": "Impossible de joindre l’instance. Vérifiez votre connexion.",
     "invalid_password": "Utilisez au moins 12 caractères et au maximum 1024 octets UTF-8.",
-    "failed": "La demande n’a pas pu être traitée."
+    "failed": "La demande n’a pas pu être traitée.",
+    "individualSetupRequired": "Run the local setup command to obtain a single-use administrator claim code. Enter the code and choose your individual account below."
   },
   "Landing": {
     "settings": "Paramètres",

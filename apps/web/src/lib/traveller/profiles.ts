@@ -64,6 +64,8 @@ export const profileSchema = z.object({
 }).strict().superRefine((profile, context) => {
   if (profile.dates.mode === 'window' && (Date.parse(profile.dates.to) - Date.parse(profile.dates.from)) / 86400000 < profile.duration.minNights)
     context.addIssue({ code: 'custom', path: ['dates'], message: 'Travel window is shorter than the minimum stay' });
+  if (profile.dates.mode === 'window' && (Date.parse(profile.dates.to) - Date.parse(profile.dates.from)) / 86400000 > 730)
+    context.addIssue({ code: 'custom', path: ['dates'], message: 'Travel window cannot exceed 730 days' });
   if (profile.dates.mode !== 'window' && (profile.dates.mode === 'rolling' ? profile.dates.days : profile.dates.horizonDays) < profile.duration.minNights)
     context.addIssue({ code: 'custom', path: ['dates'], message: 'Travel window is shorter than the minimum stay' });
   if (profile.flight.excludedAirports.some(value => profile.origins.includes(value)))

@@ -1,5 +1,19 @@
 {
-  "SharedProviderFields": {"stored":"Guardado nesta instância","unset":"Não configurado","unchanged":"Deixe em branco para manter o valor atual","clear":"Remover o valor guardado","unavailable":"Não foi possível ler as credenciais guardadas. Substitua-as ou remova-as antes de guardar.","fields":{"apiKey":"Chave de API","baseUrl":"Endereço da API","compatibleApiKey":"Chave de API do servidor personalizado","allowAnonymous":"O servidor não precisa de chave de API"},"reset":"Ao salvar, remover todas as configurações e credenciais salvas deste provedor.","endpointMismatch":"Esta chave salva pertence a outro endpoint. Insira uma chave para o endpoint atual."},
+  "SharedProviderFields": {
+    "stored": "Guardado nesta instância",
+    "unset": "Não configurado",
+    "unchanged": "Deixe em branco para manter o valor atual",
+    "clear": "Remover o valor guardado",
+    "unavailable": "Não foi possível ler as credenciais guardadas. Substitua-as ou remova-as antes de guardar.",
+    "fields": {
+      "apiKey": "Chave de API",
+      "baseUrl": "Endereço da API",
+      "compatibleApiKey": "Chave de API do servidor personalizado",
+      "allowAnonymous": "O servidor não precisa de chave de API"
+    },
+    "reset": "Ao salvar, remover todas as configurações e credenciais salvas deste provedor.",
+    "endpointMismatch": "Esta chave salva pertence a outro endpoint. Insira uma chave para o endpoint atual."
+  },
   "SharedSecurity": {
     "householdTitle": "Acesso ao aplicativo",
     "householdHint": "Uma senha compartilhada abre o aplicativo. Depois, cada pessoa escolhe seu perfil.",
@@ -75,7 +89,8 @@
     "outcome_unknown": "A solicitação pode ter sido concluída. Confira se consegue entrar antes de tentar novamente.",
     "network_error": "Não foi possível conectar à instância. Confira sua conexão.",
     "invalid_password": "Use pelo menos 12 caracteres e no máximo 1024 bytes UTF-8.",
-    "failed": "Não foi possível concluir a solicitação."
+    "failed": "Não foi possível concluir a solicitação.",
+    "individualSetupRequired": "Run the local setup command to obtain a single-use administrator claim code. Enter the code and choose your individual account below."
   },
   "Landing": {
     "settings": "Configurações",

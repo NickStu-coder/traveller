@@ -266,7 +266,13 @@ export async function middleware(request: NextRequest) {
     }).catch(() => {});
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  if (process.env.TRAVELLER_AUTH_MODE === 'individual' &&
+      (pathname.startsWith('/api/traveller/') || pathname.startsWith('/api/account/') || pathname.startsWith('/api/auth/') ||
+       ['/dashboard', '/discover', '/trips', '/stays', '/surprise', '/watch-profiles', '/preferences', '/alerts', '/history', '/operations', '/account'].some(prefix => pathname === prefix || pathname.startsWith(prefix + '/')))) {
+    response.headers.set('Cache-Control', 'private, no-store');
+  }
+  return response;
 }
 
 export const config = {

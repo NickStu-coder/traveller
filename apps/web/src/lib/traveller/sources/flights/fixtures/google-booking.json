@@ -1,0 +1,71 @@
+{
+  "url": "https://www.google.com/travel/flights/booking?tfs=CBwQAhpnEgoyMDI3LTA0LTAxIiAKA0xKVRIKMjAyNy0wNC0wMRoDTVVDKgJMSDIEMTY5NyIgCgNNVUMSCjIwMjctMDQtMDEaA0NERyoCTEgyBDIyMzJqBwgBEgNMSlVyDAgCEggvbS8wNXF0ahpnEgoyMDI3LTA0LTA3IiAKA0NERxIKMjAyNy0wNC0wNxoDTVVDKgJWTDIEMjIzMSIgCgNNVUMSCjIwMjctMDQtMDcaA0xKVSoCTEgyBDE2OThqDAgCEggvbS8wNXF0anIHCAESA0xKVUABQAFIA3ABggELCP___________wGYAQE&tfu=CnhDalJJVG5CS1ZHMXZRelUzY1hkQldEQnJTbWRDUnkwdExTMHRMUzB0TFMxM1luTnJOVUZCUVVGQlIzSkZhVmxOVFcxUWRUQkJFZzFXVERJeU16RjhURWd4TmprNEdnc0lqTzRGRUFJYUEwVlZVamdjY01uSkJnPT0SAggAIgA&hl=en&curr=EUR",
+  "legs": [
+    [
+      {
+        "arrival": "2:20 PM on Thu, Apr 1",
+        "cabin": "Business Class",
+        "departure": "1:20 PM on Thu, Apr 1",
+        "destination": "Munich International Airport (MUC)",
+        "duration": "Travel time: 1 hr",
+        "flight": "LH 1697",
+        "layover": "1 hr 20 min layoverMunich (MUC)",
+        "origin": "Ljubljana Airport (LJU)"
+      },
+      {
+        "arrival": "5:15 PM on Thu, Apr 1",
+        "cabin": "Business Class",
+        "departure": "3:40 PM on Thu, Apr 1",
+        "destination": "Aéroport de Paris-Charles de Gaulle (CDG)",
+        "duration": "Travel time: 1 hr 35 min",
+        "flight": "LH 2232",
+        "layover": "",
+        "origin": "Munich International Airport (MUC)"
+      }
+    ],
+    [
+      {
+        "arrival": "3:45 PM on Wed, Apr 7",
+        "cabin": "Business Class",
+        "departure": "2:15 PM on Wed, Apr 7",
+        "destination": "Munich International Airport (MUC)",
+        "duration": "Travel time: 1 hr 30 min",
+        "flight": "VL 2231",
+        "layover": "2 hr 50 min layoverMunich (MUC)",
+        "origin": "Aéroport de Paris-Charles de Gaulle (CDG)"
+      },
+      {
+        "arrival": "7:25 PM on Wed, Apr 7",
+        "cabin": "Business Class",
+        "departure": "6:35 PM on Wed, Apr 7",
+        "destination": "Ljubljana Airport (LJU)",
+        "duration": "Travel time: 50 min",
+        "flight": "LH 1698",
+        "layover": "",
+        "origin": "Munich International Airport (MUC)"
+      }
+    ]
+  ],
+  "fares": [
+    {
+      "label": "Continue to book with Lufthansa, Business Comfort for 961 euros",
+      "text": "Business Comfort or similar\n€961\nNo refunds\nNo ticket changes\nFree seat selection\nPriority boarding\nFree meal service\n1 free carry-on per passenger\n1st checked bag per passenger free\nContinue"
+    },
+    {
+      "label": "Continue to book with Lufthansa, Business Comfort Green for 1161 euros",
+      "text": "Business Comfort Green or similar\n€1,161\nNo refunds\nNo ticket changes\nFree seat selection\nPriority boarding\nFree meal service\n1 free carry-on per passenger\n1st checked bag per passenger free\nContinue"
+    },
+    {
+      "label": "Continue to book with Lufthansa, Business Flex for 1633 euros",
+      "text": "Business Flex or similar\n€1,633\nFull refunds\nFree change, possible fare difference\nFree seat selection\nPriority boarding\nFree meal service\n1 free carry-on per passenger\n2 free checked bags per passenger\nContinue"
+    },
+    {
+      "label": "Continue to book with Expedia for 961 euros",
+      "text": ""
+    },
+    {
+      "label": "Continue to book with Mytrip for 1001 euros (Equivalent to 1122 US dollars on Mytrip)",
+      "text": ""
+    }
+  ]
+}

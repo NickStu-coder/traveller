@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { profileSchema } from '../profiles';
 import { confirmExploreContext, parseExploreCards, readExploreCardElements, type ExploreControls } from './google-explore';
-import { googleDiscoveryUrl } from './google-url';
+import { googleDiscoveryUrl, googleFlightSearchUrl } from './google-url';
+import { googleFlightFields } from '../../scraper/flight-link';
 
 const profile = profileSchema.parse({ name: 'Anywhere', origins: ['LJU'], destination: { kind: 'anywhere' }, dates: { mode: 'rolling', days: 365 }, duration: { minNights: 5, maxNights: 12 }, passengers: { adults: 2 }, cabin: 'business', positioning: { homeAirports: ['LJU'] } });
 const request = { origin: 'LJU', destination: null, departure: '2027-04-01', returnDate: '2027-04-07' };
@@ -29,5 +30,17 @@ describe('Google Explore captured context', () => {
     const card = { entity: '/m/05qtj', name: 'Paris', flightPrice: '1,234', currency: 'EUR', stops: 'Nonstop', duration: '2 hr' };
     expect(parseExploreCards([card, card, { ...card, entity: '/m/other', flightPrice: '-1' }], request, profile)).toHaveLength(1);
     expect(parseExploreCards([{ ...card, flightPrice: 'unavailable' }], request, profile)).toHaveLength(0);
+  });
+  it('selects the Flights surface for an exact city lookup rather than redirecting to Explore', () => {
+    const url = googleFlightSearchUrl({ ...request, destination: '/m/05qtj' }, profile);
+    const state = googleFlightFields(Buffer.from(new URL(url).searchParams.get('tfs')!, 'base64url'));
+    expect(state.find(field => field.id === 2)?.value).toBe(2n);
+    expect(() => confirmExploreContext({ ...controls, url }, { ...request, destination: '/m/05qtj' }, profile, ['/travel/flights'])).not.toThrow();
+  });
+  it('confirms geographic entities selected by the provider and rejects a changed destination', () => {
+    const asiaUrl = 'https://www.google.com/travel/explore?tfs=CBwQAxoiEgoyMDI3LTA0LTAxagcIARIDTEpVcgsIBBIHL20vMGowaxoiEgoyMDI3LTA0LTA3agsIBBIHL20vMGowa3IHCAESA0xKVUABQAFIA3ABggELCP___________wGYAQE&tfu=GgA&hl=en&curr=EUR';
+    expect(() => confirmExploreContext({ ...controls, url: asiaUrl, destinationEntity: '/m/0j0k' }, { ...request, destination: 'Asia' }, profile)).not.toThrow();
+    expect(() => confirmExploreContext({ ...controls, url: asiaUrl }, request, profile)).toThrow(/state/);
+    expect(() => confirmExploreContext({ ...controls, url: asiaUrl, destinationEntity: '/m/wrong' }, { ...request, destination: 'Asia' }, profile)).toThrow(/state/);
   });
 });

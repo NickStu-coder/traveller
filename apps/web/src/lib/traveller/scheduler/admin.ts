@@ -4,14 +4,16 @@ import { serializable } from '../../sidedoor/access/transaction';
 import { schedulerSchema } from './policy';
 import { IMPLEMENTED_SOURCES } from './store';
 import { SOURCE_CATALOG } from '../sources/catalog';
+import { engineSchema } from '../engine/policy';
 
 export const operationalUpdate = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('scheduler'), revision: z.number().int().nonnegative(), settings: schedulerSchema }).strict(),
+  z.object({ kind: z.literal('engine'), revision: z.number().int().nonnegative(), settings: engineSchema }).strict(),
   z.object({ kind: z.literal('source'), source: z.string().max(100), revision: z.number().int().nonnegative(), enabled: z.boolean(), budgetPerDay: z.number().int().min(1).max(200) }).strict(),
 ]);
 export class OperationalConflict extends Error {}
 export async function updateTravellerOperations(actorId: string, input: z.output<typeof operationalUpdate>) {
-  const key = input.kind === 'source' ? `source:${input.source}` : 'scheduler';
+  const key = input.kind === 'source' ? `source:${input.source}` : input.kind;
   if (input.kind === 'source' && (!SOURCE_CATALOG.some(source => source.id === input.source) || input.enabled && !IMPLEMENTED_SOURCES.some(source => source === input.source)))
     throw new OperationalConflict('This source does not have an available adapter');
   return serializable(async tx => {

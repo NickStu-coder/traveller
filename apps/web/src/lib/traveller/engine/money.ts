@@ -5,14 +5,15 @@ export type FxQuote = { from: string; to: string; rate: string; source: string; 
 
 function amount(value: string, allowZero = false) {
   const parsed = new Prisma.Decimal(value);
-  if (!parsed.isFinite() || (allowZero ? parsed.isNegative() : !parsed.isPositive())) throw new Error('Invalid money amount');
+  if (!parsed.isFinite() || (allowZero ? parsed.lt(0) : parsed.lte(0))) throw new Error('Invalid money amount');
   return parsed;
 }
 
-export function convertMoney(original: Money, target: string, quote?: FxQuote): Money {
+export function convertMoney(original: Money, target: string, quote?: FxQuote, now = new Date()): Money {
   const value = amount(original.amount);
   if (original.currency === target) return { amount: value.toFixed(4), currency: target };
   if (!quote || quote.from !== original.currency || quote.to !== target || !quote.source || !Number.isFinite(quote.at.getTime())) throw new Error('A matching dated FX quote is required');
+  if (quote.at > now || now.getTime() - quote.at.getTime() > 7 * 86400000) throw new Error('FX quote is stale or from the future');
   return { amount: value.mul(amount(quote.rate)).toFixed(4), currency: target };
 }
 

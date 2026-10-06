@@ -1,4 +1,4 @@
-FROM docker.io/library/node:26-alpine AS deps
+FROM docker.io/library/node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS deps
 RUN apk add --no-cache libc6-compat openssl python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -8,7 +8,7 @@ COPY apps/web/prisma ./apps/web/prisma/
 RUN npm ci --loglevel=error
 
 # Production-only deps (no devDependencies)
-FROM docker.io/library/node:26-alpine AS proddeps
+FROM docker.io/library/node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS proddeps
 RUN apk add --no-cache libc6-compat openssl python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -42,22 +42,22 @@ RUN set -e; cd /app; mkdir -p /ext/@prisma; \
       cp -R "node_modules/@prisma/$p" "/ext/@prisma/$p"; \
     done
 
-# Prisma CLI as a self-contained toolchain for the entrypoint schema push.
+# Prisma CLI as a self-contained toolchain for committed startup migrations.
 # The CLI is a devDependency, so it is absent from the lean runtime
 # node_modules, and fetching it with npx at container start round-trips the
 # registry and fails in restricted networks. Install its locked dependency tree
 # in isolation, then copy the whole tree into the runner. Its exact version is
 # checked against the project's CLI and client. The entrypoint invokes
-# this CLI with explicit --schema/--url flags (no prisma.config.ts at runtime),
+# this CLI with the bundled dependency-free runtime configuration,
 # and v7's client is Rust-free (WASM query compiler), so there is no engine
 # binary to match the alpine target.
-FROM docker.io/library/node:26-alpine AS prismacli
+FROM docker.io/library/node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS prismacli
 RUN apk add --no-cache openssl
 WORKDIR /pcli
 COPY scripts/prisma-cli/package.json scripts/prisma-cli/package-lock.json ./
 RUN npm ci --loglevel=error
 
-FROM docker.io/library/node:26-alpine AS builder
+FROM docker.io/library/node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS builder
 RUN apk add --no-cache libc6-compat openssl python3 make g++
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -92,14 +92,14 @@ COPY --from=builder --chown=1000:1000 /app/packages/cli/dist /app/packages/cli/d
 COPY --from=builder --chown=1000:1000 /app/packages/cli/package.json /app/packages/cli/package.json
 COPY --from=cliruntime --chown=1000:1000 /cli-runtime /app
 
-FROM docker.io/library/node:26-alpine AS partitioned
+FROM docker.io/library/node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS partitioned
 COPY --from=runtimeassets /app /runtime
 COPY scripts/partition-runtime.mjs /partition-runtime.mjs
 COPY scripts/prune-runtime-dependencies.mjs /prune-runtime-dependencies.mjs
 RUN node /partition-runtime.mjs /runtime /dependencies \
     && node /prune-runtime-dependencies.mjs /dependencies
 
-FROM docker.io/library/node:26-alpine AS browser-runtime
+FROM docker.io/library/node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS browser-runtime
 RUN apk add --no-cache libc6-compat openssl chromium-headless-shell curl \
     && ln -s /usr/bin/chromium-headless-shell /usr/bin/chromium-browser
 

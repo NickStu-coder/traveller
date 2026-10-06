@@ -1,0 +1,998 @@
+{
+  "source": "https://unstats.un.org/unsd/methodology/m49/overview/",
+  "retrievedAt": "2026-10-06",
+  "countries": {
+    "AD": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "AE": [
+      "Asia",
+      "Western Asia"
+    ],
+    "AF": [
+      "Asia",
+      "Southern Asia"
+    ],
+    "AG": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "AI": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "AL": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "AM": [
+      "Asia",
+      "Western Asia"
+    ],
+    "AO": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "AQ": [
+      "",
+      ""
+    ],
+    "AR": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "AS": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "AT": [
+      "Europe",
+      "Western Europe"
+    ],
+    "AU": [
+      "Oceania",
+      "Australia and New Zealand"
+    ],
+    "AW": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "AX": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "AZ": [
+      "Asia",
+      "Western Asia"
+    ],
+    "BA": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "BB": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "BD": [
+      "Asia",
+      "Southern Asia"
+    ],
+    "BE": [
+      "Europe",
+      "Western Europe"
+    ],
+    "BF": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "BG": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "BH": [
+      "Asia",
+      "Western Asia"
+    ],
+    "BI": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "BJ": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "BL": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "BM": [
+      "Americas",
+      "Northern America"
+    ],
+    "BN": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "BO": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "BQ": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "BR": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "BS": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "BT": [
+      "Asia",
+      "Southern Asia"
+    ],
+    "BV": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "BW": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "BY": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "BZ": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "CA": [
+      "Americas",
+      "Northern America"
+    ],
+    "CC": [
+      "Oceania",
+      "Australia and New Zealand"
+    ],
+    "CD": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "CF": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "CG": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "CH": [
+      "Europe",
+      "Western Europe"
+    ],
+    "CI": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "CK": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "CL": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "CM": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "CN": [
+      "Asia",
+      "Eastern Asia"
+    ],
+    "CO": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "CR": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "CU": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "CV": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "CW": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "CX": [
+      "Oceania",
+      "Australia and New Zealand"
+    ],
+    "CY": [
+      "Asia",
+      "Western Asia"
+    ],
+    "CZ": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "DE": [
+      "Europe",
+      "Western Europe"
+    ],
+    "DJ": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "DK": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "DM": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "DO": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "DZ": [
+      "Africa",
+      "Northern Africa"
+    ],
+    "EC": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "EE": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "EG": [
+      "Africa",
+      "Northern Africa"
+    ],
+    "EH": [
+      "Africa",
+      "Northern Africa"
+    ],
+    "ER": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "ES": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "ET": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "FI": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "FJ": [
+      "Oceania",
+      "Melanesia"
+    ],
+    "FK": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "FM": [
+      "Oceania",
+      "Micronesia"
+    ],
+    "FO": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "FR": [
+      "Europe",
+      "Western Europe"
+    ],
+    "GA": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "GB": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "GD": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "GE": [
+      "Asia",
+      "Western Asia"
+    ],
+    "GF": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "GG": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "GH": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "GI": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "GL": [
+      "Americas",
+      "Northern America"
+    ],
+    "GM": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "GN": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "GP": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "GQ": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "GR": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "GS": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "GT": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "GU": [
+      "Oceania",
+      "Micronesia"
+    ],
+    "GW": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "GY": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "HK": [
+      "Asia",
+      "Eastern Asia"
+    ],
+    "HM": [
+      "Oceania",
+      "Australia and New Zealand"
+    ],
+    "HN": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "HR": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "HT": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "HU": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "ID": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "IE": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "IL": [
+      "Asia",
+      "Western Asia"
+    ],
+    "IM": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "IN": [
+      "Asia",
+      "Southern Asia"
+    ],
+    "IO": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "IQ": [
+      "Asia",
+      "Western Asia"
+    ],
+    "IR": [
+      "Asia",
+      "Southern Asia"
+    ],
+    "IS": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "IT": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "JE": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "JM": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "JO": [
+      "Asia",
+      "Western Asia"
+    ],
+    "JP": [
+      "Asia",
+      "Eastern Asia"
+    ],
+    "KE": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "KG": [
+      "Asia",
+      "Central Asia"
+    ],
+    "KH": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "KI": [
+      "Oceania",
+      "Micronesia"
+    ],
+    "KM": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "KN": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "KP": [
+      "Asia",
+      "Eastern Asia"
+    ],
+    "KR": [
+      "Asia",
+      "Eastern Asia"
+    ],
+    "KW": [
+      "Asia",
+      "Western Asia"
+    ],
+    "KY": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "KZ": [
+      "Asia",
+      "Central Asia"
+    ],
+    "LA": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "LB": [
+      "Asia",
+      "Western Asia"
+    ],
+    "LC": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "LI": [
+      "Europe",
+      "Western Europe"
+    ],
+    "LK": [
+      "Asia",
+      "Southern Asia"
+    ],
+    "LR": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "LS": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "LT": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "LU": [
+      "Europe",
+      "Western Europe"
+    ],
+    "LV": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "LY": [
+      "Africa",
+      "Northern Africa"
+    ],
+    "MA": [
+      "Africa",
+      "Northern Africa"
+    ],
+    "MC": [
+      "Europe",
+      "Western Europe"
+    ],
+    "MD": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "ME": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "MF": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "MG": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "MH": [
+      "Oceania",
+      "Micronesia"
+    ],
+    "MK": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "ML": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "MM": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "MN": [
+      "Asia",
+      "Eastern Asia"
+    ],
+    "MO": [
+      "Asia",
+      "Eastern Asia"
+    ],
+    "MP": [
+      "Oceania",
+      "Micronesia"
+    ],
+    "MQ": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "MR": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "MS": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "MT": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "MU": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "MV": [
+      "Asia",
+      "Southern Asia"
+    ],
+    "MW": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "MX": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "MY": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "MZ": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "NA": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "NC": [
+      "Oceania",
+      "Melanesia"
+    ],
+    "NE": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "NF": [
+      "Oceania",
+      "Australia and New Zealand"
+    ],
+    "NG": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "NI": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "NL": [
+      "Europe",
+      "Western Europe"
+    ],
+    "NO": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "NP": [
+      "Asia",
+      "Southern Asia"
+    ],
+    "NR": [
+      "Oceania",
+      "Micronesia"
+    ],
+    "NU": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "NZ": [
+      "Oceania",
+      "Australia and New Zealand"
+    ],
+    "OM": [
+      "Asia",
+      "Western Asia"
+    ],
+    "PA": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "PE": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "PF": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "PG": [
+      "Oceania",
+      "Melanesia"
+    ],
+    "PH": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "PK": [
+      "Asia",
+      "Southern Asia"
+    ],
+    "PL": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "PM": [
+      "Americas",
+      "Northern America"
+    ],
+    "PN": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "PR": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "PS": [
+      "Asia",
+      "Western Asia"
+    ],
+    "PT": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "PW": [
+      "Oceania",
+      "Micronesia"
+    ],
+    "PY": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "QA": [
+      "Asia",
+      "Western Asia"
+    ],
+    "RE": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "RO": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "RS": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "RU": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "RW": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "SA": [
+      "Asia",
+      "Western Asia"
+    ],
+    "SB": [
+      "Oceania",
+      "Melanesia"
+    ],
+    "SC": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "SD": [
+      "Africa",
+      "Northern Africa"
+    ],
+    "SE": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "SG": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "SH": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "SI": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "SJ": [
+      "Europe",
+      "Northern Europe"
+    ],
+    "SK": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "SL": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "SM": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "SN": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "SO": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "SR": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "SS": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "ST": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "SV": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "SX": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "SY": [
+      "Asia",
+      "Western Asia"
+    ],
+    "SZ": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "TC": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "TD": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "TF": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "TG": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "TH": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "TJ": [
+      "Asia",
+      "Central Asia"
+    ],
+    "TK": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "TL": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "TM": [
+      "Asia",
+      "Central Asia"
+    ],
+    "TN": [
+      "Africa",
+      "Northern Africa"
+    ],
+    "TO": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "TR": [
+      "Asia",
+      "Western Asia"
+    ],
+    "TT": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "TV": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "TZ": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "UA": [
+      "Europe",
+      "Eastern Europe"
+    ],
+    "UG": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "UM": [
+      "Oceania",
+      "Micronesia"
+    ],
+    "US": [
+      "Americas",
+      "Northern America"
+    ],
+    "UY": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "UZ": [
+      "Asia",
+      "Central Asia"
+    ],
+    "VA": [
+      "Europe",
+      "Southern Europe"
+    ],
+    "VC": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "VE": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "VG": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "VI": [
+      "Americas",
+      "Latin America and the Caribbean"
+    ],
+    "VN": [
+      "Asia",
+      "South-eastern Asia"
+    ],
+    "VU": [
+      "Oceania",
+      "Melanesia"
+    ],
+    "WF": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "WS": [
+      "Oceania",
+      "Polynesia"
+    ],
+    "YE": [
+      "Asia",
+      "Western Asia"
+    ],
+    "YT": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "ZA": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "ZM": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ],
+    "ZW": [
+      "Africa",
+      "Sub-Saharan Africa"
+    ]
+  }
+}

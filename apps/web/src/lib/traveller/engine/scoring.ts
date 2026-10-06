@@ -40,20 +40,22 @@ export function hotelQuality(rating: number | null, scale: 5 | 10, reviews: numb
   return { eligible, quality: clamp(adjusted), reviewConfidence: confidence, reason: eligible ? null : 'quality_threshold' };
 }
 
-export function dealScore(evidence: PriceEvidence | null, quality: number, confidence: Confidence, eligible = true) {
+export function dealScore(evidence: PriceEvidence | null, quality: number, confidence: Confidence, eligible = true, weights: ScoreWeights = DEFAULT_WEIGHTS) {
+  const selected = weightSchema.parse(weights);
   if (!eligible || !evidence?.ready || !Number.isFinite(quality) || evidence.discount <= 0) return { score: null, band: 'insufficient' as const, version: 'traveller-v1', evidence };
   const factors = {
-    discount: clamp(evidence.discount / 0.5) * 35,
-    percentile: (1 - evidence.percentile) * 30,
-    quality: clamp(quality) * 20,
-    verification: ({ low: 0, medium: 0.5, high: 1 }[confidence]) * 15,
+    discount: clamp(evidence.discount / 0.5) * selected.discount,
+    percentile: (1 - evidence.percentile) * selected.percentile,
+    quality: clamp(quality) * selected.quality,
+    verification: ({ low: 0, medium: 0.5, high: 1 }[confidence]) * selected.verification,
   };
   const score = Math.min(confidence === 'low' ? 79 : confidence === 'medium' ? 89 : 100, Math.round(Object.values(factors).reduce((sum, value) => sum + value, 0)));
-  return { score, band: score >= 90 ? 'extreme' : score >= 80 ? 'excellent' : score >= 70 ? 'good' : 'ordinary', version: 'traveller-v1', factors, evidence };
+  return { score, band: score >= 90 ? 'extreme' : score >= 80 ? 'excellent' : score >= 70 ? 'good' : 'ordinary', version: 'traveller-v1', weights: selected, factors, evidence };
 }
 
-export function tripScore(totalEvidence: PriceEvidence | null, flightScore: number | null, hotelScore: number | null, confidence: Confidence) {
-  if (flightScore === null || hotelScore === null) return dealScore(null, 0, confidence);
+export function tripScore(totalEvidence: PriceEvidence | null, flightScore: number | null, hotelScore: number | null, confidence: Confidence, weights: ScoreWeights = DEFAULT_WEIGHTS) {
+  if (flightScore === null || hotelScore === null) return dealScore(null, 0, confidence, true, weights);
   // Total historical cost controls the price factors; component value controls quality.
-  return dealScore(totalEvidence, Math.min(flightScore, hotelScore) / 100, confidence);
+  return dealScore(totalEvidence, Math.min(flightScore, hotelScore) / 100, confidence, true, weights);
 }
+import { DEFAULT_WEIGHTS, weightSchema, type ScoreWeights } from './policy';

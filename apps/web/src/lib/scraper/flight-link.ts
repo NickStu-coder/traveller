@@ -30,13 +30,13 @@ export function googleFlightFields(bytes: Uint8Array): GoogleFlightField[] {
   return result;
 }
 function message(field: GoogleFlightField): GoogleFlightField[] {
-  if (!(field.value instanceof Uint8Array)) throw new Error('Invalid itinerary in Google Flights link');
+  if (typeof field.value === 'bigint') throw new Error('Invalid itinerary in Google Flights link');
   return googleFlightFields(field.value);
 }
 function text(entries: GoogleFlightField[], id: number, pattern: RegExp): string {
   const values = entries.filter(field => field.id === id);
   const value = values[0]?.value;
-  if (values.length !== 1 || !(value instanceof Uint8Array)) throw new Error('The link does not contain a complete selected itinerary');
+  if (values.length !== 1 || value === undefined || typeof value === 'bigint') throw new Error('The link does not contain a complete selected itinerary');
   const decoded = new TextDecoder('utf-8', { fatal: true }).decode(value);
   if (!pattern.test(decoded)) throw new Error('Invalid flight details in the selected link');
   return decoded;
@@ -47,7 +47,7 @@ function date(entries: GoogleFlightField[], id: number): string {
   return value;
 }
 
-export function readFlightLink(raw: unknown): FlightLink {
+export function readFlightLink(raw: unknown, expectedPassengers: readonly number[] = [1]): FlightLink {
   const { url } = travelImportUrl(raw, 'flights');
   const encoded = new URL(url).searchParams.get('tfs')!;
   if (!/^[A-Za-z0-9_-]+={0,2}$/.test(encoded) || encoded.length > 12000) throw new Error('Invalid Google Flights itinerary encoding');
@@ -75,7 +75,9 @@ export function readFlightLink(raw: unknown): FlightLink {
   if (!cabinClass) throw new Error('The selected link does not specify a supported cabin');
   // Existing flight trackers price one adult. Do not relabel a group fare.
   const travelers = root.filter(field => field.id === 8);
-  if (travelers.length !== 1 || travelers[0]!.value !== 1n) throw new Error('Flight link import currently supports one adult');
+  if (travelers.length !== expectedPassengers.length || travelers.some(field => typeof field.value !== 'bigint')
+    || travelers.map(field => Number(field.value)).sort().join() !== [...expectedPassengers].sort().join())
+    throw new Error(expectedPassengers.length === 1 && expectedPassengers[0] === 1 ? 'Flight link import currently supports one adult' : 'The selected itinerary changed the passenger allocation');
   return { url, legs, cabinClass };
 }
 

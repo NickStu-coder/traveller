@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { sanitizeNext } from '@/lib/safe-next';
 import styles from './page.module.css';
 
-export function AccessScreen({ next, mode, hosted, needsLocalSetup = false }: { next: string | null; mode: AccessFormMode; hosted: boolean; needsLocalSetup?: boolean }) {
+export function AccessScreen({ next, mode, hosted, individual = false, needsLocalSetup = false }: { next: string | null; mode: AccessFormMode; hosted: boolean; individual?: boolean; needsLocalSetup?: boolean }) {
   const t = useTranslations('SharedAccess');
   const errors: Record<string, string> = { unauthorized: t('unauthorized'), forbidden: t('forbidden'), conflict: t('conflict'), rate_limited: t('rate_limited'), cancelled: t('cancelled'), passkey_failed: t('passkey_failed'), ceremony_busy: t('ceremony_busy'), outcome_unknown: t('outcome_unknown'), network_error: t('network_error'), invalid_password: t('invalid_password') };
   const copy: AccessFormCopy = {
@@ -24,7 +24,8 @@ export function AccessScreen({ next, mode, hosted, needsLocalSetup = false }: { 
     <div className={styles.content}>
       <p className={styles.brand}>Traveller</p>
       <h1 className={styles.title}>{t('title')}</h1>
-      <AccessForm initialMode={mode} modes={hosted ? ['login', 'recover'] : [mode]} claimModes={['household']} copy={copy} modeDescriptions={{ login: t('loginDescription'), household: t('householdDescription'), claim: t('claimDescription'), recover: t('recoverDescription') }} classes={{ root: styles.access, form: styles.form, navigation: styles.navigation, label: styles.label, input: styles.input, button: styles.button, secondary: styles.secondary, error: styles.error, hint: styles.hint }} onSignedIn={session => {
+      {individual && mode === 'claim' && <p className={styles.hint}>{t('individualSetupRequired')} <code>flight-finder access setup</code></p>}
+      <AccessForm initialMode={mode} modes={mode === 'claim' ? ['claim'] : hosted ? ['login', 'recover'] : [mode]} claimModes={[individual ? 'individual' : 'household']} copy={copy} modeDescriptions={{ login: t('loginDescription'), household: t('householdDescription'), claim: t('claimDescription'), recover: t('recoverDescription') }} classes={{ root: styles.access, form: styles.form, navigation: styles.navigation, label: styles.label, input: styles.input, button: styles.button, secondary: styles.secondary, error: styles.error, hint: styles.hint }} onSignedIn={session => {
         const destination = sanitizeNext(next);
         if (!session.principal) {
           window.location.assign(`/login${destination ? `?next=${encodeURIComponent(destination)}` : ''}`);

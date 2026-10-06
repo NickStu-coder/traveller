@@ -37,7 +37,8 @@ export function googleFlightSearchUrl(request: DiscoveryRequest & { destination:
   const outbound = [...field(2, request.departure), ...field(13, location(request.origin)), ...field(14, location(request.destination))];
   const inbound = [...field(2, request.returnDate), ...field(13, location(request.destination)), ...field(14, location(request.origin))];
   const cabin = ['economy', 'premium_economy', 'business', 'first'].indexOf(profile.cabin) + 1;
-  const bytes = [...field(1, 28), ...field(2, 3), ...field(3, outbound), ...field(3, inbound), ...googlePassengerCategories(profile).flatMap(value => field(8, value)), ...field(9, cabin), ...field(14, 1)];
+  // Field 2 selects the provider surface: 2 is Flights; 3 redirects to Explore.
+  const bytes = [...field(1, 28), ...field(2, 2), ...field(3, outbound), ...field(3, inbound), ...googlePassengerCategories(profile).flatMap(value => field(8, value)), ...field(9, cabin), ...field(14, 1)];
   const url = new URL('https://www.google.com/travel/flights');
   url.searchParams.set('tfs', Buffer.from(bytes).toString('base64url'));
   url.searchParams.set('hl', 'en'); url.searchParams.set('curr', profile.currency);

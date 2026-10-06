@@ -1,10 +1,20 @@
 import type { Page } from 'playwright';
 import { closeTravelBrowser, currentTravelExecution } from '../../travel/execution';
-import { guardTravelNavigation } from '../../travel/navigation';
+import { guardTravelContext } from '../../travel/navigation';
+import type { TravelNavigationGuard } from '../../travel/navigation';
 import { SourceError } from './types';
 
+/** Provider navigation paths observed in public, ordinary booking flows. */
+export function travellerNavigationAllowed(url: URL, provider: 'google' | 'lufthansa' | 'booking' = 'google'): boolean {
+  return url.protocol === 'https:' && !url.port && !url.username && !url.password
+    && ((url.hostname === 'www.google.com' && /^\/(?:travel|sorry)(?:\/|$)/.test(url.pathname)) || url.hostname === 'consent.google.com'
+      || provider === 'lufthansa' && (url.hostname === 'shop.lufthansa.com' && url.pathname.startsWith('/booking/')
+        || url.hostname === 'www.lufthansa.com' && url.pathname === '/deeplink/partner')
+      || provider === 'booking' && url.hostname === 'www.booking.com' && (/^\/searchresults(?:\.[a-z]{2}(?:-[a-z]{2})?)?\.html$/.test(url.pathname) || /^\/hotel\/[a-z]{2}\/[\w.-]+\.html$/.test(url.pathname)));
+}
+
 /** Use an ordinary isolated browser: no navigator spoofing or challenge bypass. */
-export async function withGooglePage<T>(signal: AbortSignal, work: (page: Page) => Promise<T>): Promise<T> {
+export async function withGooglePage<T>(signal: AbortSignal, work: (page: Page, navigation: TravelNavigationGuard, navigationFor: (page: Page) => TravelNavigationGuard) => Promise<T>, provider: 'google' | 'lufthansa' | 'booking' = 'google'): Promise<T> {
   const execution = currentTravelExecution();
   if (!execution) throw new Error('Traveller sources require the shared travel worker lease');
   signal.throwIfAborted(); execution.check();
@@ -21,14 +31,15 @@ export async function withGooglePage<T>(signal: AbortSignal, work: (page: Page) 
     await context.route('**/*', route => {
       const url = new URL(route.request().url());
       return url.protocol === 'https:' && !url.username && !url.password && !url.port
-        && /^(?:(?:www|consent)\.google\.com|(?:[a-z0-9-]+\.)*(?:gstatic\.com|googleusercontent\.com|googleapis\.com))$/.test(url.hostname)
+        && (/^(?:(?:www|consent)\.google\.com|(?:[a-z0-9-]+\.)*(?:gstatic\.com|googleusercontent\.com|googleapis\.com))$/.test(url.hostname)
+          || provider === 'lufthansa' && ['shop.lufthansa.com', 'www.lufthansa.com', 'cdn.cookielaw.org'].includes(url.hostname)
+          || provider === 'booking' && /^(?:www\.booking\.com|(?:[a-z0-9-]+\.)*bstatic\.com)$/.test(url.hostname))
         ? route.continue() : route.abort('blockedbyclient');
     });
+    const navigationFor = await guardTravelContext(context, 'traveller-' + provider, url => travellerNavigationAllowed(url, provider));
     const page = await context.newPage();
     page.setDefaultTimeout(15_000);
-    await guardTravelNavigation(page, 'traveller-google', url => url.protocol === 'https:' && !url.port && !url.username && !url.password
-      && ((url.hostname === 'www.google.com' && /^\/(?:travel|sorry)(?:\/|$)/.test(url.pathname)) || url.hostname === 'consent.google.com'));
-    return await work(page);
+    return await work(page, navigationFor(page), navigationFor);
   } catch (error) { failure = error; throw error; }
   finally { signal.removeEventListener('abort', abort); await closeTravelBrowser(browser, failure); }
 }

@@ -11,15 +11,20 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class AccessPreparationTests(unittest.TestCase):
-    def test_container_prepares_before_schema_change_and_finalizes_before_serving(self):
-        entrypoint = (ROOT / "docker-entrypoint.sh").read_text()
+    def test_container_migrates_before_platform_writes_and_finalizes_before_serving(self):
+        entrypoint = (ROOT / "docker-entrypoint.sh").read_text(encoding="utf-8")
         prepare = entrypoint.index("access prepare")
-        schema = entrypoint.index("db push")
+        schema = entrypoint.index("migrate deploy")
+        constraints = entrypoint.index("/app/scripts/apply-travel-constraints.mjs")
         finalize = entrypoint.index("access finalize")
         clear_imports = entrypoint.index("unset SIDEDOOR_IMPORT_ADMIN_PASSWORD")
         serve = entrypoint.index("exec node apps/web/server.js")
-        self.assertLess(prepare, schema)
-        self.assertLess(schema, finalize)
+        # Recording the baseline must precede Sidedoor's first state-table write.
+        # Existing unbaselined databases must fail rather than being adopted silently.
+        self.assertLess(schema, prepare)
+        self.assertLess(prepare, constraints)
+        self.assertLess(constraints, finalize)
+        self.assertNotIn("db push", entrypoint)
         self.assertLess(finalize, clear_imports)
         self.assertLess(clear_imports, serve)
         self.assertLess(finalize, serve)

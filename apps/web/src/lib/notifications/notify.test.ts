@@ -35,6 +35,13 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe('dispatchNotifications', () => {
+  it('limits delivery to selected profile channels and excludes already acknowledged channels', async () => {
+    vi.stubEnv('TRAVELLER_AUTH_MODE', 'individual');
+    mockFindMany.mockResolvedValue([]);
+    await dispatchNotifications('user-1', MESSAGE, ['acknowledged'], { signal: new AbortController().signal, channelIds: ['selected', 'acknowledged'], beforeSend: async () => undefined, onDelivered: async () => undefined });
+    expect(mockFindMany).toHaveBeenCalledWith(expect.objectContaining({ where: { enabled: true, userId: 'user-1', id: { in: ['selected', 'acknowledged'], notIn: ['acknowledged'] } } }));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
   it('keeps individual account recipients private even if a channel is reassigned during delivery', async () => {
     vi.stubEnv('TRAVELLER_AUTH_MODE', 'individual');
     mockFindMany.mockResolvedValue([{ id: 'owned', type: 'webhook', config: {}, userId: 'user-1' }]);

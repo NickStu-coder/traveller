@@ -1,5 +1,19 @@
 {
-  "SharedProviderFields": {"stored":"Auf dieser Instanz gespeichert","unset":"Nicht konfiguriert","unchanged":"Leer lassen, um den aktuellen Wert zu behalten","clear":"Gespeicherten Wert entfernen","unavailable":"Gespeicherte Zugangsdaten konnten nicht gelesen werden. Ersetzen oder entfernen Sie sie vor dem Speichern.","fields":{"apiKey":"API-Schlüssel","baseUrl":"API-Adresse","compatibleApiKey":"API-Schlüssel des eigenen Servers","allowAnonymous":"Der Server benötigt keinen API-Schlüssel"},"reset":"Beim Speichern alle gespeicherten Einstellungen und Zugangsdaten dieses Anbieters entfernen.","endpointMismatch":"Dieser gespeicherte Schlüssel gehört zu einem anderen Endpunkt. Gib einen Schlüssel für den aktuellen Endpunkt ein."},
+  "SharedProviderFields": {
+    "stored": "Auf dieser Instanz gespeichert",
+    "unset": "Nicht konfiguriert",
+    "unchanged": "Leer lassen, um den aktuellen Wert zu behalten",
+    "clear": "Gespeicherten Wert entfernen",
+    "unavailable": "Gespeicherte Zugangsdaten konnten nicht gelesen werden. Ersetzen oder entfernen Sie sie vor dem Speichern.",
+    "fields": {
+      "apiKey": "API-Schlüssel",
+      "baseUrl": "API-Adresse",
+      "compatibleApiKey": "API-Schlüssel des eigenen Servers",
+      "allowAnonymous": "Der Server benötigt keinen API-Schlüssel"
+    },
+    "reset": "Beim Speichern alle gespeicherten Einstellungen und Zugangsdaten dieses Anbieters entfernen.",
+    "endpointMismatch": "Dieser gespeicherte Schlüssel gehört zu einem anderen Endpunkt. Gib einen Schlüssel für den aktuellen Endpunkt ein."
+  },
   "SharedSecurity": {
     "householdTitle": "App-Zugang",
     "householdHint": "Ein gemeinsames Passwort öffnet die App. Danach wählt jede Person ihr Profil.",
@@ -75,7 +89,8 @@
     "outcome_unknown": "Die Anfrage wurde möglicherweise abgeschlossen. Prüfe vor einem erneuten Versuch, ob du dich anmelden kannst.",
     "network_error": "Die Instanz ist nicht erreichbar. Prüfe deine Verbindung.",
     "invalid_password": "Verwende mindestens 12 Zeichen und höchstens 1024 UTF-8-Bytes.",
-    "failed": "Die Anfrage konnte nicht abgeschlossen werden."
+    "failed": "Die Anfrage konnte nicht abgeschlossen werden.",
+    "individualSetupRequired": "Run the local setup command to obtain a single-use administrator claim code. Enter the code and choose your individual account below."
   },
   "Landing": {
     "settings": "Einstellungen",

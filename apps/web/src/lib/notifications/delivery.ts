@@ -7,6 +7,7 @@ export const DELIVERY_CLAIM_MS = 120_000;
 export interface ClaimedDelivery extends TravelAlertDelivery {
   owner: string | null;
   payload: ChannelMessage;
+  channelIds?: readonly string[];
 }
 export type DeliveryGuard = <T>(work: (tx: Prisma.TransactionClient, row: TravelAlertDelivery) => Promise<T>) => Promise<T>;
 
@@ -25,6 +26,7 @@ export async function deliverClaimedAlert(entry: ClaimedDelivery, guarded: Deliv
   try {
     const outcomes = await dispatchNotifications(entry.owner, { ...entry.payload, data: { ...entry.payload.data, eventId: entry.eventKey } }, entry.deliveredIds, {
       signal,
+      channelIds: entry.channelIds,
       beforeSend: () => guarded(async () => { signal.throwIfAborted(); }),
       onDelivered: id => guarded(async (tx, row) => {
         await update(tx, { deliveredIds: [...new Set([...row.deliveredIds, id])] });

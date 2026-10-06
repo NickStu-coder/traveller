@@ -94,6 +94,30 @@ try {
   }
   const before = await snapshot(tables);
   const dockerConnection = new URL(connection); dockerConnection.hostname = 'host.docker.internal';
+  // This rehearsal intentionally adopts a known legacy schema. Production
+  // startup must never silently baseline an arbitrary existing database.
+  await command('docker', ['run', '--rm',
+    ...(process.platform === 'linux' ? ['--add-host', 'host.docker.internal:host-gateway'] : []),
+    '-e', `DATABASE_URL=${dockerConnection.href}`, '-e', 'SELF_HOSTED=true',
+    '-e', 'ADMIN_SESSION_SECRET=local-migration-test-session-secret',
+    '-e', 'SIDEDOOR_IMPORT_ADMIN_PASSWORD=local-migration-owner-password',
+    '--entrypoint', 'node', imageId, '/app/packages/cli/dist/index.js', 'access', 'prepare']);
+  const adoptedSchema = join(output, 'adopted-baseline.prisma');
+  await writeFile(adoptedSchema, await command('git', ['show', '608eb42d7775f238ae1a7cf0b437a814091460c3:apps/web/prisma/schema.prisma']));
+  const migrationEnv = { ...process.env, DATABASE_URL: connection.href };
+  const migration = await command(process.execPath, [resolve(root, 'node_modules/prisma/build/index.js'),
+    'migrate', 'diff', '--from-config-datasource', '--to-schema', adoptedSchema, '--script'], { env: migrationEnv });
+  assert.doesNotMatch(migration, /DROP (?:TABLE|TYPE)/i, 'Legacy rehearsal must preserve all tables and types');
+  for (const [, column] of migration.matchAll(/DROP COLUMN "([^"]+)"/g))
+    assert.ok(movedCredentialColumns.has(column), `Unexpected destructive change: ${column}`);
+  await writeFile(join(output, 'legacy-cutover.sql'), migration);
+  await client.query(migration);
+  assert.equal(await snapshot(tables), before, 'Reviewed legacy cutover must preserve existing application data');
+  const remaining = await command(process.execPath, [resolve(root, 'node_modules/prisma/build/index.js'),
+    'migrate', 'diff', '--from-config-datasource', '--to-schema', adoptedSchema, '--exit-code'], { env: migrationEnv });
+  assert.match(remaining, /No difference detected/, 'Only an exact verified baseline can be adopted');
+  await command(process.execPath, [resolve(root, 'node_modules/prisma/build/index.js'),
+    'migrate', 'resolve', '--applied', '20261006000000_upstream_baseline'], { env: migrationEnv });
   await command('docker', ['run', '-d', '--name', container, '-p', '127.0.0.1::3003',
     ...(process.platform === 'linux' ? ['--add-host', 'host.docker.internal:host-gateway'] : []),
     '-e', `DATABASE_URL=${dockerConnection.href}`, '-e', 'REDIS_URL=redis://host.docker.internal:56389',

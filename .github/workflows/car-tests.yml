@@ -166,3 +166,4 @@ jobs:
         with:
           name: travel-migration-evidence
           path: /tmp/flight-finder-travel-migration-*
+          retention-days: 3

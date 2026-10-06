@@ -21,7 +21,7 @@ export interface SourceContext {
   profile: WatchConstraints;
   signal: AbortSignal;
   /** Reserve one logical provider search before navigation or a filter submission. */
-  reserveRequest(): Promise<void>;
+  reserveRequest(units?: number): Promise<void>;
 }
 export interface FlightCandidate {
   kind: 'flight';
@@ -50,6 +50,14 @@ export interface FlightCandidate {
   layoverMinutes: number[] | null;
   arrivalLocal: string | null;
   returnDepartureLocal: string | null;
+  legs?: FlightSegment[][];
+  fare?: { provider: string; name: string | null; refundable: boolean | null; changesAllowed: boolean | null };
+  directConfirmation?: { provider: 'Lufthansa'; url: string; googleAmount: number; verifiedAt: string; marketingAliases: { google: string; direct: string; operator: string }[] };
+}
+export interface FlightSegment {
+  origin: string; destination: string; date: string; arrivalDate: string;
+  airline: string; number: string; cabin: WatchConstraints['cabin'];
+  departureTime: string; arrivalTime: string; durationMinutes: number;
 }
 export interface FlightSourceAdapter {
   metadata: SourceMetadata;
@@ -60,4 +68,8 @@ export class SourceError extends Error {
   constructor(readonly status: Exclude<SourceStatus, 'healthy' | 'disabled'>, message: string) {
     super(message); this.name = 'SourceError';
   }
+}
+/** Invalid or ambiguous user context does not make the provider unhealthy. */
+export class ProfileSearchError extends Error {
+  constructor(message: string) { super(message); this.name = 'ProfileSearchError'; }
 }
