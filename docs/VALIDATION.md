@@ -1,6 +1,16 @@
 # Validation evidence
 
-Evidence recorded on 2026-10-06. Production has not been deployed; none of these checks establishes production SMTP, passkeys behind DSM or off-NAS backup retention.
+Evidence recorded on 2026-10-06. Production is now deployed. The dated rehearsal evidence below remains distinct from production checks; production passkeys, restore and off-NAS retention have not been verified.
+
+## Production handoff
+
+The production stack uses the tested application revision `7629b943af458c61148deef4ba330dc1577acc6c` through the immutable image `ghcr.io/nickstu-coder/traveller@sha256:c801554f090d4520da35e04983421da66a0758693f78ed9f21123af152c8d22c`. The application, PostgreSQL and Redis containers report healthy. The application API confirmed its revision and database/Redis connectivity. The operator configured the DSM HTTPS reverse proxy; a fresh public HTTPS request reached the actual Traveller access page.
+
+The operator completed first-owner enrollment and confirmed receipt of the private Gmail test message. Read-only production checks found one individual owner and one enabled private email channel. After the profile was saved at revision 2, a read-only join confirmed that its alert policy selects the same owner's enabled email channel. The operator also reported that the DSM backup task was configured. This report does not establish a verified production snapshot or restore; the isolated PostgreSQL/SQLite recovery checks below remain the available independent recovery evidence.
+
+`CRON_ENABLED` was enabled through the existing Portainer stack configuration without changing the image or persistent database/Redis containers. The replacement application container became healthy, the global scheduler remained enabled and one active Watch Profile persisted. Its first real Google Explore job started automatically and failed after 53 seconds with zero observations and the guarded message `Source context could not be confirmed; review source health`. The same search dates reproduced a 45-second destination-card wait timeout in the isolated NAS validation environment. A later diagnostic rendered cards, so the timeout is intermittent; no security guard or search-context validation was relaxed. Source health became degraded and normal backoff applies. This is evidence of worker execution, not successful production price collection. A separate single-query live check in the isolated NAS validation environment returned five Business candidates for one adult from LJU; those results were not inserted into production.
+
+The setup hint now names the installed `flight-finder-tui access setup` command. The installer browser assertion is updated to require that exact visible command, retaining the first-run handoff and authentication checks.
 
 ## Tested source and runtime
 
@@ -22,7 +32,7 @@ Lufthansa's captured cart fixture verifies both legs, segment cabins, party and 
 
 Five additive Prisma migrations applied successfully and a repeated deployment reported no pending migrations. PostgreSQL integration checks cover ownership, stale revision rejection, cancellation, source budgets, immutable observation preservation, complete-party trip pairing, measured alert deduplication and selected private delivery channels. Tests use dedicated disposable databases with no production data.
 
-A PostgreSQL 16 custom-format dump and restore retained one individual owner, one Watch Profile, one encrypted private notification channel and all five migration records. Restored original password login, logout and channel decryption passed with the original test encryption key. See [backup and restore](BACKUP-RESTORE.md). Production storage and off-NAS backup scheduling still require deployment configuration.
+A PostgreSQL 16 custom-format dump and restore retained one individual owner, one Watch Profile, one encrypted private notification channel and all five migration records. Restored original password login, logout and channel decryption passed with the original test encryption key. See [backup and restore](BACKUP-RESTORE.md). This was an isolated rehearsal; production restore and off-NAS backup scheduling remain unverified.
 
 ## Private SMTP setup verification
 
@@ -32,6 +42,6 @@ A credential-free probe from the target NAS established Gmail STARTTLS on `smtp.
 
 ## NAS folder backup checks
 
-The NAS host reports Docker storage at `/volume1/@docker`. The selected dedicated backup folder is `/volume1/docker/traveller/backups`, outside application volumes. Five host-script boundary tests passed, including archive/SQLite failure preservation, root-directory refusal, exact project selection, private checksummed exports and concurrent lock handling. The actual published Synology image also passed a native `better-sqlite3` online backup and `quick_check`, retaining a committed row from a live WAL database. This isolated fixture is not production data. The PostgreSQL restore rehearsal above remains separate proof of database recovery. Production folder creation, DSM scheduling, retention and an off-NAS copy have not been activated.
+The NAS host reports Docker storage at `/volume1/@docker`. The selected dedicated backup folder is `/volume1/docker/traveller/backups`, outside application volumes. Five host-script boundary tests passed, including archive/SQLite failure preservation, root-directory refusal, exact project selection, private checksummed exports and concurrent lock handling. The actual published Synology image also passed a native `better-sqlite3` online backup and `quick_check`, retaining a committed row from a live WAL database. This isolated fixture is not production data. The PostgreSQL restore rehearsal above remains separate proof of database recovery. The operator subsequently reported that the DSM backup task was configured; actual production snapshot verification, restore, retention and an off-NAS copy remain unverified.
 
 The subsequent backup validation run exposed a cold-catalog fixture timeout: the regional-filter test loaded and verified a 72,816,218-byte geography catalog within Vitest's five-second assertion deadline under full-suite load. The unchanged test passed alone on the same NAS in 1.9 seconds. Its real catalog initialization now runs in a `beforeAll` hook with the existing geography suite's 60-second setup allowance, including an actual CDG/France assertion. All original region and unresolved-entity assertions retain their normal test deadline; neither the real catalog nor its integrity checks were mocked or disabled.

@@ -192,7 +192,7 @@ try {
     try {
       const page = await setupContext.newPage();
       await page.goto(`http://localhost:${port}/access`);
-      await page.getByText('flight-finder access setup', { exact: true }).waitFor();
+      await page.getByText('flight-finder-tui access setup', { exact: true }).waitFor();
       assert.equal(await page.locator('input[type=password]').count(), 0, 'Do not show a login form before local setup');
       console.log(`PASS ${desktop ? 'desktop' : 'unattended'} first-run handoff to local password setup`);
     } finally { await setupContext.close(); }
