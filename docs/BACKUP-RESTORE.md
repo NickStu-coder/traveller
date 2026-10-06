@@ -40,3 +40,21 @@ Production backup existence and restore capability are not yet confirmed. NAS ac
 ## Recorded isolated rehearsal
 
 On 2026-10-06, the dedicated PostgreSQL 16 validation container successfully created a custom-format `pg_dump`, validated its archive contents and used `pg_restore --no-owner --exit-on-error` into a newly created `traveller_restore_rehearsal` database. Restored counts were one individual owner, one private Watch Profile, one encrypted notification channel and five completed migrations. The application then verified original password login, session logout/revocation, profile ownership and decryption with the original test encryption key. No mail was sent. This rehearsal contained disposable test fixtures, not production user data or off-NAS production backups.
+
+## Dedicated Synology backup directory
+
+The requested NAS-local destination is `/volume1/docker/traveller/backups`, outside the application volume. Paste the complete reviewed `scripts/traveller/backup-synology.sh` into a DSM Task Scheduler user-defined script and schedule it once daily. Its defaults select the production stack and this folder. Alternatively, save the script as a root-owned file, mode 0700, inside a directory writable only by root, and run it from a trusted NAS shell with:
+
+```sh
+TRAVELLER_BACKUP_PROJECT=traveller-prod \
+TRAVELLER_BACKUP_DIR=/volume1/docker/traveller/backups \
+sh /root/traveller-backup-synology.sh
+```
+
+The DSM task needs access to Docker; use the NAS administrator's reviewed Task Scheduler configuration. A root task must not execute a script writable by other NAS users. Task code stored directly in the administrator-only DSM scheduler avoids that shared-folder dependency. The script selects exactly one running database and web container by their Compose project and service labels. It uses the existing database credentials inside the database container, never a secret written into the task. It creates a PostgreSQL custom-format dump, checks its archive contents and decodes every data block to `/dev/null` without connecting to a database, records the actual image and version, and uses the existing SQLite online backup API to retain committed analytics WAL data without stopping writers. If no analytics database exists, the manifest explicitly records that absence. The backup directory is private (mode 700), and checksums cover the exported files.
+
+An atomic lock prevents concurrent backups. Only a fully checked snapshot is renamed from `.incomplete.*` to `traveller-*`. Failed exports and existing snapshots are preserved. No old backup is deleted automatically: define retention explicitly after choosing disk capacity and an independent backup destination. Monitor DSM task failures, free space and the age of the latest completed snapshot. A stale lock after power loss needs operator investigation before removing it.
+
+Keep `ADMIN_SESSION_SECRET` and the deployment environment separately in private storage. The locally generated `C:\Users\Nejc\.codex\secrets\traveller-production.env` must be preserved; a database backup cannot decrypt its credentials without the original encryption secret. The backup job intentionally does not copy secrets from container inspection into logs or archives. Current application persistent data is the analytics SQLite database; add explicit backup coverage when introducing additional upload or document storage.
+
+A folder on the same NAS protects against application mistakes and replacement of its Docker volumes. It does not establish recovery from NAS loss. An off-NAS copy, retention policy and a production restore rehearsal are still operator configuration. The host script's boundary tests verify private snapshots, checksum validation, failed-export preservation, exact container selection, concurrent-job refusal and explicit absent-analytics handling. Actual production scheduling remains pending DSM access.

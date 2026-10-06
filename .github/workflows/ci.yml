@@ -32,6 +32,7 @@ jobs:
       - run: python3 scripts/testing/test_installer_network.py -v
       - run: bash scripts/cli-runtime-test.sh
       - run: python3 -m unittest discover -s scripts -p 'test_deploy*.py' -v
+      - run: python3 scripts/traveller/test_backup_synology.py -v
 
   traveller-database:
     runs-on: ubuntu-latest
