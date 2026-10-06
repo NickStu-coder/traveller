@@ -136,6 +136,10 @@ try {
   assert.equal(channel.config.passSet, true);
   const stored = (await db.query('SELECT config FROM "NotificationChannel" WHERE id=$1', [channel.id])).rows[0].config;
   assert.notEqual(stored.pass, 'test-only-app-password');
+  const testSend = ownerPage.waitForResponse(response => response.url().endsWith(`/channels/${channel.id}/test`) && response.request().method() === 'POST');
+  await ownerPage.getByRole('button', { name: english.channelTest, exact: true }).click();
+  assert.equal((await testSend).status(), 503, 'The Redis-disabled fixture must fail closed without sending email');
+  await ownerPage.getByRole('alert').filter({ hasText: english.channelTestUnavailable }).waitFor();
   pass('Private Gmail defaults, self-addressing, encrypted storage and API secret redaction; no email sent');
 
   const invitation = await json(await owner.request.post('/api/admin/access-invitation', { headers: { Origin: origin }, data: {} }));
@@ -144,6 +148,7 @@ try {
   await json(await member.request.post('/api/access/redeem-invitation', { headers: { Origin: origin }, data: { code: new URLSearchParams(invite.hash.slice(1)).get('invite'), enrollment: { name: memberName, password } } }));
   assert.equal((await member.request.get(`/api/traveller/profiles/${profile.id}`)).status(), 404);
   assert.equal((await member.request.get('/api/traveller/admin')).status(), 403);
+  assert.equal((await member.request.post(`/api/traveller/channels/${channel.id}/test`, { headers: { Origin: origin } })).status(), 404);
   assert.deepEqual((await json(await member.request.get('/api/traveller/profiles'))).profiles, []);
   assert.deepEqual((await json(await member.request.get('/api/traveller/channels'))).channels, []);
   const memberProfile = (await json(await member.request.post('/api/traveller/profiles', { headers: { Origin: origin }, data: { ...profile.constraints, name: 'Member private profile' } }), 201)).profile;

@@ -324,6 +324,13 @@
       "western_europe": "Zahodna Evropa"
     },
     "regionFilterNotice": "Regije temeljijo na potrjenem ciljnem letališču. Še nerazrešeni cilji so iz filtriranega prikaza izključeni.",
-    "measuredHistoryOnly": "Samo izmerjene cene v prikazani valuti. Tabela vsebuje posamezna opažanja."
+    "measuredHistoryOnly": "Samo izmerjene cene v prikazani valuti. Tabela vsebuje posamezna opažanja.",
+    "channelTest": "Pošlji testno obvestilo",
+    "channelTestSent": "Storitev je sprejela testno obvestilo. Preverite prejeto pošto oziroma cilj obvestil.",
+    "channelTestThrottled": "Pred naslednjim testnim obvestilom počakajte 30 sekund.",
+    "channelTestUnavailable": "Testno pošiljanje začasno ni na voljo. Poskusite znova pozneje.",
+    "channelTestFailed": "Testnega obvestila ni bilo mogoče poslati. Preverite nastavitve kanala in prijavne podatke.",
+    "channelTestTitle": "Testno obvestilo Travellerja",
+    "channelTestBody": "To je testno obvestilo iz vašega zasebnega kanala Travellerja. Obvestilo ne predstavlja potovalne ponudbe."
   }
 }

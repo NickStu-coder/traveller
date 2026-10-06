@@ -9,6 +9,7 @@ export function Channels() {
   const [type, setType] = useState('email');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState('');
   const reload = async () => {
     const response = await fetch('/api/traveller/channels');
     const result = await response.json();
@@ -21,7 +22,7 @@ export function Channels() {
     if (active) setChannels(result.data.channels);
   }).catch(() => { if (active) setError(t('error')); }); return () => { active = false; }; }, [t]);
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); setBusy(true); setError('');
+    event.preventDefault(); setBusy(true); setError(''); setNotice('');
     const formElement = event.currentTarget, form = new FormData(formElement);
     const config = Object.fromEntries([...form].filter(([key]) => key !== 'label')) as Record<string, FormDataEntryValue | number | boolean>;
     if (type === 'email') {
@@ -39,12 +40,21 @@ export function Channels() {
   };
   const change = async (channel: Channel, remove = false) => {
     if (remove && !confirm(t('removeChannelConfirm'))) return;
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setNotice('');
     try {
       const response = await fetch(`/api/traveller/channels/${encodeURIComponent(channel.id)}`, { method: remove ? 'DELETE' : 'PATCH', headers: { 'Content-Type': 'application/json' }, body: remove ? undefined : JSON.stringify({ enabled: !channel.enabled }) });
       if (!response.ok) throw new Error((await response.json()).error ?? t('error'));
       await reload();
     } catch (failure) { setError(failure instanceof Error ? failure.message : t('error')); }
+    finally { setBusy(false); }
+  };
+  const test = async (channel: Channel) => {
+    setBusy(true); setError(''); setNotice('');
+    try {
+      const response = await fetch(`/api/traveller/channels/${encodeURIComponent(channel.id)}/test`, { method: 'POST' });
+      if (!response.ok) throw new Error(t(response.status === 429 ? 'channelTestThrottled' : response.status === 503 ? 'channelTestUnavailable' : 'channelTestFailed'));
+      setNotice(t('channelTestSent'));
+    } catch (failure) { setError(failure instanceof Error ? failure.message : t('channelTestFailed')); }
     finally { setBusy(false); }
   };
   const fields: Record<string, [string, string, string, boolean][]> = {
@@ -54,7 +64,8 @@ export function Channels() {
     email: [['host', 'smtpHost', 'text', true], ['port', 'smtpPort', 'number', true], ['user', 'smtpUser', 'email', true], ['pass', 'smtpPass', 'password', false], ['from', 'emailFrom', 'email', false], ['to', 'emailTo', 'email', false]],
   };
   return <section><h2>{t('channels')}</h2><p className={styles.notice}>{t('privateChannels')}</p>{error && <p className={styles.error} role="alert">{error}</p>}
-    <div className={styles.cards}>{channels.map(channel => <article className={styles.card} key={channel.id}><h3>{channel.label ?? channel.type}</h3><p>{channel.type} · {channel.enabled ? t('active') : t('paused')}</p><div className={styles.actions}><button className={styles.button} disabled={busy} onClick={() => void change(channel)}>{channel.enabled ? t('pause') : t('resume')}</button><button className={styles.button} disabled={busy} onClick={() => void change(channel, true)}>{t('removeChannel')}</button></div></article>)}</div>
+    {notice && <p className={styles.notice} role="status">{notice}</p>}
+    <div className={styles.cards}>{channels.map(channel => <article className={styles.card} key={channel.id}><h3>{channel.label ?? channel.type}</h3><p>{channel.type} · {channel.enabled ? t('active') : t('paused')}</p><div className={styles.actions}><button className={styles.button} disabled={busy || !channel.enabled} onClick={() => void test(channel)}>{t('channelTest')}</button><button className={styles.button} disabled={busy} onClick={() => void change(channel)}>{channel.enabled ? t('pause') : t('resume')}</button><button className={styles.button} disabled={busy} onClick={() => void change(channel, true)}>{t('removeChannel')}</button></div></article>)}</div>
     <form className={styles.form} onSubmit={save}><fieldset><legend>{t('addChannel')}</legend><div className={styles.grid}>
       <label className={styles.field}>{t('channelType')}<select value={type} onChange={event => setType(event.target.value)}>{Object.keys(fields).map(value => <option value={value} key={value}>{value === 'email' ? t('email') : value === 'webhook' ? 'Webhook' : value === 'telegram' ? 'Telegram' : 'ntfy'}</option>)}</select></label>
       <label className={styles.field}>{t('name')}<input name="label" required maxLength={100} /></label>

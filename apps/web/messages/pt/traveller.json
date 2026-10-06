@@ -324,6 +324,13 @@
       "western_europe": "Western Europe"
     },
     "regionFilterNotice": "Regions use a confirmed destination airport. Unresolved destinations are excluded from a region-filtered view.",
-    "measuredHistoryOnly": "Measured prices in the displayed currency only. The table lists individual observations."
+    "measuredHistoryOnly": "Measured prices in the displayed currency only. The table lists individual observations.",
+    "channelTest": "Send test notification",
+    "channelTestSent": "Test notification accepted by the sending service. Check your inbox or destination.",
+    "channelTestThrottled": "Wait 30 seconds before sending another test.",
+    "channelTestUnavailable": "Test sending is temporarily unavailable. Try again later.",
+    "channelTestFailed": "The test notification could not be sent. Check your channel settings and credentials.",
+    "channelTestTitle": "Traveller test notification",
+    "channelTestBody": "This is a test notification from your private Traveller channel. No travel deal is being reported."
   }
 }
