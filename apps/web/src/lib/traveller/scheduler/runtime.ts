@@ -17,9 +17,11 @@ export async function pumpTraveller(): Promise<void> {
   return runtime.travellerPump;
 }
 export async function startTravellerScheduler(): Promise<void> {
-  if (process.env.TRAVELLER_AUTH_MODE !== 'individual' || process.env.CRON_ENABLED === 'false' || runtime.travellerTimer) return;
+  if (process.env.TRAVELLER_AUTH_MODE !== 'individual' || runtime.travellerTimer) return;
   if (runtime.travellerStarting) return runtime.travellerStarting;
   runtime.travellerStarting = initializeTravellerSources().then(() => {
+  // Source configuration must remain available while automatic work is paused.
+  if (process.env.CRON_ENABLED === 'false') return;
   const tick = async () => {
     await pumpTraveller();
     runtime.travellerTimer = setTimeout(() => { void tick(); }, 60_000);

@@ -32,7 +32,7 @@ elif name == 'curl':
     elif url.endswith('/api/admin/providers'): print(json.dumps({'ok':True,'data':{'ollama':{'status':'unreachable'}}}))
     elif url.endswith('/api/admin/config'):
         print(json.dumps({'ok':not any('TOOLONG' in v for v in args),'data':{'defaultCurrency':'EUR','defaultCountry':'DE'}}))
-    else: print('<html>Flight Finder</html>')
+    else: print('<html>Traveller</html>')
 '''
 
 

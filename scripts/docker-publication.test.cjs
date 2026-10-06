@@ -47,7 +47,7 @@ test('publication waits for checks still running and rejects a failed rerun', as
   await assert.rejects(requireChecks({ github: checks(runs), sha, attempts: 1 }), /cancelled/);
 });
 
-function publication({ main = sha, existing = {}, releaseTag = '', tagSha = sha, imageSha = sha } = {}) {
+function publication({ main = sha, defaultBranch = 'main', existing = {}, releaseTag = '', tagSha = sha, imageSha = sha } = {}) {
   const tags = new Map(Object.entries(existing));
   const writes = [];
   const run = (...args) => {
@@ -65,7 +65,13 @@ function publication({ main = sha, existing = {}, releaseTag = '', tagSha = sha,
     tags.set(args[2], manifest());
     return '';
   };
-  const github = { rest: { repos: { getCommit: async ({ ref }) => ({ data: { sha: ref === 'main' ? main : tagSha } }) } } };
+  const github = { rest: { repos: {
+    get: async () => ({ data: { default_branch: defaultBranch } }),
+    getCommit: async ({ ref }) => {
+      if (!ref.startsWith('refs/tags/')) assert.equal(ref, defaultBranch);
+      return { data: { sha: ref === defaultBranch ? main : tagSha } };
+    },
+  } } };
   return { writes, execute: () => publish({ github, owner: 'owner', repo: 'app', sha, image, digests: [digest('b'), digest('c')], version: '1.2.3', releaseTag, run }) };
 }
 
@@ -79,6 +85,15 @@ test('current main promotes latest without overwriting a release version', async
   const result = publication();
   await result.execute();
   assert.deepEqual(result.writes, [`${image}:${sha}`, `${image}:latest`]);
+});
+
+test('a Traveller fork promotes its verified default branch without querying absent main', async () => {
+  const current = publication({ defaultBranch: 'traveller' });
+  await current.execute();
+  assert.deepEqual(current.writes, [`${image}:${sha}`, `${image}:latest`]);
+  const historical = publication({ defaultBranch: 'traveller', main: 'd'.repeat(40) });
+  await historical.execute();
+  assert.deepEqual(historical.writes, [`${image}:${sha}`]);
 });
 
 test('images with a different revision cannot be reused under a commit tag', async () => {

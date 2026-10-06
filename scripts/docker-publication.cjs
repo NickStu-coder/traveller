@@ -87,9 +87,10 @@ async function publish({ github, owner, repo, sha, image, digests, releaseTag, v
     if (previous && !sameImages(previous, published)) throw new Error(`Refusing to overwrite released version ${version}`);
     if (!previous) run('create', '-t', versionImage, immutable);
   }
-  // The job's concurrency lock serializes promotions. Check main again after all builds.
-  const { data: main } = await github.rest.repos.getCommit({ owner, repo, ref: 'main' });
-  if (main.sha === sha) run('create', '-t', `${image}:latest`, immutable);
+  // The job's concurrency lock serializes promotions. Recheck the repository's default branch.
+  const { data: repository } = await github.rest.repos.get({ owner, repo });
+  const { data: current } = await github.rest.repos.getCommit({ owner, repo, ref: repository.default_branch });
+  if (current.sha === sha) run('create', '-t', `${image}:latest`, immutable);
 }
 
 module.exports = { requireChecks, requireRelease, publish, REQUIRED_WORKFLOWS };

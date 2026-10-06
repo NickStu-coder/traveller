@@ -9,10 +9,10 @@ Traveller extends [Flight Finder](https://github.com/affromero/flight-finder) in
 - Watch Profiles with multiple airports, Anywhere/region/destination constraints, flexible dates, cabin and party allocation, hotel quality constraints, positioning estimates and alert preferences.
 - Versioned edits, concurrency checks and archiving that retains observations and audit revisions.
 - Deterministic currency conversion, robust daily price medians/percentiles, hotel rating/review confidence, verification freshness/independence and complete-party trip totals.
-- English and Slovenian Traveller screens, responsive layout and the upstream PWA. Legacy screens currently retain English fallback while Slovenian translation continues.
+- English and Slovenian screens with matching message keys, responsive layout and a PWA that excludes private pages and API responses from its cache.
 - Additive PostgreSQL migrations, persistent volumes, health checks, an immutable-image deployment template and backup/restore instructions.
 
-Automatic broad flight discovery, the adapter-backed observation pipeline, live independent verification, trip pairing, Surprise Me and scored deal alerts are still being implemented. Saving a Watch Profile does not yet start automatic discovery. The UI states this explicitly and never shows example fares as measured results. See [implementation status](docs/ROADMAP.md).
+Active Watch Profiles schedule bounded broad discovery and recurring checks through a persistent PostgreSQL queue. Observations feed flight and hotel history, complete-trip pairing, measured deal scores, Surprise Me and private alerts. Statistical alerts require sufficient measured history; newly installed instances show their warming state without example fares. Source blocking and unavailable independent evidence limit verification confidence. See [implementation status](docs/ROADMAP.md) and [validation evidence](docs/VALIDATION.md).
 
 The retained upstream flight, hotel and car tracker interfaces remain available. Some upstream flight extraction paths require an optional AI provider. Traveller's statistics, scheduling design and scoring do not require AI or paid travel-data APIs.
 
@@ -49,6 +49,7 @@ Existing installations need a verified backup, a schema-equivalence check, expli
 - [Scheduler](docs/SCHEDULER.md)
 - [Security](docs/SECURITY.md)
 - [Implementation status](docs/ROADMAP.md)
+- [Validation evidence](docs/VALIDATION.md)
 - [Original upstream README](docs/README-UPSTREAM.md)
 
 ## License

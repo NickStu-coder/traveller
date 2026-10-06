@@ -22,6 +22,7 @@ const environment = { ...process.env, APP_URL: origin, SELF_HOSTED: 'true', CRON
 const accessCopy = JSON.parse(await readFile('apps/web/messages/en/pages.json', 'utf8')).SharedAccess;
 const english = JSON.parse(await readFile('apps/web/messages/en/traveller.json', 'utf8')).Traveller;
 const slovenian = JSON.parse(await readFile('apps/web/messages/sl/traveller.json', 'utf8')).Traveller;
+const recoveryCopy = JSON.parse(await readFile('apps/web/messages/sl/admin.json', 'utf8')).AdminTravel;
 const ownerName = 'traveller-browser-owner', memberName = 'traveller-browser-member';
 const password = 'Traveller browser test only password';
 const passed = [], errors = [], contexts = [];
@@ -158,6 +159,14 @@ try {
     const response = await ownerPage.goto('/' + route);
     assert.equal(response.status(), 200);
     await ownerPage.getByRole('heading', { name: slovenian[title], exact: true }).waitFor();
+    if (route === 'operations') {
+      await ownerPage.getByRole('heading', { name: 'Google Flights Explore', exact: true }).waitFor();
+      const source = ownerPage.locator('form').filter({ has: ownerPage.getByRole('heading', { name: 'Google Flights Explore', exact: true }) });
+      assert.equal(await source.locator('input[name="budget"]').isEnabled(), true);
+      const recovery = ownerPage.getByRole('region', { name: recoveryCopy.title, exact: true });
+      await recovery.getByRole('heading', { name: recoveryCopy.ready, exact: true }).waitFor();
+      assert.equal(await recovery.getByRole('button', { name: recoveryCopy.reload, exact: true }).isEnabled(), true);
+    }
     await capture(ownerPage, route);
   }
   pass('Nine private Slovenian surfaces render without overflow at 390px and 1280px');
