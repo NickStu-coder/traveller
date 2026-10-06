@@ -17,14 +17,14 @@ export function AccessScreen({ next, mode, hosted, individual = false, needsLoca
       <p className={styles.brand}>Traveller</p>
       <h1 className={styles.title}>{t('title')}</h1>
       <p role="status">{t('localSetupRequired')}</p>
-      <code>flight-finder access setup</code>
+      <code>flight-finder-tui access setup</code>
     </div>
   </main>;
   return <main className={styles.root}>
     <div className={styles.content}>
       <p className={styles.brand}>Traveller</p>
       <h1 className={styles.title}>{t('title')}</h1>
-      {individual && mode === 'claim' && <p className={styles.hint}>{t('individualSetupRequired')} <code>flight-finder access setup</code></p>}
+      {individual && mode === 'claim' && <p className={styles.hint}>{t('individualSetupRequired')} <code>flight-finder-tui access setup</code></p>}
       <AccessForm initialMode={mode} modes={mode === 'claim' ? ['claim'] : hosted ? ['login', 'recover'] : [mode]} claimModes={[individual ? 'individual' : 'household']} copy={copy} modeDescriptions={{ login: t('loginDescription'), household: t('householdDescription'), claim: t('claimDescription'), recover: t('recoverDescription') }} classes={{ root: styles.access, form: styles.form, navigation: styles.navigation, label: styles.label, input: styles.input, button: styles.button, secondary: styles.secondary, error: styles.error, hint: styles.hint }} onSignedIn={session => {
         const destination = sanitizeNext(next);
         if (!session.principal) {
