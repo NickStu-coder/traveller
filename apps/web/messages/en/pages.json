@@ -80,7 +80,7 @@
     "unauthorized": "The credentials could not be verified.",
     "forbidden": "This action is not allowed.",
     "localSetupRequired": "Create the first Admin profile and shared password in a terminal on this computer or server, then reload this page:",
-    "originNotAllowed": "This address is not configured for login. Ask the server operator to configure it with flight-finder access origin <url>.",
+    "originNotAllowed": "This address is not configured for login. Ask the server operator to configure it with flight-finder access origin '<url>'.",
     "conflict": "The account or instance configuration changed. Check its current state before continuing.",
     "rate_limited": "Too many attempts. Try again later.",
     "cancelled": "The passkey prompt was cancelled.",

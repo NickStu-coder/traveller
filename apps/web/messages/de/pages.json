@@ -80,7 +80,7 @@
     "unauthorized": "Die Zugangsdaten konnten nicht bestätigt werden.",
     "forbidden": "Diese Aktion ist nicht erlaubt.",
     "localSetupRequired": "Erstelle das erste Admin-Profil und das gemeinsame Passwort in einem Terminal auf diesem Computer oder Server. Lade danach diese Seite neu:",
-    "originNotAllowed": "Diese Adresse ist nicht für die Anmeldung eingerichtet. Bitte den Betreiber, sie mit flight-finder access origin <url> einzurichten.",
+    "originNotAllowed": "Diese Adresse ist nicht für die Anmeldung eingerichtet. Bitte den Betreiber, sie mit flight-finder access origin '<url>' einzurichten.",
     "conflict": "Die Konto- oder Instanzkonfiguration wurde geändert. Prüfe den aktuellen Zustand, bevor du fortfährst.",
     "rate_limited": "Zu viele Versuche. Versuche es später erneut.",
     "cancelled": "Die Passkey-Abfrage wurde abgebrochen.",

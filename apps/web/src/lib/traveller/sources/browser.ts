@@ -38,9 +38,14 @@ export async function withGooglePage<T>(signal: AbortSignal, work: (page: Page, 
     });
     const navigationFor = await guardTravelContext(context, 'traveller-' + provider, url => travellerNavigationAllowed(url, provider));
     const page = await context.newPage();
+    page.on('framenavigated', frame => {
+      // Booking's observed challenge redirect can disappear before the body is read.
+      if (provider === 'booking' && frame === page.mainFrame() && new URL(frame.url()).searchParams.has('chal_t'))
+        execution.abort(new SourceError('blocked', 'Booking access challenge; unattended requests stopped'));
+    });
     page.setDefaultTimeout(15_000);
     return await work(page, navigationFor(page), navigationFor);
-  } catch (error) { failure = error; throw error; }
+  } catch (error) { failure = execution.signal.aborted ? execution.signal.reason : error; throw failure; }
   finally { signal.removeEventListener('abort', abort); await closeTravelBrowser(browser, failure); }
 }
 

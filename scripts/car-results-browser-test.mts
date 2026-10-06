@@ -169,7 +169,7 @@ try {
   for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `No overflow at ${width}`);
-    const brand = await page.locator('a[aria-label="Flight Finder home"]').boundingBox(), heading = await page.locator('h1').boundingBox();
+    const brand = await page.locator('a[aria-label="Traveller home"]').boundingBox(), heading = await page.locator('h1').boundingBox();
     assert.ok(brand && heading && brand.y + brand.height <= heading.y, 'Home link does not overlap the result heading');
     await page.screenshot({ path: resolve(output, `verified-${width}.png`), fullPage: true });
   }

@@ -80,7 +80,7 @@
     "unauthorized": "Les identifiants n’ont pas pu être vérifiés.",
     "forbidden": "Cette action n’est pas autorisée.",
     "localSetupRequired": "Créez le premier profil administrateur et le mot de passe partagé dans un terminal sur cet ordinateur ou serveur, puis rechargez cette page :",
-    "originNotAllowed": "Cette adresse n’est pas configurée pour la connexion. Demandez à l’administrateur de la configurer avec flight-finder access origin <url>.",
+    "originNotAllowed": "Cette adresse n’est pas configurée pour la connexion. Demandez à l’administrateur de la configurer avec flight-finder access origin '<url>'.",
     "conflict": "La configuration du compte ou de l’instance a changé. Vérifiez son état avant de continuer.",
     "rate_limited": "Trop de tentatives. Réessayez plus tard.",
     "cancelled": "La demande de clé d’accès a été annulée.",

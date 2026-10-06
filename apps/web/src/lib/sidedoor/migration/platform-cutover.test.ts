@@ -138,7 +138,12 @@ describe.skipIf(!databaseUrl)('installed platform cutover with PostgreSQL', () =
     const prepared = await preparePlatformCutover();
     expect(prepared).toMatchObject({ setupComplete: true, sourceUsers: 2, sourceProviders: ['anthropic', 'google', 'openai'] });
 
-    const { sharedAccess, sharedAccessStore } = await import('../access/service');
+    // Before schema deployment only the imported Sidedoor state is available.
+    // The current platform store additionally queries current User columns.
+    const { AccessService, accessStateSchema, initialAccessState } = await import('thesidedoor-core/access');
+    const { sharedStateStore } = await import('../access/store');
+    const sharedAccessStore = sharedStateStore('access', value => accessStateSchema.parse(value), initialAccessState);
+    const sharedAccess = new AccessService({ store: sharedAccessStore, allowPrincipalAccessInHousehold: false });
     await expect(sharedAccess.login('Owner', 'owner imported password')).rejects.toMatchObject({ code: 'unauthorized' });
     const state = await sharedAccessStore.read();
     expect(state.principals.filter(principal => principal.role === 'owner')).toHaveLength(1);
@@ -165,6 +170,9 @@ describe.skipIf(!databaseUrl)('installed platform cutover with PostgreSQL', () =
     await before.end();
 
     await push(resolve('prisma/schema.prisma'));
+    const { sharedAccess: migratedAccess } = await import('../access/service');
+    await expect(migratedAccess.login('Owner', 'owner imported password')).rejects.toMatchObject({ code: 'unauthorized' });
+    expect((await migratedAccess.authenticate(admitted, true)).principal?.id).toBe('owner-id');
     await expect(preparePlatformCutover()).resolves.toMatchObject({ setupComplete: true, sourceUsers: 2, sourceProviders: ['anthropic', 'google', 'openai'] });
     const finalized = await finalizePlatformCutover();
     expect(finalized).toMatchObject({ setupComplete: true, sourceUsers: 2, sourceProviders: ['anthropic', 'google', 'openai'] });

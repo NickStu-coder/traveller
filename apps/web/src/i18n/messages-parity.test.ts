@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { LOCALES, DEFAULT_LOCALE } from './locales';
+import { createTranslator } from 'next-intl';
 
 const MESSAGES_DIR = resolve(__dirname, '../../messages');
 
@@ -37,4 +38,10 @@ describe('message key parity across locales', () => {
       expect({ file, missing, extra }).toEqual({ file, missing: [], extra: [] });
     }
   });
+});
+
+it.each(LOCALES)('%s renders the literal origin command without interpreting its placeholder as a rich-text tag', locale => {
+  const pages = JSON.parse(readFileSync(resolve(MESSAGES_DIR, locale, 'pages.json'), 'utf-8'));
+  const t = createTranslator({ locale, messages: pages.SharedAccess, onError: error => { throw error; } });
+  expect(t('originNotAllowed')).toContain('flight-finder access origin <url>');
 });

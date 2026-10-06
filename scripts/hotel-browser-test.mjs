@@ -104,7 +104,7 @@ try {
       await page.setViewportSize({ width, height: 1000 });
       // Filling the date fields can scroll the longer form before this check.
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-      const brand = page.getByRole('link', { name: /Flight Finder home/i });
+      const brand = page.getByRole('link', { name: /Traveller home/i });
       const homeBox = await brand.boundingBox();
       const heading = await page.getByRole('heading', { level: 1 }).boundingBox();
       assert.ok(homeBox && heading && homeBox.y + homeBox.height <= heading.y, 'Home link does not cover hotel heading');

@@ -80,7 +80,7 @@
     "unauthorized": "No se pudieron verificar las credenciales.",
     "forbidden": "Esta acción no está permitida.",
     "localSetupRequired": "Crea el primer perfil de administrador y la contraseña compartida en una terminal de este equipo o servidor. Después, recarga esta página:",
-    "originNotAllowed": "Esta dirección no está configurada para iniciar sesión. Pide al administrador que la configure con flight-finder access origin <url>.",
+    "originNotAllowed": "Esta dirección no está configurada para iniciar sesión. Pide al administrador que la configure con flight-finder access origin '<url>'.",
     "conflict": "La configuración de la cuenta o de la instancia cambió. Revisa su estado antes de continuar.",
     "rate_limited": "Demasiados intentos. Vuelve a intentarlo más tarde.",
     "cancelled": "Se canceló la solicitud de clave de acceso.",
