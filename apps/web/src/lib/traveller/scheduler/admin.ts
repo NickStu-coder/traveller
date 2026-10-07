@@ -23,6 +23,11 @@ export async function updateTravellerOperations(actorId: string, input: z.output
     const revision = (config?.revision ?? 0) + 1;
     const saved = await tx.travellerConfig.upsert({ where: { id: key }, create: { id: key, settings, revision }, update: { settings, revision } });
     await tx.travellerConfigRevision.create({ data: { configId: key, revision, actorId, settings } });
+    if (input.kind === 'scheduler' && (!config || schedulerSchema.parse(config.settings).discoveryMinutes !== input.settings.discoveryMinutes)) {
+      // Reconsider existing due times too; the worker still honors source cooldowns,
+      // budgets and the existing queued/running job deduplication guard.
+      await tx.watchProfile.updateMany({ where: { active: true, archivedAt: null, user: { disabledAt: null } }, data: { nextCheckAt: new Date() } });
+    }
     if (input.kind === 'source') {
       await tx.travellerSourceState.update({ where: { source: input.source }, data: { enabled: input.enabled, budgetPerDay: input.budgetPerDay,
         status: input.enabled ? 'unconfigured' : 'disabled', failures: 0, lastError: null,

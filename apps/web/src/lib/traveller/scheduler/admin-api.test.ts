@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ auth: vi.fn(), read: vi.fn(), update: vi.fn() }));
 vi.mock('../http', async () => ({ ...await vi.importActual('../http'), travellerUser: mocks.auth }));
-vi.mock('../../prisma', () => ({ prisma: { travellerSourceState: { findMany: mocks.read }, travellerJob: { findMany: mocks.read, groupBy: mocks.read, aggregate: vi.fn().mockResolvedValue({ _avg: { durationMs: null } }) }, travellerConfig: { findMany: mocks.read }, travellerObservation: { count: vi.fn().mockResolvedValue(0) } } }));
+vi.mock('../../prisma', () => ({ prisma: { travellerSourceState: { findMany: mocks.read }, travellerJob: { findMany: mocks.read, groupBy: mocks.read, aggregate: vi.fn().mockResolvedValue({ _avg: { durationMs: null }, _max: { startedAt: null } }) }, travellerConfig: { findMany: mocks.read }, travellerObservation: { count: vi.fn().mockResolvedValue(0) }, watchProfile: { findMany: mocks.read }, extractionConfig: { findUnique: mocks.read } } }));
 vi.mock('./store', () => ({ schedulerSettings: vi.fn().mockResolvedValue({}) }));
 vi.mock('../engine/settings', () => ({ engineSettings: vi.fn().mockResolvedValue({ baseCurrency: 'EUR', weights: {} }) }));
 vi.mock('./admin', async () => ({ ...await vi.importActual('./admin'), updateTravellerOperations: mocks.update }));

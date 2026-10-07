@@ -1,13 +1,23 @@
 import { describe, it, expect } from 'vitest';
 import { profileSchema } from '../profiles';
-import { discoveryRequest, nextCheck } from './policy';
+import { DEFAULT_SCHEDULER, discoveryRequest, nextCheck } from './policy';
 import { googleDiscoveryUrl, googlePassengerCategories } from '../sources/google-url';
 
 const profile = profileSchema.parse({ name: 'Anywhere', origins: ['LJU', 'VIE'], destination: { kind: 'anywhere' }, dates: { mode: 'rolling', days: 365 }, duration: { minNights: 5, maxNights: 12 }, passengers: { adults: 1 }, cabin: 'business', positioning: { homeAirports: ['LJU'] } });
 describe('bounded adaptive discovery', () => {
+  it('defaults to three-hour discovery and rotates samples at the configured interval', () => {
+    expect(DEFAULT_SCHEDULER.discoveryMinutes).toBe(180);
+    const now = new Date('2026-10-06T00:00:00Z');
+    const later = new Date(now.getTime() + 3 * 3600000);
+    expect(discoveryRequest(profile, 'profile', now, 180)).not.toEqual(discoveryRequest(profile, 'profile', later, 180));
+    expect(discoveryRequest(profile, 'profile', now, 360)).toEqual(discoveryRequest(profile, 'profile', later, 360));
+    const minutes = (nextCheck('profile', 'DISCOVERY', 0, now).getTime() - now.getTime()) / 60000;
+    expect(minutes).toBeGreaterThanOrEqual(162);
+    expect(minutes).toBeLessThanOrEqual(198);
+  });
   it('rotates origins and full-year dates without constructing a destination matrix', () => {
     const start = new Date('2026-10-06T00:00:00Z');
-    const requests = Array.from({ length: 365 }, (_, slot) => discoveryRequest(profile, 'profile', new Date(start.getTime() + slot * 6 * 3600000))!);
+    const requests = Array.from({ length: 365 }, (_, slot) => discoveryRequest(profile, 'profile', new Date(start.getTime() + slot * DEFAULT_SCHEDULER.discoveryMinutes * 60000))!);
     expect(new Set(requests.map(request => request.origin))).toEqual(new Set(['LJU', 'VIE']));
     expect(requests.every(request => request.destination === null)).toBe(true);
     expect(requests.every(request => { const nights = (Date.parse(request.returnDate) - Date.parse(request.departure)) / 86400000; return nights >= 5 && nights <= 12; })).toBe(true);

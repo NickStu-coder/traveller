@@ -34,12 +34,13 @@ export async function scheduleTravellerDiscovery(now = new Date()): Promise<numb
   for (const profile of due) {
     const constraints = profileSchema.safeParse(profile.constraints);
     if (!constraints.success) continue;
-    const request = discoveryRequest(constraints.data, profile.id, now);
+    const request = discoveryRequest(constraints.data, profile.id, now, settings.discoveryMinutes);
     const created = await serializable(async tx => {
-      const updated = await tx.watchProfile.updateMany({ where: { id: profile.id, revision: profile.revision, active: true, archivedAt: null, nextCheckAt: { lte: now }, user: { disabledAt: null } }, data: { nextCheckAt: nextCheck(profile.id, request ? 'DISCOVERY' : 'COLD', source.failures, now, settings) } });
+      // Provider backoff is enforced by its persisted request slot. Keep profile
+      // cadence independent so recovery does not inherit another long delay.
+      const updated = await tx.watchProfile.updateMany({ where: { id: profile.id, revision: profile.revision, active: true, archivedAt: null, nextCheckAt: { lte: now }, user: { disabledAt: null } }, data: { nextCheckAt: nextCheck(profile.id, request ? 'DISCOVERY' : 'COLD', 0, now, settings) } });
       if (!updated.count || !request || await tx.travellerJob.count({ where: { profileId: profile.id, kind: 'discovery', state: { in: ['queued', 'running'] } } })) return false;
-      const slot = Math.floor(now.getTime() / (settings.discoveryMinutes * 60000));
-      const dedupKey = createHash('sha256').update(JSON.stringify([profile.id, profile.revision, source.source, request, slot])).digest('hex');
+      const dedupKey = createHash('sha256').update(JSON.stringify([profile.id, profile.revision, source.source, request, profile.nextCheckAt.toISOString()])).digest('hex');
       const existing = await tx.travellerJob.findUnique({ where: { dedupKey } });
       if (existing) return false;
       await tx.travellerJob.create({ data: { profileId: profile.id, profileRevision: profile.revision, kind: 'discovery', source: source.source, dedupKey,

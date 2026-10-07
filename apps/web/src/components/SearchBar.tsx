@@ -564,7 +564,6 @@ export function SearchBar({
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={loading}
-              autoFocus
             />
             <button
               className={styles.searchButton}

@@ -22,6 +22,8 @@ const environment = { ...process.env, APP_URL: origin, SELF_HOSTED: 'true', CRON
 const accessCopy = JSON.parse(await readFile('apps/web/messages/en/pages.json', 'utf8')).SharedAccess;
 const english = JSON.parse(await readFile('apps/web/messages/en/traveller.json', 'utf8')).Traveller;
 const slovenian = JSON.parse(await readFile('apps/web/messages/sl/traveller.json', 'utf8')).Traveller;
+const hotelCopy = JSON.parse(await readFile('apps/web/messages/sl/hotels.json', 'utf8')).Hotels;
+const carCopy = JSON.parse(await readFile('apps/web/messages/sl/cars.json', 'utf8')).Cars;
 const recoveryCopy = JSON.parse(await readFile('apps/web/messages/sl/admin.json', 'utf8')).AdminTravel;
 const ownerName = 'traveller-browser-owner', memberName = 'traveller-browser-member';
 const password = 'Traveller browser test only password';
@@ -49,7 +51,7 @@ async function capture(page, name) {
   }
 }
 async function newContext(locale = 'en') {
-  const context = await browser.newContext({ baseURL: origin, viewport: { width: 1280, height: 1000 } });
+  const context = await browser.newContext({ baseURL: origin, viewport: { width: 1280, height: 1000 }, timezoneId: 'Europe/Ljubljana' });
   await context.addCookies([{ name: 'ft-locale', value: locale, url: origin }]);
   context.on('page', page => {
     page.setDefaultTimeout(20_000); page.setDefaultNavigationTimeout(30_000); page.on('pageerror', error => errors.push(error.message));
@@ -160,21 +162,45 @@ try {
   await ownerPage.getByRole('heading', { name: slovenian.settings, exact: true }).waitFor();
   assert.equal((await json(await owner.request.get('/api/account/settings'))).locale, 'sl');
   pass('Slovenian language selection persists to the individual account');
-  for (const [route, title] of [['dashboard', 'welcome'], ['discover', 'discover'], ['trips', 'trips'], ['surprise', 'surprise'], ['watch-profiles', 'profiles'], ['preferences', 'settings'], ['alerts', 'alerts'], ['history', 'history'], ['operations', 'operations']]) {
+  const routes = [['dashboard', 'welcome'], ['discover', 'discover'], ['trips', 'trips'], ['surprise', 'surprise'], ['watch-profiles', 'profiles'], ['preferences', 'settings'], ['alerts', 'alerts'], ['history', 'history'], ['operations', 'operations']].map(([route, key]) => [route, slovenian[key]]);
+  routes.push(['flights', 'Traveller'], ['hotels', hotelCopy.headline], ['cars', carCopy.carsTitle]);
+  for (const [route, title] of routes) {
     const response = await ownerPage.goto('/' + route);
     assert.equal(response.status(), 200);
-    await ownerPage.getByRole('heading', { name: slovenian[title], exact: true }).waitFor();
+    await ownerPage.getByRole('heading', { name: title, exact: true }).waitFor();
+    if (route === 'flights') assert.ok(await ownerPage.evaluate(() => scrollY <= 1), 'Flight search must retain the initial header and navigation');
     if (route === 'operations') {
       await ownerPage.getByRole('heading', { name: 'Google Flights Explore', exact: true }).waitFor();
       const source = ownerPage.locator('form').filter({ has: ownerPage.getByRole('heading', { name: 'Google Flights Explore', exact: true }) });
+      assert.equal(await source.locator('input[name="budget"]').isVisible(), false);
+      await source.getByText(slovenian.sourceSettings, { exact: true }).click();
       assert.equal(await source.locator('input[name="budget"]').isEnabled(), true);
+      assert.equal(await source.locator('input[name="budget"]').isVisible(), true);
+      const activity = await json(await owner.request.get('/api/traveller/admin'));
+      assert.equal(activity.settings.discoveryMinutes, 180);
+      assert.equal(activity.automaticChecksEnabled, false);
+      assert.ok(activity.profiles.some(value => value.id === profile.id));
+      await ownerPage.getByText(slovenian.activityRefreshNotice.replace('{timeZone}', 'Europe/Ljubljana'), { exact: true }).waitFor();
+      await source.getByText(slovenian.sourceSettings, { exact: true }).click();
+      await db.query(`UPDATE "TravellerSourceState" SET enabled=false, status='blocked', "lastError"='Fixture access challenge' WHERE source='google_explore'`);
+      const blockedRefresh = ownerPage.waitForResponse(response => response.url().endsWith('/api/traveller/admin'));
+      await ownerPage.getByRole('button', { name: slovenian.refreshActivity, exact: true }).click();
+      await blockedRefresh;
+      await source.getByText('Fixture access challenge', { exact: true }).waitFor();
+      assert.equal(await source.locator('input[name="enabled"]').isChecked(), false);
+      const priorSource = activity.sources.find(value => value.source === 'google_explore');
+      await db.query('UPDATE "TravellerSourceState" SET enabled=$1, status=$2, "lastError"=$3 WHERE source=$4', [priorSource.enabled, priorSource.status, priorSource.lastError, 'google_explore']);
+      const restoredRefresh = ownerPage.waitForResponse(response => response.url().endsWith('/api/traveller/admin'));
+      await ownerPage.getByRole('button', { name: slovenian.refreshActivity, exact: true }).click();
+      await restoredRefresh;
+      await source.getByText('Fixture access challenge', { exact: true }).waitFor({ state: 'hidden' });
       const recovery = ownerPage.getByRole('region', { name: recoveryCopy.title, exact: true });
       await recovery.getByRole('heading', { name: recoveryCopy.ready, exact: true }).waitFor();
       assert.equal(await recovery.getByRole('button', { name: recoveryCopy.reload, exact: true }).isEnabled(), true);
     }
     await capture(ownerPage, route);
   }
-  pass('Nine private Slovenian surfaces render without overflow at 390px and 1280px');
+  pass('Twelve private Slovenian surfaces render without overflow at 390px and 1280px');
   await json(await member.request.post('/api/access/logout', { headers: { Origin: origin }, data: {} }));
   const memberPage = await member.newPage();
   await memberPage.goto('/access?next=%2Fdiscover');

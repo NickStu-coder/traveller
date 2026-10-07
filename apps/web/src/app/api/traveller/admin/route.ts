@@ -11,16 +11,23 @@ export async function GET() {
   const auth = await travellerUser();
   if (auth.response) return auth.response;
   if (!auth.user.isAdmin) return apiError('Administrator access required', 403);
-  const [sources, jobs, counts, duration, settings, configs, observations, engine] = await Promise.all([
+  const [sources, jobs, counts, duration, settings, configs, observations, engine, profiles, lastRun, automation] = await Promise.all([
     prisma.travellerSourceState.findMany({ orderBy: { source: 'asc' } }),
-    prisma.travellerJob.findMany({ orderBy: { createdAt: 'desc' }, take: 50, include: { profile: { select: { userId: true, name: true } } } }),
+    prisma.travellerJob.findMany({ orderBy: { createdAt: 'desc' }, take: 50, select: {
+      id: true, source: true, kind: true, state: true, runAt: true, startedAt: true, completedAt: true, durationMs: true,
+      resultCount: true, error: true, profile: { select: { userId: true, name: true } },
+    } }),
     prisma.travellerJob.groupBy({ by: ['state'], _count: true }),
     prisma.travellerJob.aggregate({ where: { state: 'completed' }, _avg: { durationMs: true } }),
     schedulerSettings(), prisma.travellerConfig.findMany({ select: { id: true, revision: true } }), prisma.travellerObservation.count(), engineSettings(),
+    prisma.watchProfile.findMany({ where: { active: true, archivedAt: null, user: { disabledAt: null } }, select: { id: true, name: true, nextCheckAt: true }, orderBy: { nextCheckAt: 'asc' }, take: 50 }),
+    prisma.travellerJob.aggregate({ _max: { startedAt: true } }),
+    prisma.extractionConfig.findUnique({ where: { id: 'singleton' }, select: { enabled: true } }),
   ]);
   return apiSuccess({ sources: sources.map(source => ({ ...source, metadata: SOURCE_CATALOG.find(metadata => metadata.id === source.source), revision: configs.find(config => config.id === `source:${source.source}`)?.revision ?? 0 })),
     jobs, counts, averageDurationMs: duration._avg.durationMs, settings, revision: configs.find(config => config.id === 'scheduler')?.revision ?? 0, observations,
-    engine, engineRevision: configs.find(config => config.id === 'engine')?.revision ?? 0 });
+    engine, engineRevision: configs.find(config => config.id === 'engine')?.revision ?? 0,
+    profiles, lastStartedAt: lastRun._max.startedAt, automaticChecksEnabled: process.env.CRON_ENABLED !== 'false' && automation?.enabled !== false });
 }
 export async function PATCH(request: Request) {
   const auth = await travellerUser();

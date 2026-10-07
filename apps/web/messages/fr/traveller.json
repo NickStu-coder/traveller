@@ -331,6 +331,25 @@
     "channelTestUnavailable": "Test sending is temporarily unavailable. Try again later.",
     "channelTestFailed": "The test notification could not be sent. Check your channel settings and credentials.",
     "channelTestTitle": "Traveller test notification",
-    "channelTestBody": "This is a test notification from your private Traveller channel. No travel deal is being reported."
+    "channelTestBody": "This is a test notification from your private Traveller channel. No travel deal is being reported.",
+    "monitoringActivity": "Monitoring activity",
+    "checksRecorded": "Saved checks",
+    "lastDiscovery": "Last discovery attempt",
+    "nextDiscovery": "Next planned discovery",
+    "latestCheckState": "Latest discovery state",
+    "refreshActivity": "Refresh activity",
+    "automaticChecksEnabled": "Automatic checks enabled",
+    "automaticChecksPaused": "Automatic checks paused",
+    "discoveryCadence": "Base discovery interval: {minutes} minutes",
+    "scheduleNotice": "Discovery times include up to 10% jitter. Source failures increase waiting times; budgets and source cooldowns can delay execution. Completed checks can return zero results.",
+    "lastCheckStarted": "Last check started",
+    "activityUpdated": "Activity loaded at",
+    "activityRefreshNotice": "Refreshes every 30 seconds while this page is visible. Times use {timeZone}. Job counters include all saved history.",
+    "scheduledFor": "Scheduled for",
+    "startedAt": "Started at",
+    "noChecksYet": "No checks recorded yet.",
+    "sources": "Sources",
+    "sourceSettings": "Source settings",
+    "schedulerSettings": "Check schedule"
   }
 }

@@ -8,5 +8,5 @@ export default async function ProfilesPage() {
     prisma.watchProfile.findMany({ where: { userId: user.id, archivedAt: null }, orderBy: { createdAt: 'desc' }, take: 50 }),
     prisma.notificationChannel.findMany({ where: { userId: user.id }, select: { id: true, label: true, type: true } }),
   ]);
-  return <Profiles initialProfiles={profiles.map(profile => ({ id: profile.id, revision: profile.revision, active: profile.active, constraints: profile.constraints }))} channels={channels} />;
+  return <Profiles initialProfiles={profiles.map(profile => ({ id: profile.id, revision: profile.revision, active: profile.active, constraints: profile.constraints, nextCheckAt: profile.nextCheckAt.toISOString() }))} channels={channels} />;
 }

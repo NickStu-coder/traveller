@@ -16,11 +16,12 @@ import styles from './HomeBrand.module.css';
 export function HomeBrand() {
   const t = useTranslations('HomeBrand');
   const pathname = usePathname();
+  const travellerPage = ['/dashboard', '/discover', '/trips', '/surprise', '/watch-profiles', '/alerts', '/history', '/preferences', '/operations'].some(route => pathname === route || pathname?.startsWith(route + '/'));
   const travelPage = pathname === '/hotels' || pathname?.startsWith('/hotels/') || pathname === '/cars' || pathname?.startsWith('/cars/');
   if (
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/setup') ||
-    pathname?.startsWith('/login')
+    pathname?.startsWith('/login') || pathname === '/flights' || travellerPage
   ) {
     return null;
   }

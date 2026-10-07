@@ -3,8 +3,9 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { profileSchema, type WatchConstraints } from '@/lib/traveller/profiles';
 import styles from '../traveller.module.css';
+import { LocalTime } from '../activity/local-time';
 
-type Profile = { id: string; revision: number; active: boolean; constraints: unknown };
+type Profile = { id: string; revision: number; active: boolean; constraints: unknown; nextCheckAt: string };
 type Channel = { id: string; label: string | null; type: string };
 const initial = { ...profileSchema.parse({ name: 'Default', origins: ['LJU'], destination: { kind: 'anywhere' }, dates: { mode: 'rolling', days: 365 }, duration: { minNights: 5, maxNights: 12 }, passengers: { adults: 1 }, cabin: 'business', positioning: { homeAirports: ['LJU'] } }), name: '' };
 
@@ -38,7 +39,9 @@ export function Profiles({ initialProfiles, channels }: { initialProfiles: Profi
       const constraints = profileSchema.safeParse(profile.constraints);
       if (!constraints.success) return <article className={styles.card} key={profile.id}><p>{t('unavailable')}</p></article>;
       const p = constraints.data;
-      return <article className={styles.card} key={profile.id}><h2>{p.name}</h2><p>{p.origins.join(', ')} · {p.destination.kind === 'anywhere' ? t('anywhere') : p.destination.values.join(', ')}</p><p>{t(p.cabin)} · {p.duration.minNights}–{p.duration.maxNights} {t('minNights').toLowerCase()}</p><p className={styles.meta}>{profile.active ? t('active') : t('paused')} · {t('revision')} {profile.revision}</p><div className={styles.actions}><button className={styles.button} disabled={busy} onClick={() => setEditing(profile)}>{t('edit')}</button><button className={styles.button} disabled={busy} onClick={() => void archive(profile)}>{t('archive')}</button></div></article>;
+      return <article className={styles.card} key={profile.id}><h2>{p.name}</h2><p>{p.origins.join(', ')} · {p.destination.kind === 'anywhere' ? t('anywhere') : p.destination.values.join(', ')}</p><p>{t(p.cabin)} · {p.duration.minNights}–{p.duration.maxNights} {t('minNights').toLowerCase()}</p><p className={styles.meta}>{profile.active ? t('active') : t('paused')} · {t('revision')} {profile.revision}</p>
+        {profile.active && <p>{t('nextDiscovery')}: <LocalTime value={profile.nextCheckAt} /></p>}
+        <div className={styles.actions}><button className={styles.button} disabled={busy} onClick={() => setEditing(profile)}>{t('edit')}</button><button className={styles.button} disabled={busy} onClick={() => void archive(profile)}>{t('archive')}</button></div></article>;
     })}</div>{!profiles.length && !editing && <p>{t('noProfiles')}</p>}</>;
 }
 

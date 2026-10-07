@@ -4,7 +4,7 @@ Use `docker-compose.traveller.yml` for a private instance. It retains PostgreSQL
 
 ## Prerequisites
 
-Requested target: Portainer `http://10.24.52.208:9000/`; public origin `https://traveller.flynimbus.synology.me`. Authenticated inspection confirmed endpoint 3, host Flynimbus, Linux x86_64, Synology kernel 4.4.302+, Docker 24.0.2/API 1.43, four CPU cores and 33.6 GB RAM. No existing Traveller stack was found. A separate validation stack has no published ports or host volumes. Production has not been deployed.
+Requested target: Portainer `http://10.24.52.208:9000/`; public origin `https://traveller.flynimbus.synology.me`. Authenticated inspection confirmed endpoint 3, host Flynimbus, Linux x86_64, Synology kernel 4.4.302+, Docker 24.0.2/API 1.43, four CPU cores and 33.6 GB RAM. Production stack `traveller-prod` (73) is deployed. Its web, PostgreSQL and Redis containers were healthy during the October 7 inspection; HTTPS and individual-owner access were working. A separate validation stack has no published ports or host volumes.
 
 This host rejects Compose `cpus`/NanoCPUs because CPU CFS scheduling is unavailable. Do not put a hard CPU quota in its stack. Limit worker concurrency in the application and use memory limits verified on this host. The production Compose does not use NanoCPUs.
 
@@ -32,8 +32,22 @@ Household credentials do not become isolated member credentials automatically. U
 
 Back up, review migration compatibility, stop writers, deploy the tested digest and inspect logs/health/version. Preserve the previous image digest. Re-deploying it rolls back the app only; it does not undo database changes. Additive migrations are preferred. If the prior schema is incompatible, follow the rehearsed database restore procedure instead of deleting volumes.
 
-Docker health checks report unhealthy status; restart policies alone do not automatically restart every unhealthy container. Monitor health in Portainer and alert on meaningful failures. Keep DSM/app access private until ownership and HTTPS checks pass. No production deployment has been performed by creating these files.
+Docker health checks report unhealthy status; restart policies alone do not automatically restart every unhealthy container. Monitor health in Portainer and alert on meaningful failures. Keep DSM/app access private until ownership and HTTPS checks pass.
+
+The cadence and layout update requires no schema migration. Existing stored
+scheduler settings override defaults: verify 180 discovery minutes in Sources
+and workers. Saving a changed discovery interval makes active profiles due for
+reconsideration; provider cooldowns, budgets and pending-job deduplication remain
+enforced. Confirm actual job start/outcome timestamps and the next profile due
+time after updating. Retain the previous tested image for rollback. The initial
+October 6 production image was `ghcr.io/nickstu-coder/traveller@sha256:c801554f090d4520da35e04983421da66a0758693f78ed9f21123af152c8d22c`
+(commit `7629b943af458c61148deef4ba330dc1577acc6c`).
+
+The operator reports a daily 03:15 DSM backup task using
+`/volume1/docker/traveller/backups`, outside application volumes. The isolated
+restore rehearsal passed; production snapshots, production restore and an
+off-NAS copy have not been independently verified.
 
 ## Gmail alerts
 
-Preferences: private notification channels defaults to email with `smtp.gmail.com:587` and required STARTTLS (implicit TLS unchecked). Enter your full Gmail address and a Google app password privately in Traveller. Leaving sender and recipient blank uses that same address for both. The password is encrypted at rest and never returned by the channels API. Use Send test notification on your enabled private channel, then check your Gmail inbox and spam folder. A successful response confirms service acceptance; only inbox receipt confirms delivery. Test sending is limited to once per owner every 30 seconds and requires the stack's Redis limiter. Google app passwords require 2-Step Verification and may be unavailable under some account policies: https://support.google.com/mail/answer/185833. SMTP settings: https://support.google.com/mail/answer/7104828. No SMTP credentials have been configured or messages sent during development.
+Preferences: private notification channels defaults to email with `smtp.gmail.com:587` and required STARTTLS (implicit TLS unchecked). Enter your full Gmail address and a Google app password privately in Traveller. Leaving sender and recipient blank uses that same address for both. The password is encrypted at rest and never returned by the channels API. Use Send test notification on your enabled private channel, then check your Gmail inbox and spam folder. A successful response confirms service acceptance; only inbox receipt confirms delivery. Test sending is limited to once per owner every 30 seconds and requires the stack's Redis limiter. Google app passwords require 2-Step Verification and may be unavailable under some account policies: https://support.google.com/mail/answer/185833. SMTP settings: https://support.google.com/mail/answer/7104828. The production owner confirmed Gmail test-message receipt and saved the private channel selection in Watch Profile revision 2. Automated validation uses dummy channels and sends no email.

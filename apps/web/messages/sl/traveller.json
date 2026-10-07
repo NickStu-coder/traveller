@@ -331,6 +331,25 @@
     "channelTestUnavailable": "Testno pošiljanje začasno ni na voljo. Poskusite znova pozneje.",
     "channelTestFailed": "Testnega obvestila ni bilo mogoče poslati. Preverite nastavitve kanala in prijavne podatke.",
     "channelTestTitle": "Testno obvestilo Travellerja",
-    "channelTestBody": "To je testno obvestilo iz vašega zasebnega kanala Travellerja. Obvestilo ne predstavlja potovalne ponudbe."
+    "channelTestBody": "To je testno obvestilo iz vašega zasebnega kanala Travellerja. Obvestilo ne predstavlja potovalne ponudbe.",
+    "monitoringActivity": "Aktivnost spremljanja",
+    "checksRecorded": "Shranjena preverjanja",
+    "lastDiscovery": "Zadnji poskus iskanja",
+    "nextDiscovery": "Naslednje načrtovano iskanje",
+    "latestCheckState": "Stanje zadnjega iskanja",
+    "refreshActivity": "Osveži aktivnost",
+    "automaticChecksEnabled": "Samodejna preverjanja so omogočena",
+    "automaticChecksPaused": "Samodejna preverjanja so ustavljena",
+    "discoveryCadence": "Osnovni interval iskanja: {minutes} minut",
+    "scheduleNotice": "Časi iskanja se zamaknejo za največ 10 %. Napake vira podaljšajo čakanje; dnevne omejitve in premori vira lahko odložijo izvedbo. Uspešno preverjanje lahko vrne nič rezultatov.",
+    "lastCheckStarted": "Začetek zadnjega preverjanja",
+    "activityUpdated": "Aktivnost naložena ob",
+    "activityRefreshNotice": "Osvežitev vsakih 30 sekund, ko je stran vidna. Časi uporabljajo {timeZone}. Števci preverjanj vključujejo vso shranjeno zgodovino.",
+    "scheduledFor": "Načrtovano za",
+    "startedAt": "Začetek",
+    "noChecksYet": "Preverjanj še ni.",
+    "sources": "Viri",
+    "sourceSettings": "Nastavitve vira",
+    "schedulerSettings": "Urnik preverjanj"
   }
 }

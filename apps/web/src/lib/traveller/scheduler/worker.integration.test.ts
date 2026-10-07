@@ -12,6 +12,8 @@ import { googleExactAdapter } from '../sources/flights/exact-adapter';
 import { exactFlight } from '../sources/flights/google-exact';
 import fixture from '../sources/flights/fixtures/google-booking.json';
 import { SourceError } from '../sources/types';
+import { updateTravellerOperations } from './admin';
+import { DEFAULT_SCHEDULER } from './policy';
 
 const owner = 'traveller-worker-test-' + randomUUID();
 const profile = profileSchema.parse({ name: 'Worker fixture', origins: ['LJU'], destination: { kind: 'anywhere' }, dates: { mode: 'rolling', days: 365 }, duration: { minNights: 5, maxNights: 12 }, passengers: { adults: 2 }, cabin: 'business', positioning: { homeAirports: ['LJU'] } });
@@ -19,6 +21,7 @@ describe.skipIf(process.env.TRAVELLER_DATABASE_TESTS !== '1')('Traveller Postgre
   let sourceCreated = false;
   let exactSourceCreated = false;
   let databaseValidated = false;
+  let schedulerCreated = false;
   beforeAll(async () => {
     const url = new URL(process.env.DATABASE_URL ?? '');
     if (!['database', 'localhost', '127.0.0.1'].includes(url.hostname) || url.pathname !== '/traveller_test') throw new Error('Worker integration requires the dedicated traveller_test database');
@@ -38,6 +41,10 @@ describe.skipIf(process.env.TRAVELLER_DATABASE_TESTS !== '1')('Traveller Postgre
     await prisma.travellerJob.deleteMany({ where: { profileId: { in: ids } } });
     await prisma.watchProfileRevision.deleteMany({ where: { profileId: { in: ids } } });
     await prisma.watchProfile.deleteMany({ where: { id: { in: ids } } });
+    if (schedulerCreated) {
+      await prisma.travellerConfigRevision.deleteMany({ where: { configId: 'scheduler', actorId: owner } });
+      await prisma.travellerConfig.delete({ where: { id: 'scheduler' } });
+    }
     await prisma.user.deleteMany({ where: { id: owner } });
     if (sourceCreated) await prisma.travellerSourceState.delete({ where: { source: 'google_explore' } });
     if (exactSourceCreated) await prisma.travellerSourceState.delete({ where: { source: 'google_flights' } });
@@ -115,5 +122,46 @@ describe.skipIf(process.env.TRAVELLER_DATABASE_TESTS !== '1')('Traveller Postgre
     await prisma.travellerJob.create({ data: { profileId: saved.id, profileRevision: 1, source: 'google_explore', kind: 'discovery', dedupKey: randomUUID(), request } });
     expect(await runTravellerJob()).toBe(false);
     expect(adapter.mock.calls.length - before).toBe(1);
+  });
+  it('reconsiders active due times when cadence changes without resetting paused profiles or source protections', async () => {
+    if (await prisma.travellerConfig.findUnique({ where: { id: 'scheduler' } })) throw new Error('Cadence fixture requires an isolated scheduler configuration');
+    const active = await saveProfile(owner, { ...profile, name: 'Cadence active' });
+    const paused = await saveProfile(owner, { ...profile, name: 'Cadence paused' });
+    const future = new Date(Date.now() + 86400000);
+    await prisma.watchProfile.update({ where: { id: active.id }, data: { nextCheckAt: future } });
+    await prisma.watchProfile.update({ where: { id: paused.id }, data: { nextCheckAt: future, active: false } });
+    const protectedSource = await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_explore' } });
+    const before = Date.now();
+    await updateTravellerOperations(owner, { kind: 'scheduler', revision: 0, settings: { ...DEFAULT_SCHEDULER, discoveryMinutes: 360 } });
+    schedulerCreated = true;
+    await prisma.watchProfile.update({ where: { id: active.id }, data: { nextCheckAt: future } });
+    await updateTravellerOperations(owner, { kind: 'scheduler', revision: 1, settings: DEFAULT_SCHEDULER });
+    const changed = await prisma.watchProfile.findUniqueOrThrow({ where: { id: active.id } });
+    expect(changed.revision).toBe(active.revision);
+    expect(changed.nextCheckAt.getTime()).toBeGreaterThanOrEqual(before);
+    expect(changed.nextCheckAt.getTime()).toBeLessThanOrEqual(Date.now());
+    expect((await prisma.watchProfile.findUniqueOrThrow({ where: { id: paused.id } })).nextCheckAt).toEqual(future);
+    expect(await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_explore' } })).toEqual(protectedSource);
+    expect(await prisma.travellerConfigRevision.count({ where: { configId: 'scheduler', actorId: owner } })).toBe(2);
+    await prisma.watchProfile.update({ where: { id: active.id }, data: { nextCheckAt: future } });
+    await updateTravellerOperations(owner, { kind: 'scheduler', revision: 2, settings: { ...DEFAULT_SCHEDULER, watchMinutes: 90 } });
+    expect((await prisma.watchProfile.findUniqueOrThrow({ where: { id: active.id } })).nextCheckAt).toEqual(future);
+    await prisma.travellerSourceState.update({ where: { source: 'google_explore' }, data: { enabled: true, failures: 3, nextAllowedAt: future } });
+    await prisma.watchProfile.update({ where: { id: active.id }, data: { nextCheckAt: new Date(0) } });
+    const now = new Date(Math.floor(Date.now() / (180 * 60000)) * 180 * 60000 + 60000);
+    await scheduleTravellerDiscovery(now);
+    await scheduleTravellerDiscovery(now);
+    expect(await prisma.travellerJob.count({ where: { profileId: active.id, kind: 'discovery', state: 'queued' } })).toBe(1);
+    const minutes = ((await prisma.watchProfile.findUniqueOrThrow({ where: { id: active.id } })).nextCheckAt.getTime() - now.getTime()) / 60000;
+    expect(minutes).toBeGreaterThanOrEqual(162);
+    expect(minutes).toBeLessThanOrEqual(198);
+    expect((await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_explore' } })).nextAllowedAt).toEqual(future);
+    // A new due time is a fresh check even if sampling remains in the same
+    // wall-clock slot. Jitter and configuration changes must not skip it.
+    await prisma.travellerJob.updateMany({ where: { profileId: active.id, kind: 'discovery', state: 'queued' }, data: { state: 'completed', completedAt: now } });
+    const sameSlot = new Date(now.getTime() + 162 * 60000);
+    await prisma.watchProfile.update({ where: { id: active.id }, data: { nextCheckAt: sameSlot } });
+    await scheduleTravellerDiscovery(new Date(sameSlot.getTime() + 1000));
+    expect(await prisma.travellerJob.count({ where: { profileId: active.id, kind: 'discovery' } })).toBe(2);
   });
 });

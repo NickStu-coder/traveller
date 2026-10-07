@@ -898,6 +898,18 @@ diagnostic files to a unique temporary directory. It does not create a tracker,
 use the application database, or submit a booking. `CAR_SEARCH_SMOKE_CURRENCY`
 overrides its GBP test currency; this does not change application defaults.
 
+### Traveller operational activity
+
+`GET /api/traveller/admin` requires an administrator. It returns source health,
+job counts, measured observations, recent jobs with scheduled and actual start
+times, active profile due times, `lastStartedAt`, and `automaticChecksEnabled`.
+The latter describes scheduler configuration (`CRON_ENABLED` and extraction
+enablement), not a live heartbeat. Recent jobs omit execution lease tokens and
+private request payloads. `PATCH` accepts revision-checked scheduler, source or
+scoring settings and records the actor in configuration history. Changing the
+discovery cadence reconsiders active profile due times while preserving source
+cooldowns, budgets and job deduplication.
+
 ### Flight records
 
 - **Query**: A tracked flight route with date range, cabin class, and preferences
