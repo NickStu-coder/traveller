@@ -1,6 +1,6 @@
 import type { Page } from 'playwright';
 import { SOURCE_CATALOG } from './catalog';
-import { withGooglePage } from './browser';
+import { googlePageState, withGooglePage } from './browser';
 import { confirmExploreContext, parseExploreCards, readExploreCardElements } from './google-explore';
 import { readGoogleControls, rejectGoogleConsent, settleGoogle } from './shared/context';
 import { googleDiscoveryUrl } from './google-url';
@@ -38,7 +38,8 @@ export const googleExploreAdapter: FlightSourceAdapter = {
       const controls = await readGoogleControls(page, destinationEntity);
       confirmExploreContext(controls, request, context.profile);
       await page.waitForFunction(() => document.querySelector('li[role="button"][data-code]') !== null
-        || /No results|No flights/.test(document.body.innerText), undefined, { timeout: 45_000 });
+        || /No results|No flights|Requested flight date is too far in the future/.test(document.body.innerText), undefined, { timeout: 45_000 });
+      await googlePageState(page);
       const cards = await page.locator('li[role="button"][data-code]').evaluateAll(readExploreCardElements, context.profile.currency);
       if (!cards.length && !await page.getByText(/No results|No flights/).count()) throw new SourceError('degraded', 'Google Explore did not render destination cards');
       return parseExploreCards(cards, request, context.profile);

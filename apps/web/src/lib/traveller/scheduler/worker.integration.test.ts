@@ -11,7 +11,7 @@ import { runTravellerJob } from './worker';
 import { googleExactAdapter } from '../sources/flights/exact-adapter';
 import { exactFlight } from '../sources/flights/google-exact';
 import fixture from '../sources/flights/fixtures/google-booking.json';
-import { SourceError } from '../sources/types';
+import { ProfileSearchError, SourceError } from '../sources/types';
 import { updateTravellerOperations } from './admin';
 import { DEFAULT_SCHEDULER } from './policy';
 
@@ -163,5 +163,23 @@ describe.skipIf(process.env.TRAVELLER_DATABASE_TESTS !== '1')('Traveller Postgre
     await prisma.watchProfile.update({ where: { id: active.id }, data: { nextCheckAt: sameSlot } });
     await scheduleTravellerDiscovery(new Date(sameSlot.getTime() + 1000));
     expect(await prisma.travellerJob.count({ where: { profileId: active.id, kind: 'discovery' } })).toBe(2);
+  });
+  it('records unavailable travel dates without degrading or disabling the shared provider', async () => {
+    await prisma.travellerJob.updateMany({ where: { profile: { userId: owner }, state: 'queued' }, data: { state: 'cancelled' } });
+    await prisma.watchProfile.updateMany({ where: { userId: owner }, data: { active: false } });
+    const saved = await saveProfile(owner, { ...profile, name: 'Booking horizon fixture' });
+    await prisma.travellerSourceState.update({ where: { source: 'google_explore' }, data: { enabled: true, status: 'healthy', failures: 3, lastError: null, budgetPerDay: 100, nextAllowedAt: new Date(0) } });
+    const source = await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_explore' } });
+    const job = await prisma.travellerJob.create({ data: { profileId: saved.id, profileRevision: saved.revision, source: 'google_explore', kind: 'discovery', dedupKey: randomUUID(), request: { origin: 'LJU', destination: null, departure: '2027-08-30', returnDate: '2027-09-08' } } });
+    vi.spyOn(googleExploreAdapter, 'discover').mockImplementation(async (_request, context) => {
+      await context.reserveRequest();
+      throw new ProfileSearchError('Google has not opened these travel dates yet');
+    });
+    expect(await runTravellerJob()).toBe(false);
+    expect(await prisma.travellerJob.findUniqueOrThrow({ where: { id: job.id } })).toMatchObject({ state: 'failed', error: 'Google has not opened these travel dates yet', leaseToken: null });
+    expect(await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_explore' } })).toMatchObject({ enabled: true, status: source.status, failures: source.failures, lastError: source.lastError, usedToday: source.usedToday + 1 });
+    expect((await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_explore' } })).nextAllowedAt.getTime()).toBeLessThan(Date.now() + 180_000);
+    expect((await prisma.watchProfile.findUniqueOrThrow({ where: { id: saved.id } })).constraints).toEqual(profileSchema.parse({ ...profile, name: 'Booking horizon fixture' }));
+    expect(await prisma.travellerObservation.count({ where: { profileId: saved.id } })).toBe(0);
   });
 });

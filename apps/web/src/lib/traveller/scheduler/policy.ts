@@ -25,6 +25,16 @@ export function nextCheck(key: string, lane: Lane, failures: number, now = new D
   return new Date(now.getTime() + minutes * 60000 * (0.9 + jitter * 0.2));
 }
 
+/** Spread consecutive checks across the window while retaining a complete cycle. */
+function dateStride(days: number): number {
+  for (let stride = Math.max(1, Math.floor(days * 0.618)); stride < days; stride++) {
+    let a = days, b = stride;
+    while (b) { const remainder = a % b; a = b; b = remainder; }
+    if (a === 1) return stride;
+  }
+  return 1;
+}
+
 /** One broad origin search, never an airport × destination × date matrix.
  * Date samples rotate through the full window; coverage is deliberately sampled.
  */
@@ -36,10 +46,11 @@ export function discoveryRequest(profile: WatchConstraints, key: string, now = n
   if (available <= 0) return null;
   const slot = Math.floor(now.getTime() / (discoveryMinutes * 60000));
   const offset = createHash('sha256').update(key).digest().readUInt32BE(0);
+  const dateOffset = ((slot + offset) * dateStride(available)) % available;
   const origin = profile.origins[(slot + offset) % profile.origins.length]!;
   const destination = profile.destination.kind === 'anywhere' ? null : profile.destination.values[(Math.floor(slot / profile.origins.length) + offset) % profile.destination.values.length]!;
   for (let attempt = 0; attempt < available; attempt++) {
-    const departure = new Date(Date.parse(from) + ((slot + offset + attempt) % available) * 86400000).toISOString().slice(0, 10);
+    const departure = new Date(Date.parse(from) + ((dateOffset + attempt) % available) * 86400000).toISOString().slice(0, 10);
     const remaining = Math.floor((Date.parse(window.to) - Date.parse(departure)) / 86400000);
     const range = Math.min(profile.duration.maxNights, remaining) - profile.duration.minNights + 1;
     const nights = profile.duration.minNights + (slot + offset) % range;

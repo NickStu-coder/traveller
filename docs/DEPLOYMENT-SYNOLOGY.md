@@ -51,3 +51,19 @@ off-NAS copy have not been independently verified.
 ## Gmail alerts
 
 Preferences: private notification channels defaults to email with `smtp.gmail.com:587` and required STARTTLS (implicit TLS unchecked). Enter your full Gmail address and a Google app password privately in Traveller. Leaving sender and recipient blank uses that same address for both. The password is encrypted at rest and never returned by the channels API. Use Send test notification on your enabled private channel, then check your Gmail inbox and spam folder. A successful response confirms service acceptance; only inbox receipt confirms delivery. Test sending is limited to once per owner every 30 seconds and requires the stack's Redis limiter. Google app passwords require 2-Step Verification and may be unavailable under some account policies: https://support.google.com/mail/answer/185833. SMTP settings: https://support.google.com/mail/answer/7104828. The production owner confirmed Gmail test-message receipt and saved the private channel selection in Watch Profile revision 2. Automated validation uses dummy channels and sends no email.
+
+## Unopened booking dates
+
+A 365-day profile may include dates that Google has not opened yet. The adapter
+records the explicit date-limit response as a profile search limitation and
+continues sampling other dates without degrading the shared provider. This is
+not a successful price lookup. Read the latest job outcome and its error in
+Sources and workers; readiness alone does not establish successful collection.
+
+Do not clear provider cooldowns indiscriminately during an update. If an earlier
+version misclassified a proven date-limit response, correct only that exact
+job's added failure/backoff, preserve request usage and ordinary spacing, and
+record the previous/new state and actor in the configuration audit. Abort that
+correction if the source or latest completed job has changed. Existing blocked
+and rate-limited states must retain their protections. No schema migration is
+needed for this update.

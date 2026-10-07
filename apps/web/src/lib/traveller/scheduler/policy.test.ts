@@ -29,6 +29,16 @@ describe('bounded adaptive discovery', () => {
     expect(request.departure.slice(5, 7)).toBe('01');
     expect(discoveryRequest({ ...profile, dates: { mode: 'window', from: '2026-09-01', to: '2026-09-15' } }, 'a', now)).toBeNull();
   });
+  it.each([6, 15, 26, 31, 60, 365])('spreads checks and covers all %i available dates without repetition', days => {
+    const start = new Date('2026-10-06T00:00:00Z');
+    const from = '2027-04-01';
+    const to = new Date(Date.parse(from) + (days + 4) * 86400000).toISOString().slice(0, 10);
+    const fixed = { ...profile, dates: { mode: 'window' as const, from, to }, duration: { minNights: 5, maxNights: 5 } };
+    const requests = Array.from({ length: days }, (_, slot) => discoveryRequest(fixed, 'date-coverage', new Date(start.getTime() + slot * 180 * 60000))!);
+    expect(new Set(requests.map(request => request.departure)).size).toBe(days);
+    expect(Math.abs(Date.parse(requests[0]!.departure) - Date.parse(requests[1]!.departure)) / 86400000).toBeGreaterThanOrEqual(days / 3);
+    expect(requests.every(request => Date.parse(request.returnDate) - Date.parse(request.departure) === 5 * 86400000)).toBe(true);
+  });
   it('backs off failures while keeping hot work ahead of discovery', () => {
     const now = new Date('2026-10-06T00:00:00Z');
     expect(nextCheck('a', 'HOT', 0, now).getTime()).toBeLessThan(nextCheck('a', 'DISCOVERY', 0, now).getTime());

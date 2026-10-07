@@ -2,7 +2,7 @@ import type { Page } from 'playwright';
 import { closeTravelBrowser, currentTravelExecution } from '../../travel/execution';
 import { guardTravelContext } from '../../travel/navigation';
 import type { TravelNavigationGuard } from '../../travel/navigation';
-import { SourceError } from './types';
+import { ProfileSearchError, SourceError } from './types';
 
 /** Provider navigation paths observed in public, ordinary booking flows. */
 export function travellerNavigationAllowed(url: URL, provider: 'google' | 'lufthansa' | 'booking' = 'google'): boolean {
@@ -24,6 +24,7 @@ export async function withGooglePage<T>(signal: AbortSignal, work: (page: Page, 
   const abort = () => execution.abort(signal.reason);
   signal.addEventListener('abort', abort, { once: true });
   let failure: unknown;
+  let currentPage: Page | undefined;
   try {
     signal.throwIfAborted();
     const context = await browser.newContext({ locale: 'en-US', timezoneId: 'UTC', serviceWorkers: 'block' });
@@ -38,6 +39,7 @@ export async function withGooglePage<T>(signal: AbortSignal, work: (page: Page, 
     });
     const navigationFor = await guardTravelContext(context, 'traveller-' + provider, url => travellerNavigationAllowed(url, provider));
     const page = await context.newPage();
+    currentPage = page;
     page.on('framenavigated', frame => {
       // Booking's observed challenge redirect can disappear before the body is read.
       if (provider === 'booking' && frame === page.mainFrame() && new URL(frame.url()).searchParams.has('chal_t'))
@@ -45,7 +47,17 @@ export async function withGooglePage<T>(signal: AbortSignal, work: (page: Page, 
     });
     page.setDefaultTimeout(15_000);
     return await work(page, navigationFor(page), navigationFor);
-  } catch (error) { failure = execution.signal.aborted ? execution.signal.reason : error; throw failure; }
+  } catch (error) {
+    failure = execution.signal.aborted ? execution.signal.reason : error;
+    if (provider === 'google' && currentPage && !execution.signal.aborted && !(failure instanceof ProfileSearchError)
+      && !(failure instanceof SourceError && ['blocked', 'rate_limited'].includes(failure.status))) {
+      // A provider error can arrive after its loading indicator disappears.
+      await googlePageState(currentPage).catch((stateError: unknown) => {
+        if (stateError instanceof SourceError || stateError instanceof ProfileSearchError) failure = stateError;
+      });
+    }
+    throw failure;
+  }
   finally { signal.removeEventListener('abort', abort); await closeTravelBrowser(browser, failure); }
 }
 
@@ -54,4 +66,6 @@ export async function googlePageState(page: Page): Promise<void> {
   if (/captcha|unusual traffic|verify (?:that )?you(?:'re| are) human|access denied/i.test(text) || new URL(page.url()).pathname.startsWith('/sorry'))
     throw new SourceError('blocked', 'Google access challenge; unattended requests paused');
   if (/too many requests|rate limit/i.test(text)) throw new SourceError('rate_limited', 'Google request limit; unattended requests paused');
+  if (/Requested flight date is too far in the future/i.test(text))
+    throw new ProfileSearchError('Google has not opened these travel dates yet; later checks sample other dates in your window');
 }

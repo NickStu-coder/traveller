@@ -24,3 +24,7 @@ wall-clock sampling bucket. A fresh due time can therefore record another check
 within the same bucket after jitter or an explicit cadence change. Concurrent
 schedulers still use serializable compare-and-set updates and the pending-job
 guard to create only one job.
+
+Google can reject dates near the far end of a 365-day profile before it opens booking availability. The observed `Requested flight date is too far in the future` response is a profile search limitation, not evidence of a broken provider. It records a failed search with an explicit reason, retains the original travel window, consumes the reserved request budget and ordinary spacing, and does not increase provider failure backoff or disable the source. Later scheduled searches continue rotating dates. Access challenges and rate limits take precedence over this classification.
+
+Consecutive discovery samples use a stride coprime to the number of available departure dates. This spreads checks across the travel window while retaining a complete cycle, instead of spending consecutive days on adjacent dates near the provider's unopened booking horizon. The sampler does not guess or impose a provider-specific maximum booking date and keeps the profile's duration, months and destination constraints.
