@@ -14,6 +14,7 @@ import fixture from '../sources/flights/fixtures/google-booking.json';
 import { ProfileSearchError, SourceError } from '../sources/types';
 import { updateTravellerOperations } from './admin';
 import { DEFAULT_SCHEDULER } from './policy';
+import { latestFlightCandidates } from '../views/candidates';
 
 const owner = 'traveller-worker-test-' + randomUUID();
 const profile = profileSchema.parse({ name: 'Worker fixture', origins: ['LJU'], destination: { kind: 'anywhere' }, dates: { mode: 'rolling', days: 365 }, duration: { minNights: 5, maxNights: 12 }, passengers: { adults: 2 }, cabin: 'business', positioning: { homeAirports: ['LJU'] } });
@@ -181,5 +182,49 @@ describe.skipIf(process.env.TRAVELLER_DATABASE_TESTS !== '1')('Traveller Postgre
     expect((await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_explore' } })).nextAllowedAt.getTime()).toBeLessThan(Date.now() + 180_000);
     expect((await prisma.watchProfile.findUniqueOrThrow({ where: { id: saved.id } })).constraints).toEqual(profileSchema.parse({ ...profile, name: 'Booking horizon fixture' }));
     expect(await prisma.travellerObservation.count({ where: { profileId: saved.id } })).toBe(0);
+  });
+  it('uses exact airport discovery even with Explore disabled and rejects unrelated routes without deleting history', async () => {
+    vi.restoreAllMocks();
+    await prisma.travellerJob.updateMany({ where: { profile: { userId: owner }, state: 'queued' }, data: { state: 'cancelled' } });
+    await prisma.watchProfile.updateMany({ where: { userId: owner }, data: { active: false } });
+    await prisma.travellerSourceState.update({ where: { source: 'google_explore' }, data: { enabled: false } });
+    await prisma.travellerSourceState.update({ where: { source: 'google_flights' }, data: { enabled: true, status: 'healthy', failures: 0, budgetPerDay: 100, nextAllowedAt: new Date(0) } });
+    const constraints = profileSchema.parse({ ...profile, name: 'Airport route fixture', destination: { kind: 'airport', values: ['CDG'] },
+      dates: { mode: 'window', from: '2027-04-01', to: '2027-04-07' }, duration: { minNights: 6, maxNights: 6 } });
+    const saved = await saveProfile(owner, constraints);
+    const used = (await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_flights' } })).usedToday;
+    expect(await scheduleTravellerDiscovery()).toBe(1);
+    expect(await scheduleTravellerDiscovery()).toBe(0);
+    const scheduled = await prisma.travellerJob.findFirstOrThrow({ where: { profileId: saved.id } });
+    expect(scheduled).toMatchObject({ kind: 'discovery', source: 'google_flights', request: { origin: 'LJU', destination: 'CDG' } });
+    const broad = vi.spyOn(googleExploreAdapter, 'discover');
+    const exact = vi.spyOn(googleExactAdapter, 'discover').mockImplementation(async (request, context) => {
+      await context.reserveRequest(3);
+      const result = exactFlight({ ...request, destination: request.destination!, destinationName: request.destination! }, context.profile, fixture.url, fixture.legs, fixture.fares);
+      return result ? [result] : [];
+    });
+    expect(await runTravellerJob()).toBe(true);
+    expect(broad).not.toHaveBeenCalled();
+    expect(exact).toHaveBeenCalledTimes(1);
+    expect(await prisma.travellerObservation.count({ where: { profileId: saved.id, source: 'google_flights' } })).toBe(1);
+    expect((await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_flights' } })).usedToday).toBe(used + 3);
+    const invalid = parseExploreCards([{ entity: '/m/0947l', name: 'Milan', flightPrice: '69', currency: 'EUR', stops: 'Nonstop', duration: '2 hr' }],
+      { origin: 'LJU', destination: null, departure: '2027-04-01', returnDate: '2027-04-07' }, profile)[0]!;
+    const old = await prisma.travellerObservation.create({ data: { profileId: saved.id, profileRevision: saved.revision, kind: 'flight', source: 'google_explore', provenance: 'cached', identity: randomUUID(), comparisonKey: randomUUID(), amount: '69', currency: 'EUR', observedAt: new Date(), expiresAt: new Date(Date.now() + 60000), bookingUrl: invalid.bookingUrl, details: invalid as unknown as Prisma.InputJsonValue } });
+    expect((await latestFlightCandidates(owner)).some(row => row.id === old.id)).toBe(false);
+    expect(await prisma.travellerObservation.findUnique({ where: { id: old.id } })).not.toBeNull();
+    await prisma.travellerSourceState.update({ where: { source: 'google_flights' }, data: { nextAllowedAt: new Date(0) } });
+    const verification = vi.spyOn(googleExactAdapter, 'verify');
+    const staleJob = await prisma.travellerJob.create({ data: { profileId: saved.id, profileRevision: saved.revision, kind: 'verification', source: 'google_flights', priority: 1000, dedupKey: randomUUID(), request: { observationId: old.id } } });
+    expect(await runTravellerJob()).toBe(false);
+    expect(verification).not.toHaveBeenCalled();
+    expect(await prisma.travellerJob.findUniqueOrThrow({ where: { id: staleJob.id } })).toMatchObject({ state: 'failed', error: 'Candidate no longer matches the selected profile airports' });
+    exact.mockResolvedValueOnce([invalid]);
+    const badJob = await prisma.travellerJob.create({ data: { profileId: saved.id, profileRevision: saved.revision, kind: 'discovery', source: 'google_flights', priority: 1000, dedupKey: randomUUID(), request: scheduled.request as Prisma.InputJsonValue } });
+    expect(await runTravellerJob()).toBe(false);
+    expect(await prisma.travellerJob.findUniqueOrThrow({ where: { id: badJob.id } })).toMatchObject({ state: 'failed', error: 'Source returned a route outside the selected profile airports' });
+    expect(await prisma.travellerObservation.count({ where: { profileId: saved.id } })).toBe(2);
+    expect(await prisma.travellerAlert.count({ where: { profileId: saved.id } })).toBe(0);
+    expect(await prisma.travellerSourceState.findUniqueOrThrow({ where: { source: 'google_flights' } })).toMatchObject({ enabled: true, failures: 0, usedToday: used + 3 });
   });
 });

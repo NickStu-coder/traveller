@@ -74,6 +74,17 @@ export const profileSchema = z.object({
 
 export type WatchConstraints = z.output<typeof profileSchema>;
 
+/** Airport profiles require an airport match, never an Explore city suggestion. */
+export function matchesFlightRoute(profile: WatchConstraints, flight: { origin: string; destination: string; legs?: { origin: string; destination: string }[][] }): boolean {
+  if (!profile.origins.includes(flight.origin)) return false;
+  const outbound = flight.legs?.[0], inbound = flight.legs?.[1];
+  if (flight.legs && (flight.legs.length !== 2 || !outbound?.length || !inbound?.length
+    || outbound[0]!.origin !== flight.origin || inbound[0]!.origin !== outbound.at(-1)!.destination || inbound.at(-1)!.destination !== flight.origin)) return false;
+  if (profile.destination.kind !== 'airport') return true;
+  const destination = outbound?.at(-1)?.destination ?? flight.destination;
+  return profile.destination.values.includes(destination) && flight.destination === destination;
+}
+
 export function travelWindow(profile: WatchConstraints, now = new Date()): { from: string; to: string } {
   if (profile.dates.mode === 'window') return { from: profile.dates.from, to: profile.dates.to };
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));

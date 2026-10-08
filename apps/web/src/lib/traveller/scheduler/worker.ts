@@ -4,7 +4,7 @@ import { prisma } from '../../prisma';
 import type { Prisma, TravellerJob, TravellerObservation } from '@/generated/prisma/client';
 import { acquireTravelLease, lockTravelLease, quarantineTravelLease, releaseTravelLease, renewTravelLease, type TravelLeaseToken } from '../../travel/admission';
 import { TravelExecution, TravelCleanupError, withTravelExecution } from '../../travel/execution';
-import { matchesDates, profileSchema } from '../profiles';
+import { matchesDates, matchesFlightRoute, profileSchema } from '../profiles';
 import type { FlightCandidate } from '../sources/types';
 import { ProfileSearchError, SourceError } from '../sources/types';
 import { googleExploreAdapter } from '../sources/explore-adapter';
@@ -108,6 +108,7 @@ export async function runTravellerJob(): Promise<boolean> {
           await reserveSourceRequest(tx, current.source, settings.sourceSpacingSeconds, units);
         }) };
       if (current.kind === 'discovery' && current.source === 'google_explore') return { kind: 'flights', candidates: await googleExploreAdapter.discover(requestSchema.parse(current.request), context) };
+      if (current.kind === 'discovery' && current.source === 'google_flights') return { kind: 'flights', candidates: await googleExactAdapter.discover(requestSchema.parse(current.request), context) };
       const hotelJob = current.kind === 'hotel_discovery' && ['google_hotels', 'booking'].includes(current.source);
       const adapter = current.source === 'airline_direct' ? lufthansaAdapter : googleExactAdapter;
       if (!hotelJob && (current.kind !== 'verification' || !['google_flights', 'airline_direct'].includes(current.source) || !adapter.verify)) throw new ProfileSearchError('Job does not have a supported adapter');
@@ -116,6 +117,7 @@ export async function runTravellerJob(): Promise<boolean> {
       if (!observation) throw new ProfileSearchError('Candidate expired or no longer belongs to the active profile revision');
       // An old observation supplies route context for a new provider lookup, never a reusable price.
       const candidate = flightCandidateSchema.parse(observation.details);
+      if (!matchesFlightRoute(constraints, candidate)) throw new ProfileSearchError('Candidate no longer matches the selected profile airports');
       if (!matchesDates(constraints, candidate.departure, candidate.returnDate)) throw new ProfileSearchError('Candidate no longer falls within the travel window');
       if (hotelJob) {
         if (!constraints.hotel.enabled) throw new ProfileSearchError('Hotel discovery is disabled for this profile');

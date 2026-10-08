@@ -1,5 +1,5 @@
 import { readFlightLink } from '../../../scraper/flight-link';
-import type { WatchConstraints } from '../../profiles';
+import { matchesFlightRoute, type WatchConstraints } from '../../profiles';
 import { googlePassengerCategories } from '../google-url';
 import type { FlightCandidate, FlightSegment } from '../types';
 
@@ -43,7 +43,8 @@ function localDate(text: string, reference: string): { date: string; time: strin
 }
 const cabins = { economy: 'Economy', premium_economy: 'Premium Economy', business: 'Business Class', first: 'First Class' };
 
-export function exactFlight(candidate: FlightCandidate, profile: WatchConstraints, bookingUrl: string, cards: SegmentCard[][], fares: FareCard[], observedAt = new Date()): FlightCandidate | null {
+export type ExactFlightRequest = Pick<FlightCandidate, 'origin' | 'destination' | 'destinationName' | 'departure' | 'returnDate'>;
+export function exactFlight(candidate: ExactFlightRequest, profile: WatchConstraints, bookingUrl: string, cards: SegmentCard[][], fares: FareCard[], observedAt = new Date()): FlightCandidate | null {
   const selected = readFlightLink(bookingUrl, googlePassengerCategories(profile));
   if (selected.legs.length !== 2 || selected.cabinClass !== profile.cabin || cards.length !== 2
     || selected.legs[0]![0]!.origin !== candidate.origin || selected.legs[0]![0]!.date !== candidate.departure || selected.legs[1]![0]!.date !== candidate.returnDate) return null;
@@ -70,6 +71,8 @@ export function exactFlight(candidate: FlightCandidate, profile: WatchConstraint
     }
     legs.push(leg);
   }
+  if (!matchesFlightRoute(profile, { ...candidate, legs })
+    || /^[A-Z]{3}$/.test(candidate.destination) && legs[0]!.at(-1)!.destination !== candidate.destination) return null;
   const all = legs.flat(), airlines = [...new Set(all.map(segment => segment.airline))];
   const maxStops = profile.flight.maxStops, maxDuration = profile.flight.maxDurationMinutes;
   const excluded = profile.flight.excludedAirlines.map(value => value.toUpperCase());
@@ -97,7 +100,9 @@ export function exactFlight(candidate: FlightCandidate, profile: WatchConstraint
   }).filter(value => value !== null).sort((a, b) => a.amount - b.amount);
   const fare = choices[0];
   if (!fare) return null;
-  return { ...candidate, amount: fare.amount, bookingUrl, source: 'google_flights', provenance: 'cached', observedAt: observedAt.toISOString(), contextConfirmed: true,
+  return { kind: 'flight', origin: candidate.origin, destination: candidate.destination, destinationName: candidate.destinationName,
+    departure: candidate.departure, returnDate: candidate.returnDate, cabin: profile.cabin, passengers: profile.passengers, currency: profile.currency,
+    amount: fare.amount, bookingUrl, source: 'google_flights', provenance: 'cached', observedAt: observedAt.toISOString(), contextConfirmed: true,
     legs, fare: { provider: fare.provider, name: fare.name, refundable: fare.refundable, changesAllowed: fare.changesAllowed }, airlineCodes: airlines,
     connectionAirports: [...new Set(legs.flatMap(leg => leg.slice(0, -1).map(segment => segment.destination)))], layoverMinutes: layovers,
     stops: Math.max(...legs.map(leg => leg.length - 1)), durationMinutes: Math.max(...legs.map(leg => leg.reduce((sum, segment) => sum + segment.durationMinutes, 0) + layoversFor(leg, legs, layovers))),

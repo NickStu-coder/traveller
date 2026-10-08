@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type { Prisma, TravellerObservation } from '@/generated/prisma/client';
 import type { ChannelMessage } from '../../notifications/channels/types';
 import { resolveBaseUrl } from '../../notifications/base-url';
-import { profileSchema } from '../profiles';
+import { matchesFlightRoute, profileSchema } from '../profiles';
 import { candidateScoreSchema } from '../views/candidates';
 import { flightCandidateSchema } from '../sources/flights/schema';
 import { hotelCandidateSchema, type HotelCandidate } from '../sources/hotels/schema';
@@ -31,6 +31,7 @@ export async function recordTravellerAlert(tx: Prisma.TransactionClient, observa
   const parsed = flightCandidateSchema.safeParse(flightDetails);
   if (observation.kind !== 'hotel' && (!parsed.success || !parsed.data.legs || !parsed.data.contextConfirmed)) return;
   const flight = parsed.success ? parsed.data : null;
+  if (flight && !matchesFlightRoute(constraints, flight)) return;
   const previous = await tx.travellerAlert.findFirst({ where: { profileId: profile.id, identity: observation.identity }, orderBy: { createdAt: 'desc' }, include: { delivery: { select: { deliveredIds: true } } } });
   const amount = Number(observation.amount), evaluation = score.data;
   if (!shouldAlert({ amount, currency: observation.currency, score: evaluation.score, confidence: evaluation.confidence, observedAt: observation.observedAt,

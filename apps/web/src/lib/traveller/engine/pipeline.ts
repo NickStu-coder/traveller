@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 import type { Prisma, TravellerJob } from '@/generated/prisma/client';
 import type { FlightCandidate } from '../sources/types';
-import type { WatchConstraints } from '../profiles';
+import { matchesFlightRoute, type WatchConstraints } from '../profiles';
+import { ProfileSearchError } from '../sources/types';
 import { convertMoney, positioningCost } from './money';
 import { dealScore } from './scoring';
 import { historicalPrice } from './history/daily';
@@ -49,6 +50,7 @@ export function monitoringLane(score: number | null, threshold: number, eligible
 
 /** Price, FX and score explanations are retained with each immutable observation. */
 export async function recordFlights(tx: Prisma.TransactionClient, job: TravellerJob, userId: string, profile: WatchConstraints, candidates: FlightCandidate[], engine: { baseCurrency: string; weights: ScoreWeights }, fx: FxData | null, scheduler: SchedulerSettings): Promise<void> {
+  if (candidates.some(candidate => !matchesFlightRoute(profile, candidate))) throw new ProfileSearchError('Source returned a route outside the selected profile airports');
   const now = new Date();
   const source = await tx.travellerSourceState.findUnique({ where: { source: 'google_flights' } });
   let queued = false;

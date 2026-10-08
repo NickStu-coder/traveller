@@ -27,13 +27,14 @@ export async function initializeTravellerSources(): Promise<void> {
 /** Serializable profile scheduling and a unique key prevent duplicate jobs across replicas. */
 export async function scheduleTravellerDiscovery(now = new Date()): Promise<number> {
   const settings = await schedulerSettings();
-  const source = await prisma.travellerSourceState.findUnique({ where: { source: 'google_explore' } });
-  if (!source?.enabled) return 0;
+  const sources = await prisma.travellerSourceState.findMany({ where: { source: { in: ['google_explore', 'google_flights'] }, enabled: true } });
   const due = await prisma.watchProfile.findMany({ where: { active: true, archivedAt: null, nextCheckAt: { lte: now }, user: { disabledAt: null } }, orderBy: { nextCheckAt: 'asc' }, take: 20 });
   let queued = 0;
   for (const profile of due) {
     const constraints = profileSchema.safeParse(profile.constraints);
     if (!constraints.success) continue;
+    const source = sources.find(value => value.source === (constraints.data.destination.kind === 'airport' ? 'google_flights' : 'google_explore'));
+    if (!source) continue;
     const request = discoveryRequest(constraints.data, profile.id, now, settings.discoveryMinutes);
     const created = await serializable(async tx => {
       // Provider backoff is enforced by its persisted request slot. Keep profile

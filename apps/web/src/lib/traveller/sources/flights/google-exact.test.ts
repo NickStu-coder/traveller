@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fixture from './fixtures/google-booking.json';
-import { profileSchema } from '../../profiles';
+import { matchesFlightRoute, profileSchema } from '../../profiles';
 import { parseExploreCards } from '../google-explore';
 import { exactFlight } from './google-exact';
 import { flightEligibility } from '../../engine/pipeline';
@@ -11,6 +11,25 @@ import airlineFixture from '../airlines/fixtures/lufthansa-cart.json';
 const profile = profileSchema.parse({ name: 'Paris', origins: ['LJU'], destination: { kind: 'anywhere' }, dates: { mode: 'rolling', days: 365 }, duration: { minNights: 5, maxNights: 12 }, passengers: { adults: 2 }, cabin: 'business', positioning: { homeAirports: ['LJU'] } });
 const candidate = parseExploreCards([{ entity: '/m/05qtj', name: 'Paris', flightPrice: '961', currency: 'EUR', stops: '1 stop', duration: '3 hr 30 min' }], { origin: 'LJU', destination: null, departure: '2027-04-01', returnDate: '2027-04-07' }, profile)[0]!;
 describe('selected round-trip fare verification', () => {
+  it('discovers only the requested airport, rejecting unrelated Explore cities and wrong exact destinations', () => {
+    const airport = { ...profile, destination: { kind: 'airport' as const, values: ['CDG'] } };
+    const request = { origin: 'LJU', destination: 'CDG', destinationName: 'CDG', departure: candidate.departure, returnDate: candidate.returnDate };
+    const result = exactFlight(request, airport, fixture.url, fixture.legs, fixture.fares)!;
+    expect(result).toMatchObject({ destination: 'CDG', destinationName: 'CDG', amount: 961, passengers: profile.passengers, cabin: profile.cabin });
+    expect(matchesFlightRoute(airport, result)).toBe(true);
+    expect(matchesFlightRoute(airport, candidate)).toBe(false);
+    const cra = { ...airport, destination: { kind: 'airport' as const, values: ['CRA'] } };
+    expect(exactFlight({ ...request, destination: 'CRA', destinationName: 'CRA' }, cra, fixture.url, fixture.legs, fixture.fares)).toBeNull();
+    expect(exactFlight({ ...request, destination: 'ORY' }, profile, fixture.url, fixture.legs, fixture.fares)).toBeNull();
+    expect(matchesFlightRoute(cra, { ...candidate, origin: 'ZAG', destination: '/m/0947l' })).toBe(false);
+    expect(matchesFlightRoute(airport, { ...result, origin: 'TRS' })).toBe(false);
+    const wrongReturn = structuredClone(result);
+    wrongReturn.legs![1]![0]!.origin = 'ORY';
+    expect(matchesFlightRoute(airport, wrongReturn)).toBe(false);
+    wrongReturn.legs![1]![0]!.origin = 'CDG';
+    wrongReturn.legs![1]!.at(-1)!.destination = 'ZAG';
+    expect(matchesFlightRoute(airport, wrongReturn)).toBe(false);
+  });
   it('keeps the party total, selected segments, local stay dates and fare conditions', () => {
     const result = exactFlight(candidate, profile, fixture.url, fixture.legs, fixture.fares)!;
     expect(result).toMatchObject({ amount: 961, source: 'google_flights', provenance: 'cached', arrivalLocal: '2027-04-01', returnDepartureLocal: '2027-04-07', checkedBags: 1,

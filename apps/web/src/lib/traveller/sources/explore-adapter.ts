@@ -24,6 +24,8 @@ async function selectDestination(page: Page, destination: string): Promise<strin
 export const googleExploreAdapter: FlightSourceAdapter = {
   metadata: SOURCE_CATALOG.find(source => source.id === 'google_explore')!,
   async discover(request, context) {
+    if (context.profile.destination.kind === 'airport' || request.destination && /^[A-Z]{3}$/.test(request.destination))
+      throw new ProfileSearchError('Airport destinations require Google Flights exact-route discovery');
     const namedDestination = request.destination && !/^[A-Z]{3}$/.test(request.destination) ? request.destination : null;
     // Reserve the complete bounded search before opening the provider, including region submission.
     await context.reserveRequest(namedDestination ? 2 : 1);

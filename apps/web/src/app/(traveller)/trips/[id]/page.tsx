@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { tripCandidateSchema } from '@/lib/traveller/engine/trips/schema';
 import { hotelCandidateSchema } from '@/lib/traveller/sources/hotels/schema';
 import { flightCandidateSchema } from '@/lib/traveller/sources/flights/schema';
+import { matchesFlightRoute, profileSchema } from '@/lib/traveller/profiles';
 import { candidateScoreSchema } from '@/lib/traveller/views/candidates';
 import { safeHotelUrl } from '@/lib/traveller/views/trips';
 import styles from '../../traveller.module.css';
@@ -16,10 +17,12 @@ export default async function TripEvidence({ params }: { params: Promise<{ id: s
   if (!user) notFound();
   const { id } = await params;
   if (id.length > 100) notFound();
-  const row = await prisma.travellerObservation.findFirst({ where: { id, kind: 'trip', profile: { userId: user.id } }, include: { profile: { select: { name: true } }, trip: { include: { flight: { include: { evidence: true } }, hotel: { include: { evidence: true } } } } } });
+  const row = await prisma.travellerObservation.findFirst({ where: { id, kind: 'trip', profile: { userId: user.id } }, include: { profile: { select: { name: true, constraints: true } }, trip: { include: { flight: { include: { evidence: true } }, hotel: { include: { evidence: true } } } } } });
   if (!row?.trip) notFound();
   const details = tripCandidateSchema.safeParse(row.details), hotel = hotelCandidateSchema.safeParse(row.trip.hotel.details), flight = flightCandidateSchema.safeParse(row.trip.flight.details);
-  if (!details.success || !hotel.success || !flight.success || details.data.flightObservationId !== row.trip.flight.id || details.data.hotelObservationId !== row.trip.hotel.id) notFound();
+  const profile = profileSchema.safeParse(row.profile.constraints);
+  if (!details.success || !hotel.success || !flight.success || details.data.flightObservationId !== row.trip.flight.id || details.data.hotelObservationId !== row.trip.hotel.id
+    || !profile.success || !matchesFlightRoute(profile.data, flight.data)) notFound();
   const [t, format, history] = await Promise.all([getTranslations('Traveller'), getFormatter(), prisma.travellerObservation.findMany({ where: { profileId: row.profileId, identity: row.identity, observedAt: { lte: row.observedAt } }, orderBy: { observedAt: 'desc' }, take: 50 })]);
   const money = (amount: string | number, currency = row.currency) => format.number(Number(amount), { style: 'currency', currency });
   const date = (value: Date) => format.dateTime(value, { dateStyle: 'medium', timeStyle: 'short' });

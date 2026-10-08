@@ -4,6 +4,7 @@ import { profileSchema } from '../profiles';
 import { confirmExploreContext, parseExploreCards, readExploreCardElements, type ExploreControls } from './google-explore';
 import { googleDiscoveryUrl, googleFlightSearchUrl } from './google-url';
 import { googleFlightFields } from '../../scraper/flight-link';
+import { googleExploreAdapter } from './explore-adapter';
 
 const profile = profileSchema.parse({ name: 'Anywhere', origins: ['LJU'], destination: { kind: 'anywhere' }, dates: { mode: 'rolling', days: 365 }, duration: { minNights: 5, maxNights: 12 }, passengers: { adults: 2 }, cabin: 'business', positioning: { homeAirports: ['LJU'] } });
 const request = { origin: 'LJU', destination: null, departure: '2027-04-01', returnDate: '2027-04-07' };
@@ -12,6 +13,14 @@ const controls: ExploreControls = { url: googleDiscoveryUrl(request, profile), l
 const fixture = '<ul><li role="button" data-code="/m/05qtj"><h3>Paris</h3><span data-gs="flight" aria-label="961 euros">€961</span><span class="nx0jzf">1 stop</span><span class="Xq1DAb">3 hr 30 min</span><span data-gs="">€172</span></li><li role="button" data-code="/m/07pfk"><h3>Venice</h3><span>3h</span><span data-gs="">€170</span></li></ul>';
 
 describe('Google Explore captured context', () => {
+  it('rejects airport discovery before reserving requests or opening the broad Explore map', async () => {
+    let reserved = false;
+    await expect(googleExploreAdapter.discover({ ...request, destination: 'CRA' }, {
+      profile: { ...profile, destination: { kind: 'airport', values: ['CRA'] } }, signal: new AbortController().signal,
+      reserveRequest: async () => { reserved = true; },
+    })).rejects.toThrow('Airport destinations require Google Flights exact-route discovery');
+    expect(reserved).toBe(false);
+  });
   it('accepts the party total and excludes hotel averages and ground-only destinations', () => {
     document.body.innerHTML = fixture;
     const cards = readExploreCardElements([...document.querySelectorAll('li[role="button"][data-code]')], 'EUR');

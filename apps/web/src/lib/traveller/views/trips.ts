@@ -2,6 +2,7 @@ import { prisma } from '../../prisma';
 import { tripCandidateSchema } from '../engine/trips/schema';
 import { hotelCandidateSchema } from '../sources/hotels/schema';
 import { flightCandidateSchema } from '../sources/flights/schema';
+import { matchesFlightRoute, profileSchema } from '../profiles';
 import { candidateScoreSchema } from './candidates';
 import type { CandidateFilters } from './candidates';
 import { hotelMatchesFilters } from './filters';
@@ -18,12 +19,14 @@ export function safeHotelUrl(value: string): string | null {
 export async function latestTrips(userId: string, filters: CandidateFilters = {}) {
   const rows = await prisma.travellerObservation.findMany({ where: { kind: 'trip', profile: { userId, active: true, archivedAt: null }, expiresAt: { gt: new Date() } },
     orderBy: { observedAt: 'desc' }, distinct: ['profileId', 'identity'], take: 100,
-    include: { profile: { select: { name: true, revision: true } }, trip: { include: { flight: true, hotel: true } } } });
+    include: { profile: { select: { name: true, revision: true, constraints: true } }, trip: { include: { flight: true, hotel: true } } } });
   const parsedRows = rows.flatMap(row => {
     const details = tripCandidateSchema.safeParse(row.details), evaluation = candidateScoreSchema.safeParse(row.score);
     const flight = flightCandidateSchema.safeParse(row.trip?.flight.details), hotel = hotelCandidateSchema.safeParse(row.trip?.hotel.details);
+    const profile = profileSchema.safeParse(row.profile.constraints);
     if (!details.success || !flight.success || !hotel.success || row.profileRevision !== row.profile.revision
-      || details.data.flightObservationId !== row.trip?.flight.id || details.data.hotelObservationId !== row.trip?.hotel.id) return [];
+      || details.data.flightObservationId !== row.trip?.flight.id || details.data.hotelObservationId !== row.trip?.hotel.id
+      || !profile.success || !matchesFlightRoute(profile.data, flight.data)) return [];
     if (filters.origin && details.data.origin !== filters.origin || filters.cabin && details.data.cabin !== filters.cabin
       || filters.destination && !details.data.destinationName.toLocaleLowerCase('en').includes(filters.destination.toLocaleLowerCase('en'))
       || filters.from && details.data.departure < filters.from || filters.to && details.data.returnDate > filters.to

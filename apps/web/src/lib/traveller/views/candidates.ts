@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { prisma } from '../../prisma';
 import type { Prisma } from '@/generated/prisma/client';
 import { flightCandidateSchema } from '../sources/flights/schema';
+import { matchesFlightRoute, profileSchema } from '../profiles';
 import { DESTINATION_REGIONS, filterDestinationRegion } from './regions';
 
 export const candidateFilterSchema = z.object({
@@ -33,10 +34,11 @@ export async function latestFlightCandidates(userId: string, filters: CandidateF
   if (filters.minScore !== undefined) details.push({ score: { path: ['score'], gte: filters.minScore } });
   const rows = await prisma.travellerObservation.findMany({ where: { kind: 'flight', profile: { userId, active: true, archivedAt: null }, expiresAt: { gt: new Date() },
     ...(filters.currency ? { currency: filters.currency } : {}), ...(filters.maxPrice !== undefined ? { amount: { lte: filters.maxPrice } } : {}), AND: details },
-    orderBy: { observedAt: 'desc' }, distinct: ['profileId', 'identity'], take: 100, include: { profile: { select: { name: true, revision: true } }, evidence: { orderBy: { verifiedAt: 'desc' }, take: 10 } } });
+    orderBy: { observedAt: 'desc' }, distinct: ['profileId', 'identity'], take: 100, include: { profile: { select: { name: true, revision: true, constraints: true } }, evidence: { orderBy: { verifiedAt: 'desc' }, take: 10 } } });
   const parsedRows = rows.flatMap(row => {
     const details = flightCandidateSchema.safeParse(row.details), bookingUrl = safeCandidateBookingUrl(row.bookingUrl);
-    if (!details.success || !bookingUrl || row.profileRevision !== row.profile.revision) return [];
+    const profile = profileSchema.safeParse(row.profile.constraints);
+    if (!details.success || !bookingUrl || row.profileRevision !== row.profile.revision || !profile.success || !matchesFlightRoute(profile.data, details.data)) return [];
     const score = candidateScoreSchema.safeParse(row.score);
     const nights = (Date.parse(details.data.returnDepartureLocal ?? details.data.returnDate) - Date.parse(details.data.arrivalLocal ?? details.data.departure)) / 86400000;
     if (filters.minNights !== undefined && nights < filters.minNights || filters.maxNights !== undefined && nights > filters.maxNights) return [];
